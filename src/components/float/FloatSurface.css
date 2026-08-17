@@ -1,0 +1,52 @@
+.float-surface-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+
+/* ---- Header / collapse trigger ---- */
+
+.float-surface-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 0 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.float-surface-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.2);
+  transition: background var(--float-transition);
+}
+
+.float-surface-header:hover .float-surface-handle {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+/* ---- Body ---- */
+
+.float-surface-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  overflow: hidden;
+}
+
+.float-surface-placeholder {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  color: var(--float-text-secondary);
+}

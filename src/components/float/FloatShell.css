@@ -1,0 +1,34 @@
+.float-shell {
+  position: relative;
+  width: 240px;
+  height: 48px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  overflow: visible;
+  will-change: width, height, border-radius;
+}
+
+.island-glass {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  
+  /* Glass surface */
+  background: var(--float-bg);
+  backdrop-filter: blur(var(--float-blur));
+  -webkit-backdrop-filter: blur(var(--float-blur));
+
+  /* Border & glow */
+  border: 1px solid var(--float-border);
+  box-shadow: var(--float-shadow);
+  
+  /* Prevent content overflow during morph */
+  overflow: hidden;
+  
+  transition: border-color var(--float-transition);
+}
+
+.float-shell:hover .island-glass {
+  border-color: var(--float-border-hover);
+}

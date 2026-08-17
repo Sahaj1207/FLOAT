@@ -1,0 +1,75 @@
+/* ============================================================
+   FLOAT — Global Styles
+   ============================================================
+   Transparent background for the native window.
+   System font stack — no external font dependencies.
+   Dark translucent glass aesthetic.
+   ============================================================ */
+
+:root {
+  /* Surface colors — deep physical dark glass */
+  --float-bg: rgba(12, 12, 15, 0.92);
+  --float-bg-hover: rgba(18, 18, 22, 0.96);
+  --float-border: rgba(255, 255, 255, 0.12);
+  --float-border-hover: rgba(255, 255, 255, 0.18);
+
+  /* Text */
+  --float-text-primary: rgba(255, 255, 255, 0.95);
+  --float-text-secondary: rgba(255, 255, 255, 0.6);
+
+  /* Glow / shadow — subtle inset glass highlight, zero outer shadow */
+  --float-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.12);
+  --float-glow: 0 0 0 1px rgba(255, 255, 255, 0.1),
+                inset 0 1px 1.5px rgba(255, 255, 255, 0.15);
+
+  /* Blur */
+  --float-blur: 32px;
+
+  /* Radii */
+  --float-radius-pill: 24px;
+  --float-radius-surface: 28px;
+
+  /* Animation */
+  --float-transition: 200ms ease;
+
+  /* System font stack */
+  --float-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+}
+
+/* ---- Reset & transparency ---- */
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  background: transparent;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  font-family: var(--float-font);
+  color: var(--float-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  user-select: none;
+  cursor: default;
+}
+
+/* ---- App container ---- */
+
+#root {
+  display: flex;
+  justify-content: center;
+  /* Position the surface near the top of the native window */
+  padding-top: 12px;
+}
