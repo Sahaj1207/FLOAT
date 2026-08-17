@@ -4,36 +4,31 @@ import { MediaSession, MultiSessionState } from "../../platform/media";
 import { MediaWidgetSurface } from "./MediaWidgetSurface";
 import "./FloatSurface.css";
 
-/**
- * FloatSurface — the expanded state of the FLOAT island.
- *
- * A larger rounded surface hosting media controls and multi-session switcher.
- */
-
 interface FloatSurfaceProps {
   onCollapse: () => void;
   media: MediaSession | null;
   multiState?: MultiSessionState | null;
+  onSelectSession?: (sessionId: string) => void;
 }
 
-export const FloatSurface: React.FC<FloatSurfaceProps> = ({ onCollapse, media, multiState }) => {
+export const FloatSurface: React.FC<FloatSurfaceProps> = ({ onCollapse, media, multiState, onSelectSession }) => {
   return (
     <motion.div 
       layoutId="island-glass"
       className="float-surface-content island-glass"
-      onClick={onCollapse}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
     >
-      <button className="float-surface-header" onClick={onCollapse}>
+      <button 
+        className="float-surface-header" 
+        onClick={onCollapse}
+        data-no-drag="true"
+        aria-label="Collapse island"
+      >
         <div className="float-surface-handle" />
       </button>
       
       <div className="float-surface-body">
         {media?.hasMedia ? (
-          <MediaWidgetSurface media={media} multiState={multiState} />
+          <MediaWidgetSurface media={media} multiState={multiState} onSelectSession={onSelectSession} />
         ) : (
           <div style={{ padding: '20px', color: 'var(--float-text-secondary)', textAlign: 'center' }}>
             No media playing

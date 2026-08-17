@@ -2,30 +2,24 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MediaSession, MultiSessionState } from '../../platform/media';
 import { mediaPlayPause, mediaNext, mediaPrev, mediaSeek, selectMediaSession } from '../../platform';
+import { mediaTimeline } from './mediaTimeline';
 import './MediaWidgetSurface.css';
 
 interface Props {
   media: MediaSession | null;
   multiState?: MultiSessionState | null;
+  onSelectSession?: (sessionId: string) => void;
 }
 
-export const MediaWidgetSurface: React.FC<Props> = ({ media, multiState }) => {
+export const MediaWidgetSurface: React.FC<Props> = ({ media, multiState, onSelectSession }) => {
   const [isSeekingState, setIsSeekingState] = useState(false);
 
-  // DOM Refs for direct 60fps updates without React re-renders
+  // DOM Refs for direct updates from central MediaTimelineManager
   const progressBarRef = useRef<HTMLDivElement>(null);
   const progressFillRef = useRef<HTMLDivElement>(null);
   const elapsedTimeLabelRef = useRef<HTMLSpanElement>(null);
 
-  // Clock-based position tracking state refs
-  const basePositionRef = useRef<number>(media?.position ?? 0);
-  const syncTimestampRef = useRef<number>(performance.now());
-  const isPlayingRef = useRef<boolean>(media?.isPlaying ?? false);
   const durationRef = useRef<number>(media?.duration ?? 0);
-  const lastRenderedSecRef = useRef<number>(-1);
-  const mediaIdRef = useRef<string | undefined>(media?.id);
-
-  // Seeking generation token & timeout safety refs
   const isSeekingRef = useRef<boolean>(false);
   const seekPosRef = useRef<number | null>(null);
   const seekGenTokenRef = useRef<number>(0);
@@ -43,73 +37,23 @@ export const MediaWidgetSurface: React.FC<Props> = ({ media, multiState }) => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   }, []);
 
-  // Update clock state refs whenever media props update from authoritative events
+  // Sync media duration ref
   useEffect(() => {
-    if (!media) return;
+    durationRef.current = media?.duration ?? 0;
+  }, [media?.duration]);
 
-    const trackChanged = mediaIdRef.current !== media.id;
-    mediaIdRef.current = media.id;
-
-    if (trackChanged) {
-      basePositionRef.current = media.position ?? 0;
-      syncTimestampRef.current = performance.now();
-      isPlayingRef.current = media.isPlaying;
-      durationRef.current = media.duration ?? 0;
-      lastRenderedSecRef.current = -1;
-      isSeekingRef.current = false;
-      setIsSeekingState(false);
-      return;
-    }
-
-    if (!isSeekingRef.current) {
-      if (media.position !== undefined) {
-        basePositionRef.current = media.position;
-        syncTimestampRef.current = performance.now();
-      }
-      isPlayingRef.current = media.isPlaying;
-      durationRef.current = media.duration ?? 0;
-    }
-  }, [media?.id, media?.position, media?.isPlaying, media?.duration]);
-
-  // Single persistent 60fps RAF loop updating only progressFillRef & elapsedTimeLabelRef
+  // Register DOM elements to central timeline manager
   useEffect(() => {
-    let animFrameId: number;
-
-    const renderLoop = () => {
-      const duration = durationRef.current;
-      let currentPos = basePositionRef.current;
-
-      if (isSeekingRef.current && seekPosRef.current !== null) {
-        currentPos = seekPosRef.current;
-      } else if (isPlayingRef.current && duration > 0) {
-        const elapsed = (performance.now() - syncTimestampRef.current) / 1000;
-        currentPos = Math.min(duration, Math.max(0, basePositionRef.current + elapsed));
-      }
-
-      // 1. Update progress bar fill directly in DOM at 60fps
-      if (progressFillRef.current && duration > 0) {
-        const percent = Math.min(100, Math.max(0, (currentPos / duration) * 100));
-        progressFillRef.current.style.width = `${percent}%`;
-      } else if (progressFillRef.current) {
-        progressFillRef.current.style.width = '0%';
-      }
-
-      // 2. Update formatted time text label only on second boundaries (low frequency)
-      const currentSec = Math.floor(currentPos);
-      if (currentSec !== lastRenderedSecRef.current && elapsedTimeLabelRef.current) {
-        lastRenderedSecRef.current = currentSec;
-        elapsedTimeLabelRef.current.textContent = formatTime(currentPos);
-      }
-
-      animFrameId = requestAnimationFrame(renderLoop);
-    };
-
-    animFrameId = requestAnimationFrame(renderLoop);
+    const fillEl = progressFillRef.current;
+    const labelEl = elapsedTimeLabelRef.current;
+    if (fillEl) mediaTimeline.registerFill(fillEl);
+    if (labelEl) mediaTimeline.registerLabel(labelEl);
 
     return () => {
-      cancelAnimationFrame(animFrameId);
+      if (fillEl) mediaTimeline.unregisterFill(fillEl);
+      if (labelEl) mediaTimeline.unregisterLabel(labelEl);
     };
-  }, [formatTime]);
+  }, [media?.id]);
 
   // Calculate target position from pointer event
   const calculatePositionFromEvent = (e: React.PointerEvent | PointerEvent): number | null => {
@@ -131,15 +75,16 @@ export const MediaWidgetSurface: React.FC<Props> = ({ media, multiState }) => {
     const pos = calculatePositionFromEvent(e);
     if (pos !== null) {
       seekPosRef.current = pos;
+      mediaTimeline.setSeeking(true, pos);
     }
 
-    // Safety timeout: auto-release seeking state after 2 seconds to prevent being stuck forever
     if (seekTimeoutRef.current) clearTimeout(seekTimeoutRef.current);
     seekTimeoutRef.current = setTimeout(() => {
       if (seekGenTokenRef.current === token && isSeekingRef.current) {
         isSeekingRef.current = false;
         seekPosRef.current = null;
         setIsSeekingState(false);
+        mediaTimeline.setSeeking(false, null);
       }
     }, 2000);
   };
@@ -149,6 +94,7 @@ export const MediaWidgetSurface: React.FC<Props> = ({ media, multiState }) => {
     const pos = calculatePositionFromEvent(e);
     if (pos !== null) {
       seekPosRef.current = pos;
+      mediaTimeline.setSeeking(true, pos);
     }
   };
 
@@ -164,19 +110,13 @@ export const MediaWidgetSurface: React.FC<Props> = ({ media, multiState }) => {
     const finalPos = calculatePositionFromEvent(e) ?? seekPosRef.current;
 
     if (finalPos !== null && media) {
-      basePositionRef.current = finalPos;
-      syncTimestampRef.current = performance.now();
+      mediaTimeline.commitSeek(finalPos);
       mediaSeek(finalPos, media.id);
     }
 
-    const currentToken = seekGenTokenRef.current;
-    setTimeout(() => {
-      if (seekGenTokenRef.current === currentToken) {
-        isSeekingRef.current = false;
-        seekPosRef.current = null;
-        setIsSeekingState(false);
-      }
-    }, 150);
+    isSeekingRef.current = false;
+    seekPosRef.current = null;
+    setIsSeekingState(false);
   };
 
   const handlePointerCancel = (e: React.PointerEvent) => {
@@ -187,6 +127,7 @@ export const MediaWidgetSurface: React.FC<Props> = ({ media, multiState }) => {
     isSeekingRef.current = false;
     seekPosRef.current = null;
     setIsSeekingState(false);
+    mediaTimeline.setSeeking(false, null);
   };
 
   if (!media || !media.hasMedia) {
@@ -210,79 +151,48 @@ export const MediaWidgetSurface: React.FC<Props> = ({ media, multiState }) => {
   const displayTitle = media.title || media.album || cleanSourceName(media.source);
   const displayArtist = media.artist || (media.title ? cleanSourceName(media.source) : undefined);
 
-  const evaluateSessionScore = (s: MediaSession): number => {
-    let score = 0;
-    if (s.title && s.title.trim().length > 0) score += 3;
-    if (s.artist && s.artist.trim().length > 0) score += 2;
-    if (s.albumArtBase64) score += 3;
-    if (s.isPlaying) score += 4;
-    if (s.canPlayPause) score += 1;
-    if (s.canGoNext || s.canGoPrev) score += 1;
-    return score;
-  };
-
   const allSessions = multiState?.sessions || [];
-  const usefulSessions = allSessions
-    .filter((s) => evaluateSessionScore(s) >= 3)
-    .sort((a, b) => evaluateSessionScore(b) - evaluateSessionScore(a));
-
-  const selectedId = multiState?.selectedSessionId || media.id;
 
   return (
     <div className="media-widget-surface" onClick={(e) => e.stopPropagation()}>
       <div className="media-info-layout">
-        <AnimatePresence mode="popLayout">
+        <motion.div 
+          layoutId="media-art" 
+          className={`media-art-container ${!media.albumArtBase64 ? 'fallback' : ''}`}
+        >
           {media.albumArtBase64 ? (
-            <motion.div
-              layoutId="media-art"
-              key={media.albumArtBase64}
-              initial={{ opacity: 0, scale: 0.94 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.94 }}
-              transition={{ duration: 0.25 }}
-              className="media-art-container"
-            >
-              <img 
-                src={`data:image/jpeg;base64,${media.albumArtBase64}`} 
-                alt="Album Art" 
-                className="media-art"
-              />
-            </motion.div>
+            <img 
+              src={`data:image/jpeg;base64,${media.albumArtBase64}`} 
+              alt="Album Art" 
+              className="media-art"
+            />
           ) : (
-            <motion.div layoutId="media-art" className="media-art-container fallback" key="fallback">
-              <div className="music-note-icon">🎵</div>
-            </motion.div>
+            <div className="music-note-icon">🎵</div>
           )}
-        </AnimatePresence>
+        </motion.div>
 
         <div className="media-details">
           <motion.div layoutId="media-text-container" className="media-text">
-            <AnimatePresence mode="wait">
-              <motion.h3 
-                key={displayTitle}
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: 0.15 }}
-                className="media-title"
-              >
-                {displayTitle}
-              </motion.h3>
-            </AnimatePresence>
+            <motion.h3 
+              key={`title-${media.id}-${displayTitle}`}
+              initial={{ opacity: 0, y: 3 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.12 }}
+              className="media-title"
+            >
+              {displayTitle}
+            </motion.h3>
 
             {displayArtist && (
-              <AnimatePresence mode="wait">
-                <motion.p 
-                  key={displayArtist}
-                  initial={{ opacity: 0, y: 2 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -2 }}
-                  transition={{ duration: 0.15 }}
-                  className="media-artist"
-                >
-                  {displayArtist}
-                </motion.p>
-              </AnimatePresence>
+              <motion.p 
+                key={`artist-${media.id}-${displayArtist}`}
+                initial={{ opacity: 0, y: 2 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.12 }}
+                className="media-artist"
+              >
+                {displayArtist}
+              </motion.p>
             )}
           </motion.div>
 
@@ -312,7 +222,11 @@ export const MediaWidgetSurface: React.FC<Props> = ({ media, multiState }) => {
           <div className="media-controls">
             <button 
               className="media-btn" 
-              onClick={(e) => { e.stopPropagation(); mediaPrev(media.id); }}
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                console.log("[MEDIA CONTROL] prev session=" + media.id);
+                mediaPrev(media.id); 
+              }}
               disabled={!media.canGoPrev}
               aria-label="Previous track"
               data-no-drag="true"
@@ -321,7 +235,11 @@ export const MediaWidgetSurface: React.FC<Props> = ({ media, multiState }) => {
             </button>
             <button 
               className="media-btn play-pause" 
-              onClick={(e) => { e.stopPropagation(); mediaPlayPause(media.id); }}
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                console.log("[MEDIA CONTROL] play_pause session=" + media.id);
+                mediaPlayPause(media.id); 
+              }}
               disabled={!media.canPlayPause}
               aria-label={media.isPlaying ? "Pause" : "Play"}
               data-no-drag="true"
@@ -358,7 +276,11 @@ export const MediaWidgetSurface: React.FC<Props> = ({ media, multiState }) => {
             </button>
             <button 
               className="media-btn" 
-              onClick={(e) => { e.stopPropagation(); mediaNext(media.id); }}
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                console.log("[MEDIA CONTROL] next session=" + media.id);
+                mediaNext(media.id); 
+              }}
               disabled={!media.canGoNext}
               aria-label="Next track"
               data-no-drag="true"
@@ -367,17 +289,22 @@ export const MediaWidgetSurface: React.FC<Props> = ({ media, multiState }) => {
             </button>
           </div>
 
-          {usefulSessions.length > 1 && (
+          {allSessions.length > 1 && (
             <div className="session-switcher-bottom" data-no-drag="true">
-              {usefulSessions.map((sess) => {
-                const isSelected = sess.id === selectedId;
+              {allSessions.map((sess) => {
+                const isSelected = sess.id === media.id;
                 return (
                   <div
                     key={sess.id}
                     className={`session-item-clean ${isSelected ? 'active' : ''}`}
                     onClick={(e) => {
                       e.stopPropagation();
-                      selectMediaSession(sess.id);
+                      console.log("[SESSION SELECT] clicked dot id=" + sess.id);
+                      if (onSelectSession) {
+                        onSelectSession(sess.id);
+                      } else {
+                        selectMediaSession(sess.id);
+                      }
                     }}
                     data-no-drag="true"
                   >

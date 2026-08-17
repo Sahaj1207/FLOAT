@@ -219,73 +219,81 @@ async fn run_media_listener(
                     local_session.can_go_next = true;
                     local_session.can_go_prev = true;
 
-                    while let Some(update) = rx.recv().await {
+                    // Immediately register initial session placeholder so it exists in multi-session state
+                    {
+                        let mut states = states_ref.lock().await;
+                        states.insert(str_id_clone.clone(), local_session.clone());
+                    }
+                    emit_fn();
+
+                    fn apply_model(session: &mut MediaSession, model: &gsmtc::SessionModel) -> (bool, bool) {
                         let mut state_changed = false;
                         let mut position_changed = false;
 
-                        match update {
-                            SessionUpdateEvent::Model(model) => {
-                                local_session.can_play_pause = true;
-                                local_session.can_go_next = true;
-                                local_session.can_go_prev = true;
+                        session.can_play_pause = true;
+                        session.can_go_next = true;
+                        session.can_go_prev = true;
 
-                                if let Some(playback) = &model.playback {
-                                    let new_playing = playback.status == gsmtc::PlaybackStatus::Playing;
-                                    if local_session.is_playing != new_playing {
-                                        local_session.is_playing = new_playing;
-                                        state_changed = true;
-                                    }
-                                }
-                                if let Some(timeline) = &model.timeline {
-                                    let new_pos = Some(timeline.position as f64 / 10000000.0);
-                                    let new_dur = Some(timeline.end as f64 / 10000000.0);
-                                    let new_can_seek = timeline.end > 0;
-                                    if local_session.position != new_pos || local_session.duration != new_dur || local_session.can_seek != new_can_seek {
-                                        local_session.position = new_pos;
-                                        local_session.duration = new_dur;
-                                        local_session.can_seek = new_can_seek;
-                                        position_changed = true;
-                                    }
-                                }
-                                if let Some(media) = &model.media {
-                                    let new_title = Some(media.title.clone());
-                                    let new_artist = Some(media.artist.clone());
-                                    let new_album = media.album.as_ref().map(|a| a.title.clone());
-                                    if local_session.title != new_title
-                                        || local_session.artist != new_artist
-                                        || local_session.album != new_album
-                                    {
-                                        local_session.title = new_title;
-                                        local_session.artist = new_artist;
-                                        local_session.album = new_album;
-                                        local_session.has_media = true;
-                                        state_changed = true;
-                                    }
-                                }
+                        if let Some(playback) = &model.playback {
+                            let new_playing = playback.status == gsmtc::PlaybackStatus::Playing;
+                            if session.is_playing != new_playing {
+                                session.is_playing = new_playing;
+                                state_changed = true;
+                            }
+                        }
+
+                        if let Some(timeline) = &model.timeline {
+                            let new_pos = Some(timeline.position as f64 / 10000000.0);
+                            let new_dur = Some(timeline.end as f64 / 10000000.0);
+                            let new_can_seek = timeline.end > 0;
+                            if session.position != new_pos || session.duration != new_dur || session.can_seek != new_can_seek {
+                                session.position = new_pos;
+                                session.duration = new_dur;
+                                session.can_seek = new_can_seek;
+                                position_changed = true;
+                            }
+                        }
+
+                        if let Some(media) = &model.media {
+                            let new_title = if media.title.trim().is_empty() { None } else { Some(media.title.clone()) };
+                            let new_artist = if media.artist.trim().is_empty() { None } else { Some(media.artist.clone()) };
+                            let new_album = media.album.as_ref().and_then(|a| if a.title.trim().is_empty() { None } else { Some(a.title.clone()) });
+                            let has_media = new_title.is_some() || new_artist.is_some() || new_album.is_some() || session.album_art_base64.is_some();
+
+                            if session.title != new_title || session.artist != new_artist || session.album != new_album || session.has_media != has_media {
+                                session.title = new_title;
+                                session.artist = new_artist;
+                                session.album = new_album;
+                                session.has_media = has_media;
+                                state_changed = true;
+                            }
+                        }
+
+                        (state_changed, position_changed)
+                    }
+
+                    while let Some(update) = rx.recv().await {
+                        let (state_changed, position_changed) = match update {
+                            SessionUpdateEvent::Model(model) => {
+                                apply_model(&mut local_session, &model)
                             }
                             SessionUpdateEvent::Media(model, image_opt) => {
-                                if let Some(media) = &model.media {
-                                    let new_title = Some(media.title.clone());
-                                    let new_artist = Some(media.artist.clone());
-                                    if local_session.title != new_title || local_session.artist != new_artist {
-                                        local_session.title = new_title;
-                                        local_session.artist = new_artist;
-                                        local_session.has_media = true;
-                                        state_changed = true;
-                                    }
-                                }
+                                let (sc, pc) = apply_model(&mut local_session, &model);
+                                let mut art_changed = false;
                                 if let Some(image) = image_opt {
                                     let new_art = Some(STANDARD.encode(&image.data));
                                     if local_session.album_art_base64 != new_art {
                                         local_session.album_art_base64 = new_art;
-                                        state_changed = true;
+                                        local_session.has_media = true;
+                                        art_changed = true;
                                     }
                                 } else if local_session.album_art_base64.is_some() {
                                     local_session.album_art_base64 = None;
-                                    state_changed = true;
+                                    art_changed = true;
                                 }
+                                (sc || art_changed, pc)
                             }
-                        }
+                        };
 
                         if state_changed || position_changed {
                             local_session.last_updated = std::time::SystemTime::now()
