@@ -41,27 +41,60 @@ export const MediaWidgetPill: React.FC<Props> = ({ media, sessionCount = 1, isPr
 
   const displayTitle = media.title || media.album || cleanSourceName(media.source);
 
+  // Stable track identity computation (session ID + normalized track metadata)
+  const getTrackKey = (session: MediaSession | null | undefined): string => {
+    if (!session || !session.hasMedia) return 'no-media';
+    const normTitle = (session.title || '').trim().toLowerCase();
+    const normArtist = (session.artist || '').trim().toLowerCase();
+    const normAlbum = (session.album || '').trim().toLowerCase();
+    const fallback = (!normTitle && !normArtist && !normAlbum) ? (session.source || '').trim().toLowerCase() : '';
+    return `${session.id}::${normTitle}::${normArtist}::${normAlbum}::${fallback}`;
+  };
+
+  const trackKey = getTrackKey(media);
+
   return (
     <motion.div className="media-widget-pill">
       <motion.div 
         layoutId="media-art" 
-        className={`media-pill-art-container ${!media.albumArtBase64 ? 'fallback' : ''} ${isPreview ? 'preview' : ''}`}
+        className={`media-pill-art-container ${isPreview ? 'preview' : ''}`}
       >
-        {media.albumArtBase64 ? (
-          <img 
-            src={`data:image/jpeg;base64,${media.albumArtBase64}`} 
-            alt="Art" 
-            className="media-pill-art"
-          />
-        ) : (
-          <span>🎵</span>
-        )}
+        <AnimatePresence mode="popLayout" initial={false}>
+          <motion.div
+            key={trackKey}
+            initial={{ opacity: 0.7, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.96 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="media-pill-art-inner"
+          >
+            {media.albumArtBase64 ? (
+              <img 
+                src={`data:image/jpeg;base64,${media.albumArtBase64}`} 
+                alt="Art" 
+                className="media-pill-art"
+              />
+            ) : (
+              <span className="media-pill-fallback">🎵</span>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </motion.div>
 
       <motion.div layoutId="media-text-container" className="media-pill-text-container">
-        <motion.span layoutId="media-title" className="media-pill-title">
-          {displayTitle}
-        </motion.span>
+        <AnimatePresence mode="popLayout" initial={false}>
+          <motion.span
+            key={trackKey}
+            initial={{ opacity: 0, y: 2 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -2 }}
+            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            className="media-pill-title"
+            title={displayTitle}
+          >
+            {displayTitle}
+          </motion.span>
+        </AnimatePresence>
       </motion.div>
 
       <motion.div layoutId="media-indicator" className="media-pill-right">

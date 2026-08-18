@@ -16,16 +16,33 @@
   align-items: center;
   justify-content: center;
   background: rgba(255, 255, 255, 0.05);
+  position: relative;
+}
+
+.media-pill-art-inner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
 }
 
 .media-pill-art {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
-.media-pill-art-container.fallback {
+.media-pill-art-container.fallback,
+.media-pill-art-fallback {
   font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
 }
 
 .media-pill-text-container {
@@ -33,6 +50,9 @@
   min-width: 0; /* for truncation */
   display: flex;
   align-items: center;
+  position: relative;
+  overflow: hidden;
+  height: 20px;
 }
 
 .media-pill-title {
@@ -43,6 +63,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
   letter-spacing: 0.3px;
+  display: block;
+  width: 100%;
 }
 
 .media-pill-right {

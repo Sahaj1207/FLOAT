@@ -151,6 +151,30 @@ export const MediaWidgetSurface: React.FC<Props> = ({ media, multiState, onSelec
   const displayTitle = media.title || media.album || cleanSourceName(media.source);
   const displayArtist = media.artist || (media.title ? cleanSourceName(media.source) : undefined);
 
+  // Stable track identity computation (session ID + normalized track metadata)
+  const getTrackKey = (session: MediaSession | null | undefined): string => {
+    if (!session || !session.hasMedia) return 'no-media';
+    const normTitle = (session.title || '').trim().toLowerCase();
+    const normArtist = (session.artist || '').trim().toLowerCase();
+    const normAlbum = (session.album || '').trim().toLowerCase();
+    const fallback = (!normTitle && !normArtist && !normAlbum) ? (session.source || '').trim().toLowerCase() : '';
+    return `${session.id}::${normTitle}::${normArtist}::${normAlbum}::${fallback}`;
+  };
+
+  const trackKey = getTrackKey(media);
+  const prevTrackKeyRef = useRef<string>('');
+
+  useEffect(() => {
+    if (prevTrackKeyRef.current && prevTrackKeyRef.current !== trackKey && trackKey !== 'no-media') {
+      console.log(`[TRACK ANIMATION] start session=${media.id} track=${displayTitle}`);
+      const timer = setTimeout(() => {
+        console.log(`[TRACK ANIMATION] complete session=${media.id} track=${displayTitle}`);
+      }, 220);
+      return () => clearTimeout(timer);
+    }
+    prevTrackKeyRef.current = trackKey;
+  }, [trackKey, media.id, displayTitle]);
+
   const allSessions = multiState?.sessions || [];
 
   return (
@@ -158,42 +182,54 @@ export const MediaWidgetSurface: React.FC<Props> = ({ media, multiState, onSelec
       <div className="media-info-layout">
         <motion.div 
           layoutId="media-art" 
-          className={`media-art-container ${!media.albumArtBase64 ? 'fallback' : ''}`}
+          className="media-art-container"
         >
-          {media.albumArtBase64 ? (
-            <img 
-              src={`data:image/jpeg;base64,${media.albumArtBase64}`} 
-              alt="Album Art" 
-              className="media-art"
-            />
-          ) : (
-            <div className="music-note-icon">🎵</div>
-          )}
+          <AnimatePresence mode="popLayout" initial={false}>
+            <motion.div
+              key={trackKey}
+              initial={{ opacity: 0.7, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              className="media-art-inner"
+            >
+              {media.albumArtBase64 ? (
+                <img 
+                  src={`data:image/jpeg;base64,${media.albumArtBase64}`} 
+                  alt="Album Art" 
+                  className="media-art"
+                />
+              ) : (
+                <div className="media-art-fallback">🎵</div>
+              )}
+            </motion.div>
+          </AnimatePresence>
         </motion.div>
 
         <div className="media-details">
           <motion.div layoutId="media-text-container" className="media-text">
-            <motion.h3 
-              key={`title-${media.id}-${displayTitle}`}
-              initial={{ opacity: 0, y: 3 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.12 }}
-              className="media-title"
-            >
-              {displayTitle}
-            </motion.h3>
-
-            {displayArtist && (
-              <motion.p 
-                key={`artist-${media.id}-${displayArtist}`}
-                initial={{ opacity: 0, y: 2 }}
+            <AnimatePresence mode="popLayout" initial={false}>
+              <motion.div
+                key={trackKey}
+                initial={{ opacity: 0, y: 3 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.12 }}
-                className="media-artist"
+                exit={{ opacity: 0, y: -3 }}
+                transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                className="media-text-inner"
               >
-                {displayArtist}
-              </motion.p>
-            )}
+                <h3 className="media-title" title={displayTitle}>
+                  {displayTitle}
+                </h3>
+
+                {displayArtist ? (
+                  <p className="media-artist" title={displayArtist}>
+                    {displayArtist}
+                  </p>
+                ) : (
+                  <p className="media-artist media-artist-placeholder" aria-hidden="true">&nbsp;</p>
+                )}
+              </motion.div>
+            </AnimatePresence>
           </motion.div>
 
           <div 
