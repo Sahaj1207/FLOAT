@@ -13,6 +13,23 @@
   height: 100%;
   cursor: pointer;
   white-space: nowrap;
+  transform-origin: center center;
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.25, 1);
+  will-change: transform;
+}
+
+.float-pill-container:hover .float-pill-content {
+  transform: scale(1.012);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .float-pill-content {
+    transition: none !important;
+    transform: none !important;
+  }
+  .float-pill-container:hover .float-pill-content {
+    transform: none !important;
+  }
 }
 
 .float-pill-indicator {
