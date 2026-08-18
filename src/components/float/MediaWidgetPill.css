@@ -6,6 +6,30 @@
   height: 100%;
 }
 
+.media-widget-pill.presence-active {
+  animation: pill-presence 3.6s ease-in-out infinite;
+  will-change: transform, filter;
+}
+
+@keyframes pill-presence {
+  0%, 100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.006);
+    filter: brightness(1.04);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .media-widget-pill.presence-active {
+    animation: none !important;
+    transform: none !important;
+    filter: none !important;
+  }
+}
+
 .media-pill-art-container {
   width: 24px;
   height: 24px;

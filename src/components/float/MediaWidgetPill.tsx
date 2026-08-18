@@ -91,7 +91,7 @@ export const MediaWidgetPill: React.FC<Props> = ({ media, sessionCount = 1, isPr
   }, [trackKey, displayTitle]);
 
   return (
-    <motion.div className="media-widget-pill">
+    <motion.div className={`media-widget-pill ${media.hasMedia && media.isPlaying ? 'presence-active' : ''}`}>
       <motion.div 
         layoutId="media-art" 
         className={`media-pill-art-container ${isPreview ? 'preview' : ''}`}
