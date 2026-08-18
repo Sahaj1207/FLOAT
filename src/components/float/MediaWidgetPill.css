@@ -34,13 +34,31 @@
   width: 24px;
   height: 24px;
   border-radius: 6px;
-  overflow: hidden;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.05);
   position: relative;
+}
+
+.media-pill-art-frame {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  transform-origin: center center;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-radius 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+.media-pill-art-container.preview .media-pill-art-frame {
+  transform: scale(1.1667); /* 24px * 1.1667 ≈ 28px */
+  border-radius: 6px;
 }
 
 .media-pill-art-inner {
@@ -269,13 +287,6 @@
   letter-spacing: 0.5px;
 }
 
-.media-pill-art-container.preview {
-  width: 28px;
-  height: 28px;
-  border-radius: 7px;
-  transition: width 0.2s ease, height 0.2s ease, transform 0.2s ease;
-}
-
 .media-pill-progress-overlay {
   position: absolute;
   bottom: 0;
@@ -286,23 +297,34 @@
   overflow: hidden;
   border-bottom-left-radius: inherit;
   border-bottom-right-radius: inherit;
-  animation: slide-up 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.media-pill-progress-overlay.preview-visible {
+  opacity: 1;
+  transform: scaleX(1);
 }
 
 .media-pill-progress-fill {
   height: 100%;
   background: var(--float-text-primary);
-  transition: width 0.3s ease;
 }
 
-@keyframes slide-up {
-  from {
-    transform: translateY(3px);
-    opacity: 0;
+@media (prefers-reduced-motion: reduce) {
+  .media-pill-art-frame {
+    transition: none !important;
   }
-  to {
-    transform: translateY(0);
-    opacity: 1;
+  .media-pill-progress-overlay {
+    transition: none !important;
+    transform: none !important;
+  }
+  .media-pill-progress-overlay.preview-visible {
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
 

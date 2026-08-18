@@ -17,7 +17,7 @@ export const MediaWidgetPill: React.FC<Props> = ({ media, sessionCount = 1, isPr
   // Register preview progress bar element to central timeline manager
   useEffect(() => {
     const el = fillRef.current;
-    if (isPreview && el) {
+    if (el) {
       mediaTimeline.registerFill(el);
     }
     return () => {
@@ -25,7 +25,7 @@ export const MediaWidgetPill: React.FC<Props> = ({ media, sessionCount = 1, isPr
         mediaTimeline.unregisterFill(el);
       }
     };
-  }, [isPreview, media.id]);
+  }, [media.id]);
 
   if (!media.hasMedia) return null;
 
@@ -96,26 +96,28 @@ export const MediaWidgetPill: React.FC<Props> = ({ media, sessionCount = 1, isPr
         layoutId="media-art" 
         className={`media-pill-art-container ${isPreview ? 'preview' : ''}`}
       >
-        <AnimatePresence mode="popLayout" initial={false}>
-          <motion.div
-            key={trackKey}
-            initial={{ opacity: 0.7, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.96 }}
-            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="media-pill-art-inner"
-          >
-            {media.albumArtBase64 ? (
-              <img 
-                src={`data:image/jpeg;base64,${media.albumArtBase64}`} 
-                alt="Art" 
-                className="media-pill-art"
-              />
-            ) : (
-              <span className="media-pill-fallback">🎵</span>
-            )}
-          </motion.div>
-        </AnimatePresence>
+        <div className="media-pill-art-frame">
+          <AnimatePresence mode="popLayout" initial={false}>
+            <motion.div
+              key={trackKey}
+              initial={{ opacity: 0.7, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="media-pill-art-inner"
+            >
+              {media.albumArtBase64 ? (
+                <img 
+                  src={`data:image/jpeg;base64,${media.albumArtBase64}`} 
+                  alt="Art" 
+                  className="media-pill-art"
+                />
+              ) : (
+                <span className="media-pill-fallback">🎵</span>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </motion.div>
 
       <motion.div layoutId="media-text-container" className="media-pill-text-container">
@@ -230,8 +232,8 @@ export const MediaWidgetPill: React.FC<Props> = ({ media, sessionCount = 1, isPr
         </button>
       </motion.div>
 
-      {isPreview && media.duration && media.duration > 0 && (
-        <div className="media-pill-progress-overlay">
+      {media.duration && media.duration > 0 && (
+        <div className={`media-pill-progress-overlay ${isPreview ? 'preview-visible' : ''}`}>
           <div 
             ref={fillRef}
             className="media-pill-progress-fill" 
