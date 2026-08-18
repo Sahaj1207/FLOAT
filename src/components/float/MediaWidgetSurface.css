@@ -186,6 +186,28 @@
 .media-progress-wrapper {
   width: 100%;
   margin-bottom: 4px;
+  animation: media-surface-secondary-reveal 0.2s cubic-bezier(0.16, 1, 0.3, 1) 0.06s backwards;
+}
+
+@keyframes media-surface-secondary-reveal {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .media-progress-wrapper,
+  .media-controls,
+  .session-switcher-bottom {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
 
 .media-progress-container {
@@ -275,6 +297,7 @@
   justify-content: center;
   gap: 24px;
   height: 44px;
+  animation: media-surface-secondary-reveal 0.2s cubic-bezier(0.16, 1, 0.3, 1) 0.06s backwards;
 }
 
 .media-btn {
@@ -359,6 +382,7 @@
   max-width: 100%;
   overflow-x: auto;
   scrollbar-width: none;
+  animation: media-surface-secondary-reveal 0.2s cubic-bezier(0.16, 1, 0.3, 1) 0.06s backwards;
 }
 
 .session-switcher-bottom::-webkit-scrollbar {
