@@ -232,21 +232,23 @@ export const MediaWidgetSurface: React.FC<Props> = ({ media, multiState, onSelec
             </AnimatePresence>
           </motion.div>
 
-          <div 
-            className={`media-progress-container ${isSeekingState ? 'seeking' : ''}`}
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            onPointerCancel={handlePointerCancel}
-            data-no-drag="true"
-          >
-            <div className="media-progress-bar" ref={progressBarRef}>
-              <div 
-                className="media-progress-fill" 
-                ref={progressFillRef}
-                style={{ width: '0%' }}
-              >
-                <div className="media-progress-thumb" />
+          <div className="media-progress-wrapper">
+            <div 
+              className={`media-progress-container ${isSeekingState ? 'seeking' : ''}`}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerCancel}
+              data-no-drag="true"
+            >
+              <div className="media-progress-bar" ref={progressBarRef}>
+                <div 
+                  className="media-progress-fill" 
+                  ref={progressFillRef}
+                  style={{ width: '0%' }}
+                >
+                  <div className="media-progress-thumb" />
+                </div>
               </div>
             </div>
             <div className="media-time-labels">
