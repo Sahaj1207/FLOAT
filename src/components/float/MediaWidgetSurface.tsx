@@ -164,6 +164,12 @@ export const MediaWidgetSurface: React.FC<Props> = ({ media, multiState, onSelec
   const trackKey = getTrackKey(media);
   const prevTrackKeyRef = useRef<string>('');
 
+  const titleContainerRef = useRef<HTMLDivElement>(null);
+  const titleTextRef = useRef<HTMLHeadingElement>(null);
+  const [isTitleOverflowing, setIsTitleOverflowing] = useState(false);
+  const [marqueeShift, setMarqueeShift] = useState(0);
+  const [marqueeDuration, setMarqueeDuration] = useState(10);
+
   useEffect(() => {
     if (prevTrackKeyRef.current && prevTrackKeyRef.current !== trackKey && trackKey !== 'no-media') {
       console.log(`[TRACK ANIMATION] start session=${media.id} track=${displayTitle}`);
@@ -174,6 +180,38 @@ export const MediaWidgetSurface: React.FC<Props> = ({ media, multiState, onSelec
     }
     prevTrackKeyRef.current = trackKey;
   }, [trackKey, media.id, displayTitle]);
+
+  // Overflow measurement effect: runs only when track identity or displayed title changes
+  useEffect(() => {
+    setIsTitleOverflowing(false);
+    setMarqueeShift(0);
+
+    const timer = setTimeout(() => {
+      const container = titleContainerRef.current;
+      const text = titleTextRef.current;
+      if (!container || !text) return;
+
+      const containerW = container.clientWidth;
+      const textW = text.scrollWidth;
+      const diff = textW - containerW;
+
+      if (diff > 4) {
+        const GAP = 40; // 40px gap between copies
+        const shift = textW + GAP;
+        const speed = 25; // 25 px/sec
+        const duration = Math.max(6, shift / speed);
+
+        setIsTitleOverflowing(true);
+        setMarqueeShift(shift);
+        setMarqueeDuration(duration);
+      } else {
+        setIsTitleOverflowing(false);
+        setMarqueeShift(0);
+      }
+    }, 220);
+
+    return () => clearTimeout(timer);
+  }, [trackKey, displayTitle]);
 
   const allSessions = multiState?.sessions || [];
 
@@ -217,9 +255,29 @@ export const MediaWidgetSurface: React.FC<Props> = ({ media, multiState, onSelec
                 transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
                 className="media-text-inner"
               >
-                <h3 className="media-title" title={displayTitle}>
-                  {displayTitle}
-                </h3>
+                <div 
+                  className={`media-title-wrapper ${isTitleOverflowing ? 'is-overflowing' : ''}`}
+                  ref={titleContainerRef}
+                  style={{
+                    '--marquee-shift': `-${marqueeShift}px`,
+                    '--marquee-duration': `${marqueeDuration}s`,
+                  } as React.CSSProperties}
+                >
+                  <div className={`media-title-track ${isTitleOverflowing ? 'marquee' : ''}`}>
+                    <h3 
+                      className="media-title"
+                      ref={titleTextRef}
+                      title={displayTitle}
+                    >
+                      {displayTitle}
+                    </h3>
+                    {isTitleOverflowing && (
+                      <span className="media-title-duplicate" aria-hidden="true">
+                        {displayTitle}
+                      </span>
+                    )}
+                  </div>
+                </div>
 
                 {displayArtist ? (
                   <p className="media-artist" title={displayArtist}>

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MediaSession } from '../../platform/media';
 import { mediaPlayPause } from '../../platform';
@@ -53,6 +53,43 @@ export const MediaWidgetPill: React.FC<Props> = ({ media, sessionCount = 1, isPr
 
   const trackKey = getTrackKey(media);
 
+  const pillTitleContainerRef = useRef<HTMLDivElement>(null);
+  const pillTitleTextRef = useRef<HTMLSpanElement>(null);
+  const [isPillTitleOverflowing, setIsPillTitleOverflowing] = useState(false);
+  const [pillMarqueeShift, setPillMarqueeShift] = useState(0);
+  const [pillMarqueeDuration, setPillMarqueeDuration] = useState(10);
+
+  useEffect(() => {
+    setIsPillTitleOverflowing(false);
+    setPillMarqueeShift(0);
+
+    const timer = setTimeout(() => {
+      const container = pillTitleContainerRef.current;
+      const text = pillTitleTextRef.current;
+      if (!container || !text) return;
+
+      const containerW = container.clientWidth;
+      const textW = text.scrollWidth;
+      const diff = textW - containerW;
+
+      if (diff > 4) {
+        const GAP = 36; // 36px gap between copies
+        const shift = textW + GAP;
+        const speed = 22; // 22 px/sec
+        const duration = Math.max(6, shift / speed);
+
+        setIsPillTitleOverflowing(true);
+        setPillMarqueeShift(shift);
+        setPillMarqueeDuration(duration);
+      } else {
+        setIsPillTitleOverflowing(false);
+        setPillMarqueeShift(0);
+      }
+    }, 220);
+
+    return () => clearTimeout(timer);
+  }, [trackKey, displayTitle]);
+
   return (
     <motion.div className="media-widget-pill">
       <motion.div 
@@ -83,17 +120,34 @@ export const MediaWidgetPill: React.FC<Props> = ({ media, sessionCount = 1, isPr
 
       <motion.div layoutId="media-text-container" className="media-pill-text-container">
         <AnimatePresence mode="popLayout" initial={false}>
-          <motion.span
+          <motion.div
             key={trackKey}
             initial={{ opacity: 0, y: 2 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -2 }}
             transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            className="media-pill-title"
-            title={displayTitle}
+            className={`media-pill-title-wrapper ${isPillTitleOverflowing ? 'is-overflowing' : ''}`}
+            ref={pillTitleContainerRef}
+            style={{
+              '--marquee-shift': `-${pillMarqueeShift}px`,
+              '--marquee-duration': `${pillMarqueeDuration}s`,
+            } as React.CSSProperties}
           >
-            {displayTitle}
-          </motion.span>
+            <div className={`media-pill-title-track ${isPillTitleOverflowing ? 'marquee' : ''}`}>
+              <span
+                ref={pillTitleTextRef}
+                className="media-pill-title"
+                title={displayTitle}
+              >
+                {displayTitle}
+              </span>
+              {isPillTitleOverflowing && (
+                <span className="media-pill-title-duplicate" aria-hidden="true">
+                  {displayTitle}
+                </span>
+              )}
+            </div>
+          </motion.div>
         </AnimatePresence>
       </motion.div>
 
