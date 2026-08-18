@@ -280,35 +280,37 @@ export const MediaWidgetSurface: React.FC<Props> = ({ media, multiState, onSelec
               aria-label={media.isPlaying ? "Pause" : "Play"}
               data-no-drag="true"
             >
-              <AnimatePresence mode="wait" initial={false}>
-                {media.isPlaying ? (
-                  <motion.svg 
-                    key="pause"
-                    initial={{ scale: 0.7, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0.7, opacity: 0 }}
-                    transition={{ type: "spring", stiffness: 450, damping: 25 }}
-                    viewBox="0 0 24 24" 
-                    fill="currentColor" 
-                    className="icon"
-                  >
-                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-                  </motion.svg>
-                ) : (
-                  <motion.svg 
-                    key="play"
-                    initial={{ scale: 0.7, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0.7, opacity: 0 }}
-                    transition={{ type: "spring", stiffness: 450, damping: 25 }}
-                    viewBox="0 0 24 24" 
-                    fill="currentColor" 
-                    className="icon"
-                  >
-                    <path d="M8 5v14l11-7z"/>
-                  </motion.svg>
-                )}
-              </AnimatePresence>
+              <span className="media-btn-icon-wrapper">
+                <AnimatePresence mode="popLayout" initial={false}>
+                  {media.isPlaying ? (
+                    <motion.svg 
+                      key="pause"
+                      initial={{ scale: 0.75, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.75, opacity: 0 }}
+                      transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+                      viewBox="0 0 24 24" 
+                      fill="currentColor" 
+                      className="icon"
+                    >
+                      <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                    </motion.svg>
+                  ) : (
+                    <motion.svg 
+                      key="play"
+                      initial={{ scale: 0.75, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.75, opacity: 0 }}
+                      transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+                      viewBox="0 0 24 24" 
+                      fill="currentColor" 
+                      className="icon"
+                    >
+                      <path d="M8 5v14l11-7z"/>
+                    </motion.svg>
+                  )}
+                </AnimatePresence>
+              </span>
             </button>
             <button 
               className="media-btn" 

@@ -202,16 +202,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, transform 0.12s cubic-bezier(0.2, 0.8, 0.25, 1);
+  box-sizing: border-box;
+  will-change: transform;
 }
 
 .media-btn:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.14);
-  transform: scale(1.08);
+  transform: scale(1.06);
 }
 
 .media-btn:active:not(:disabled) {
-  transform: scale(0.92);
+  transform: scale(0.94);
 }
 
 .media-btn:disabled {
@@ -224,22 +226,41 @@
   padding: 10px;
   border: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  width: 44px;
+  height: 44px;
+  position: relative;
+  overflow: visible;
 }
 
 .media-btn.play-pause:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.26);
   border-color: rgba(255, 255, 255, 0.25);
-  transform: scale(1.1);
+  transform: scale(1.05);
+}
+
+.media-btn.play-pause:active:not(:disabled) {
+  transform: scale(0.93);
+}
+
+.media-btn-icon-wrapper {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
 }
 
 .icon {
   width: 22px;
   height: 22px;
+  display: block;
 }
 
 .play-pause .icon {
   width: 24px;
   height: 24px;
+  display: block;
 }
 
 .session-switcher-bottom {

@@ -104,15 +104,33 @@ export const MediaWidgetPill: React.FC<Props> = ({ media, sessionCount = 1, isPr
           </span>
         )}
 
-        {media.isPlaying ? (
-          <div className="equalizer-bars">
-            <span className="bar" />
-            <span className="bar" />
-            <span className="bar" />
-          </div>
-        ) : (
-          <div className="music-dot" />
-        )}
+        <div className="media-pill-indicator-slot">
+          <AnimatePresence mode="wait" initial={false}>
+            {media.isPlaying ? (
+              <motion.div 
+                key="equalizer"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+                className="equalizer-bars"
+              >
+                <span className="bar" />
+                <span className="bar" />
+                <span className="bar" />
+              </motion.div>
+            ) : (
+              <motion.div 
+                key="music-dot"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+                className="music-dot" 
+              />
+            )}
+          </AnimatePresence>
+        </div>
         
         <button 
           className="media-pill-control"
@@ -124,35 +142,37 @@ export const MediaWidgetPill: React.FC<Props> = ({ media, sessionCount = 1, isPr
           data-no-drag="true"
           aria-label={media.isPlaying ? "Pause" : "Play"}
         >
-          <AnimatePresence mode="wait" initial={false}>
-            {media.isPlaying ? (
-              <motion.svg 
-                key="pill-pause"
-                initial={{ scale: 0.7, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.7, opacity: 0 }}
-                transition={{ type: "spring", stiffness: 450, damping: 25 }}
-                viewBox="0 0 24 24" 
-                fill="currentColor" 
-                className="pill-control-icon"
-              >
-                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-              </motion.svg>
-            ) : (
-              <motion.svg 
-                key="pill-play"
-                initial={{ scale: 0.7, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.7, opacity: 0 }}
-                transition={{ type: "spring", stiffness: 450, damping: 25 }}
-                viewBox="0 0 24 24" 
-                fill="currentColor" 
-                className="pill-control-icon"
-              >
-                <path d="M8 5v14l11-7z"/>
-              </motion.svg>
-            )}
-          </AnimatePresence>
+          <span className="media-pill-icon-wrapper">
+            <AnimatePresence mode="popLayout" initial={false}>
+              {media.isPlaying ? (
+                <motion.svg 
+                  key="pill-pause"
+                  initial={{ scale: 0.75, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.75, opacity: 0 }}
+                  transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+                  viewBox="0 0 24 24" 
+                  fill="currentColor" 
+                  className="pill-control-icon"
+                >
+                  <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                </motion.svg>
+              ) : (
+                <motion.svg 
+                  key="pill-play"
+                  initial={{ scale: 0.75, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.75, opacity: 0 }}
+                  transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+                  viewBox="0 0 24 24" 
+                  fill="currentColor" 
+                  className="pill-control-icon"
+                >
+                  <path d="M8 5v14l11-7z"/>
+                </motion.svg>
+              )}
+            </AnimatePresence>
+          </span>
         </button>
       </motion.div>
 
