@@ -112,12 +112,12 @@ export const MediaWidgetPill: React.FC<Props> = ({ media, sessionCount = 1, isPr
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
                 className="equalizer-bars"
               >
-                <span className="bar" />
-                <span className="bar" />
-                <span className="bar" />
+                <span className="bar bar-1" />
+                <span className="bar bar-2" />
+                <span className="bar bar-3" />
               </motion.div>
             ) : (
               <motion.div 
@@ -125,7 +125,7 @@ export const MediaWidgetPill: React.FC<Props> = ({ media, sessionCount = 1, isPr
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
                 className="music-dot" 
               />
             )}
