@@ -37,15 +37,6 @@ export async function syncWindowSize(
   }
 }
 
-/** Hide the native window (e.g. on drag-to-dismiss). */
-export async function hideWindow(): Promise<void> {
-  try {
-    await getCurrentWindow().hide();
-  } catch (e) {
-    console.error("hideWindow failed:", e);
-  }
-}
-
 /* ------------------------------------------------------------------ */
 /*  Platform detection                                                  */
 /* ------------------------------------------------------------------ */

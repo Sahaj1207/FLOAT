@@ -4,9 +4,9 @@ A Dynamic Island for Windows.
 
 FLOAT is a lightweight Windows desktop Dynamic Island that brings media controls, Windows notifications, ambient Orb mode, and quick settings into a single glass interface.
 
-## FLOAT v1.0.0
+## FLOAT v1.0.1
 
-First public release.
+Public release.
 
 ---
 
@@ -204,7 +204,7 @@ FLOAT/
 
 ## 📦 Project Status
 
-FLOAT v1.0.0 is the first public release. Future enhancements and bug fixes will be tracked through GitHub Issues and Pull Requests.
+FLOAT v1.0.1 is the latest release. Future enhancements and bug fixes will be tracked through GitHub Issues and Pull Requests.
 
 ---
 

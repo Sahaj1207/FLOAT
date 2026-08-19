@@ -1,4 +1,4 @@
-# FLOAT v1.0 Developer Guide & Architecture Reference
+# FLOAT v1.0.1 Developer Guide & Architecture Reference
 
 This document provides architectural documentation, build instructions, and IPC reference for developers working on the **FLOAT** codebase.
 

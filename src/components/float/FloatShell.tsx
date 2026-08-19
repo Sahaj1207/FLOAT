@@ -16,7 +16,6 @@ import {
   getFocusPresence,
   FocusPresencePayload,
   syncWindowSize,
-  hideWindow,
   getMultiSessionState,
   selectMediaSession,
   mediaPlayPause,
@@ -63,8 +62,6 @@ const FloatShell: React.FC = () => {
   const [visualMode, setVisualMode] = useState<IslandVisualMode>(() => getRestingDestination(loadSettings()));
   const [multiState, setMultiState] = useState<MultiSessionState | null>(null);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
-  const [pullY, setPullY] = useState(0);
-  const [isNearDismissTarget, setIsNearDismissTarget] = useState(false);
   const [notificationState, setNotificationState] = useState<OrbNotificationState | null>(null);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [isNotificationActive, setIsNotificationActive] = useState(false);
@@ -84,7 +81,6 @@ const FloatShell: React.FC = () => {
   const notificationDwellTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const idleToOrbTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
-  const gestureTypeRef = useRef<"native" | "pull" | null>(null);
   const isDraggingRef = useRef(false);
   const shellRef = useRef<HTMLDivElement>(null);
 
@@ -668,16 +664,13 @@ const FloatShell: React.FC = () => {
   };
 
   const handlePointerDown = (e: React.PointerEvent) => {
-    console.log("[ISLAND] pointer-down");
     if (e.button !== 0) return;
     const target = e.target as HTMLElement;
     if (target.closest("button, a, input, [data-no-drag]")) return;
 
-    console.log("[ISLAND] preview-dwell-cancel reason=pointer-down");
     clearHoverTimers();
     clearIdleToOrbTimer();
     isDraggingRef.current = false;
-    gestureTypeRef.current = null;
     dragStartRef.current = { x: e.screenX, y: e.screenY };
   };
 
@@ -692,145 +685,102 @@ const FloatShell: React.FC = () => {
       clearClickTimer();
       clearIdleToOrbTimer();
       lastClickTimeRef.current = 0;
+      isDraggingRef.current = true;
 
-      if (gestureTypeRef.current === null) {
-        if (visualMode === "expanded") {
-          gestureTypeRef.current = "native";
-          isDraggingRef.current = true;
-          startWindowDrag();
-        } else {
-          // Compact, CompactPreview, or Orb
-          if (dy > 0 && dy > Math.abs(dx)) {
-            gestureTypeRef.current = "pull";
-            isDraggingRef.current = true;
-          } else {
-            gestureTypeRef.current = "native";
-            isDraggingRef.current = true;
-            if (visualMode === "compactPreview") {
-              setVisualMode("compact");
-            }
-            startWindowDrag();
-          }
-        }
+      if (visualMode === "compactPreview") {
+        setVisualMode("compact");
       }
-
-      if (gestureTypeRef.current === "pull") {
-        const clampedPull = Math.min(24, Math.max(0, dy - 5));
-        setPullY(clampedPull);
-        setIsNearDismissTarget(clampedPull >= 18);
-      }
+      startWindowDrag();
     }
   };
 
   const handlePointerUp = () => {
-    console.log("[ISLAND] pointer-up");
-    if (gestureTypeRef.current === "pull") {
-      if (isNearDismissTarget) {
-        console.log("[ISLAND] dismiss triggered via pull target release");
-        hideWindow();
-      }
-      setPullY(0);
-      setIsNearDismissTarget(false);
-    }
     dragStartRef.current = null;
-    gestureTypeRef.current = null;
     setTimeout(() => {
       isDraggingRef.current = false;
-      console.log("[ISLAND] drag-end");
     }, 100);
   };
 
   return (
-    <>
-      <motion.div
-        ref={shellRef}
-        className="float-shell"
-        animate={{
-          width: isExpanded
-            ? SURFACE_WIDTH
-            : visualMode === "orb"
-            ? (notificationPreviewOpen ? NOTIF_PREVIEW_WIDTH : quickActionsOpen ? QUICK_ACTIONS_WIDTH : orbSize)
-            : pillWidth,
-          height: isExpanded
-            ? SURFACE_HEIGHT
-            : visualMode === "orb"
-            ? (notificationPreviewOpen ? NOTIF_PREVIEW_HEIGHT : quickActionsOpen ? QUICK_ACTIONS_HEIGHT : orbSize)
-            : PILL_HEIGHT,
-          borderRadius: isExpanded
-            ? 28
-            : (visualMode === "orb" && !notificationPreviewOpen && !quickActionsOpen ? Math.round(orbSize / 2) : 24),
-          y: pullY,
-        }}
-        transition={springTransition}
-        onPointerEnter={handlePointerEnter}
-        onPointerLeave={handlePointerLeave}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-      >
-        <LayoutGroup>
-          {isExpanded ? (
-            <FloatSurface
-              key="surface"
-              onCollapse={collapse}
-              media={activeMedia}
-              multiState={multiState}
-              onSelectSession={handleSelectSession}
-              notifications={notifications}
-              onDismissNotification={handleDismissNotificationItem}
-              onClearAllNotifications={handleClearAllNotifications}
-            />
-          ) : visualMode === "orb" ? (
-            <FloatOrb
-              key="orb"
-              media={activeMedia}
-              onClick={handleOrbClick}
-              notification={notificationState}
-              focus={focusState}
-              isPreviewOpen={notificationPreviewOpen}
-              onClosePreview={() => {
-                setNotificationPreviewOpen(false);
-                if (settings.idleBehavior === "alwaysPill") {
-                  transitionTo("compact", "preview-close");
-                }
-              }}
-              isQuickActionsOpen={quickActionsOpen}
-              onCloseQuickActions={() => {
-                setQuickActionsOpen(false);
-                if (settings.idleBehavior === "alwaysPill") {
-                  transitionTo("compact", "quick-actions-close");
-                }
-              }}
-              onPrev={handleQuickPrev}
-              onPlayPause={handleQuickPlayPause}
-              onNext={handleQuickNext}
-              showPresence={settings.notificationPresence}
-              showContent={settings.notificationContent}
-            />
-          ) : (
-            <FloatPill
-              key="pill"
-              onClick={handlePillClick}
-              media={activeMedia}
-              sessionCount={allSessions.length}
-              isPreview={visualMode === "compactPreview"}
-              notification={notificationState}
-              isNotificationActive={isNotificationActive}
-              onDismissNotification={handleDismissNotification}
-              showContent={settings.notificationContent}
-            />
-          )}
-        </LayoutGroup>
-      </motion.div>
-      {pullY > 0 && (
-        <div
-          className={`float-dismiss-target ${isNearDismissTarget ? "active" : ""}`}
-          aria-label="Dismiss FLOAT"
-        >
-          ✕
-        </div>
-      )}
-    </>
+    <motion.div
+      ref={shellRef}
+      className="float-shell"
+      animate={{
+        width: isExpanded
+          ? SURFACE_WIDTH
+          : visualMode === "orb"
+          ? (notificationPreviewOpen ? NOTIF_PREVIEW_WIDTH : quickActionsOpen ? QUICK_ACTIONS_WIDTH : orbSize)
+          : pillWidth,
+        height: isExpanded
+          ? SURFACE_HEIGHT
+          : visualMode === "orb"
+          ? (notificationPreviewOpen ? NOTIF_PREVIEW_HEIGHT : quickActionsOpen ? QUICK_ACTIONS_HEIGHT : orbSize)
+          : PILL_HEIGHT,
+        borderRadius: isExpanded
+          ? 28
+          : (visualMode === "orb" && !notificationPreviewOpen && !quickActionsOpen ? Math.round(orbSize / 2) : 24),
+      }}
+      transition={springTransition}
+      onPointerEnter={handlePointerEnter}
+      onPointerLeave={handlePointerLeave}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+    >
+      <LayoutGroup>
+        {isExpanded ? (
+          <FloatSurface
+            key="surface"
+            onCollapse={collapse}
+            media={activeMedia}
+            multiState={multiState}
+            onSelectSession={handleSelectSession}
+            notifications={notifications}
+            onDismissNotification={handleDismissNotificationItem}
+            onClearAllNotifications={handleClearAllNotifications}
+          />
+        ) : visualMode === "orb" ? (
+          <FloatOrb
+            key="orb"
+            media={activeMedia}
+            onClick={handleOrbClick}
+            notification={notificationState}
+            focus={focusState}
+            isPreviewOpen={notificationPreviewOpen}
+            onClosePreview={() => {
+              setNotificationPreviewOpen(false);
+              if (settings.idleBehavior === "alwaysPill") {
+                transitionTo("compact", "preview-close");
+              }
+            }}
+            isQuickActionsOpen={quickActionsOpen}
+            onCloseQuickActions={() => {
+              setQuickActionsOpen(false);
+              if (settings.idleBehavior === "alwaysPill") {
+                transitionTo("compact", "quick-actions-close");
+              }
+            }}
+            onPrev={handleQuickPrev}
+            onPlayPause={handleQuickPlayPause}
+            onNext={handleQuickNext}
+            showPresence={settings.notificationPresence}
+            showContent={settings.notificationContent}
+          />
+        ) : (
+          <FloatPill
+            key="pill"
+            onClick={handlePillClick}
+            media={activeMedia}
+            sessionCount={allSessions.length}
+            isPreview={visualMode === "compactPreview"}
+            notification={notificationState}
+            isNotificationActive={isNotificationActive}
+            onDismissNotification={handleDismissNotification}
+            showContent={settings.notificationContent}
+          />
+        )}
+      </LayoutGroup>
+    </motion.div>
   );
 };
 

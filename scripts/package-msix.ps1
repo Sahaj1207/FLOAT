@@ -89,7 +89,7 @@ $manifestContent = @"
   <Identity
     Name="FLOAT.Island"
     Publisher="CN=FLOATDev"
-    Version="1.0.0.0"
+    Version="1.0.1.0"
     ProcessorArchitecture="x64" />
 
   <Properties>

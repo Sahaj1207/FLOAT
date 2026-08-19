@@ -1,6 +1,6 @@
 [package]
 name = "float"
-version = "1.0.0"
+version = "1.0.1"
 description = "FLOAT Dynamic Island for Windows"
 authors = ["Sahaj Alatage"]
 edition = "2021"
