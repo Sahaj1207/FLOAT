@@ -19,7 +19,7 @@
 }
 
 .float-pill-container:hover .float-pill-content {
-  transform: scale(1.012);
+  transform: scale(var(--float-anim-scale-hover, 1.012));
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -45,4 +45,109 @@
   font-weight: 600;
   letter-spacing: 0.5px;
   color: var(--float-text-primary);
+}
+
+/* Notification Banner in Pill mode */
+.float-pill-notification-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  animation: notifPillEntrance 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes notifPillEntrance {
+  0% {
+    opacity: 0;
+    transform: scale(0.96) translateY(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.pill-notif-app-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pill-notif-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #3b82f6;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+  flex-shrink: 0;
+}
+
+.pill-notif-text-block {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.pill-notif-app-name {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #60a5fa;
+  flex-shrink: 0;
+}
+
+.pill-notif-divider {
+  color: var(--float-text-secondary);
+  font-size: 10px;
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+.pill-notif-body {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--float-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pill-notif-close-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  color: var(--float-text-secondary);
+  font-size: 11px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-left: auto;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.pill-notif-close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--float-text-primary);
+}
+
+.float-pill-unread-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #3b82f6;
+  box-shadow: 0 0 6px rgba(59, 130, 246, 0.5);
+  margin-left: 2px;
+  flex-shrink: 0;
 }

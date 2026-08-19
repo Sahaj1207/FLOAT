@@ -1,6 +1,59 @@
-﻿node_modules/
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Production & Build outputs
 dist/
+dist-ssr/
+build/
+target/
 src-tauri/target/
+
+# Windows MSIX & AppX staging/unpacking
+*.msix
+*.appx
+*.appxbundle
+*.msixbundle
+msix-unpacked/
+msix_staging/
+msix_verify/
+AppxMetadata/
+AppxBlockMap.xml
+AppxSignature.p7x
+resources.pri
+
+# Signing certificates & keys
+*.pfx
+*.cer
+*.p7b
+*.snk
+*.pvk
+*.key
+*.pem
+
+# Environment & Local Configuration
 .env
 .env.*
 !.env.example
+*.local
+
+# IDE & Editor files
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS Generated
+Thumbs.db
+[Dd]esktop.ini
+.DS_Store
+
+# Logs & Temporary Scratch Files
+*.log
+scratch/

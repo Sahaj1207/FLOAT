@@ -17,8 +17,8 @@
     filter: brightness(1);
   }
   50% {
-    transform: scale(1.006);
-    filter: brightness(1.04);
+    transform: scale(var(--float-anim-presence-scale, 1.006));
+    filter: brightness(var(--float-anim-presence-brightness, 1.04));
   }
 }
 

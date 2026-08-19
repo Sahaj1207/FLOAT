@@ -3,6 +3,10 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./index.css";
 import { invoke } from "@tauri-apps/api/core";
+import { loadSettings, applySettingsToDOM } from "./services/settings";
+
+// Apply initial user settings to DOM
+applySettingsToDOM(loadSettings());
 
 // Redirect frontend logs to Rust stdout for easy debugging
 const originalLog = console.log;

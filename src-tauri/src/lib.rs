@@ -94,6 +94,8 @@ fn log_from_js(msg: String) {
 }
 
 mod media;
+mod notifications;
+mod focus;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -107,12 +109,22 @@ pub fn run() {
             media::media_prev,
             media::media_seek,
             media::get_multi_session_state,
-            media::select_media_session
+            media::select_media_session,
+            focus::get_focus_presence,
+            notifications::remove_notification,
+            notifications::clear_all_notifications,
+            notifications::get_active_notifications
         ])
         .setup(|app| {
             position_window_top_center(app);
             if let Err(e) = media::init(app) {
                 eprintln!("Failed to init media: {}", e);
+            }
+            if let Err(e) = notifications::init(app) {
+                eprintln!("Failed to init notifications: {}", e);
+            }
+            if let Err(e) = focus::init(app) {
+                eprintln!("Failed to init focus: {}", e);
             }
             Ok(())
         })

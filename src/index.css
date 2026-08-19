@@ -7,9 +7,12 @@
    ============================================================ */
 
 :root {
-  /* Surface colors — deep physical dark glass */
-  --float-bg: rgba(12, 12, 15, 0.92);
-  --float-bg-hover: rgba(18, 18, 22, 0.96);
+  /* Glass opacity settings variable (default 0.85, range 0.60 - 1.00) */
+  --float-glass-opacity: 0.85;
+
+  /* Surface colors — deep physical dark glass dynamically driven by opacity setting */
+  --float-bg: rgba(12, 12, 15, var(--float-glass-opacity));
+  --float-bg-hover: rgba(18, 18, 22, calc(var(--float-glass-opacity) * 1.04));
   --float-border: rgba(255, 255, 255, 0.12);
   --float-border-hover: rgba(255, 255, 255, 0.18);
 
@@ -25,16 +28,65 @@
   /* Blur */
   --float-blur: 32px;
 
-  /* Radii */
+  /* Dimensions */
+  --float-orb-size: 48px;
+  --float-pill-width: 240px;
   --float-radius-pill: 24px;
   --float-radius-surface: 28px;
 
   /* Animation */
   --float-transition: 200ms ease;
+  --float-anim-scale-hover: 1.012;
+  --float-anim-presence-scale: 1.006;
+  --float-anim-presence-brightness: 1.04;
+  --float-anim-eq-amp: 1.0;
+  --float-anim-reveal-y: 4px;
 
   /* System font stack */
   --float-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+}
+
+:root[data-intensity="subtle"] {
+  --float-anim-scale-hover: 1.006;
+  --float-anim-presence-scale: 1.003;
+  --float-anim-presence-brightness: 1.02;
+  --float-anim-eq-amp: 0.7;
+  --float-anim-reveal-y: 2px;
+}
+
+:root[data-intensity="expressive"] {
+  --float-anim-scale-hover: 1.018;
+  --float-anim-presence-scale: 1.010;
+  --float-anim-presence-brightness: 1.06;
+  --float-anim-eq-amp: 1.25;
+  --float-anim-reveal-y: 6px;
+}
+
+/* ---- Visual Style Presets ---- */
+
+:root,
+:root[data-style="default"] {
+  --float-blur: 32px;
+  --float-border: rgba(255, 255, 255, 0.12);
+  --float-border-hover: rgba(255, 255, 255, 0.18);
+  --float-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.12);
+}
+
+:root[data-style="minimal"] {
+  --float-blur: 24px;
+  --float-border: rgba(255, 255, 255, 0.08);
+  --float-border-hover: rgba(255, 255, 255, 0.14);
+  --float-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.06);
+}
+
+:root[data-style="softGlass"],
+:root[data-style="soft-glass"] {
+  --float-blur: 44px;
+  --float-border: rgba(255, 255, 255, 0.16);
+  --float-border-hover: rgba(255, 255, 255, 0.22);
+  --float-shadow: inset 0 1.5px 2px rgba(255, 255, 255, 0.18),
+                  inset 0 -1px 2px rgba(0, 0, 0, 0.25);
 }
 
 /* ---- Reset & transparency ---- */

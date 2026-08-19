@@ -37,6 +37,15 @@ export async function syncWindowSize(
   }
 }
 
+/** Hide the native window (e.g. on drag-to-dismiss). */
+export async function hideWindow(): Promise<void> {
+  try {
+    await getCurrentWindow().hide();
+  } catch (e) {
+    console.error("hideWindow failed:", e);
+  }
+}
+
 /* ------------------------------------------------------------------ */
 /*  Platform detection                                                  */
 /* ------------------------------------------------------------------ */
@@ -73,6 +82,79 @@ export async function subscribeToSessionPosition(
   return await listen<SessionPositionPayload>("session-position-changed", (event) => {
     callback(event.payload);
   });
+}
+
+export interface NotificationItem {
+  id: number;
+  appName: string;
+  title: string;
+  body: string;
+  timestamp: number;
+  isRead?: boolean;
+}
+
+export interface NotificationPresencePayload {
+  hasNotification: boolean;
+  isNew: boolean;
+  item?: NotificationItem;
+  removedId?: number;
+  initialItems?: NotificationItem[];
+  appName?: string;
+  title?: string;
+  body?: string;
+}
+
+export async function subscribeToNotificationPresence(
+  callback: (payload: NotificationPresencePayload) => void
+): Promise<UnlistenFn> {
+  return await listen<NotificationPresencePayload>("notification-presence", (event) => {
+    callback(event.payload);
+  });
+}
+
+export async function removeNotification(id: number): Promise<void> {
+  try {
+    await invoke("remove_notification", { id });
+  } catch (e) {
+    console.error("removeNotification failed:", e);
+  }
+}
+
+export async function clearAllNotifications(): Promise<void> {
+  try {
+    await invoke("clear_all_notifications");
+  } catch (e) {
+    console.error("clearAllNotifications failed:", e);
+  }
+}
+
+export async function getActiveNotifications(): Promise<NotificationItem[]> {
+  try {
+    return await invoke<NotificationItem[]>("get_active_notifications");
+  } catch (e) {
+    console.error("getActiveNotifications failed:", e);
+    return [];
+  }
+}
+
+export interface FocusPresencePayload {
+  status: "normal" | "active" | "unknown";
+}
+
+export async function subscribeToFocusPresence(
+  callback: (payload: FocusPresencePayload) => void
+): Promise<UnlistenFn> {
+  return await listen<FocusPresencePayload>("focus-presence", (event) => {
+    callback(event.payload);
+  });
+}
+
+export async function getFocusPresence(): Promise<FocusPresencePayload> {
+  try {
+    return await invoke<FocusPresencePayload>("get_focus_presence");
+  } catch {
+    return { status: "unknown" };
+  }
 }
 
 export async function getMultiSessionState(): Promise<MultiSessionState> {
