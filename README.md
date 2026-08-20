@@ -91,7 +91,6 @@ Pill / Orb ──( Click )──► Expanded Surface [ Media | Notifications | S
 | **Hover (200ms dwell)** | Compact Pill | Expands to Compact Preview |
 | **Hover** | Orb | Wakes up and morphs to Compact Pill |
 | **Pointer Leave** | Compact Preview | Returns to Compact Pill (160ms delay) |
-| **Pull Down (>18px)** | Island | Reveals dismiss target (`✕`) to hide FLOAT |
 | **Drag (Horizontal/Up)** | Island | Repositions FLOAT window on desktop |
 | **Escape Key** | Expanded Surface / Preview | Closes surface / preview and returns to resting mode |
 
