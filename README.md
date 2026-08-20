@@ -40,7 +40,7 @@ Public release.
 
 ## 🔄 How FLOAT Works
 
-```
+```text
 [ Normal Flow ]
 Compact Pill ────────( ~3s untouched )───────► Ambient Orb (48×48)
      ▲                                                │
@@ -67,16 +67,29 @@ Pill / Orb ──( Click )──► Expanded Surface [ Media | Notifications | S
 
 ## 🖼️ Screenshots
 
-<!-- TODO: Add official v1.0 screenshot assets before final public release -->
+### Compact Pill
 
-| State | Preview |
-| :--- | :--- |
-| **Compact Pill (Resting)** | *(Screenshot placeholder: `assets/float-pill.png`)* |
-| **Ambient Orb Mode (48×48)** | *(Screenshot placeholder: `assets/float-orb.png`)* |
-| **Media Player & Equalizer** | *(Screenshot placeholder: `assets/float-media.png`)* |
-| **Notification Preview (~3.5s)** | *(Screenshot placeholder: `assets/float-notification.png`)* |
-| **Notification Center (Deck)** | *(Screenshot placeholder: `assets/float-notifications.png`)* |
-| **Expanded Surface & Settings** | *(Screenshot placeholder: `assets/float-settings.png`)* |
+![FLOAT Compact Pill](assets/screenshots/float-pill.png)
+
+### Ambient Orb Mode
+
+![FLOAT Ambient Orb](assets/screenshots/float-orb.png)
+
+### Media Player & Equalizer
+
+![FLOAT Media Player](assets/screenshots/float-media.png)
+
+### Notification Preview
+
+![FLOAT Notification Preview](assets/screenshots/float-notification.png)
+
+### Notification Center
+
+![FLOAT Notification Center](assets/screenshots/float-notifications.png)
+
+### Expanded Surface & Settings
+
+![FLOAT Settings](assets/screenshots/float-settings.png)
 
 ---
 
@@ -100,15 +113,15 @@ Pill / Orb ──( Click )──► Expanded Surface [ Media | Notifications | S
 
 ### For Users
 
-- **Microsoft Store**: Microsoft Store distribution is planned for the public release process.
-- **Packaged MSIX**: When a release build is available, download `FLOAT.msix` from the [Releases](https://github.com/your-username/FLOAT/releases) page and install via Windows App Installer.
+- **Packaged MSIX**: Download `FLOAT.msix` from the [Releases](https://github.com/Sahaj1207/FLOAT/releases) page and install it using Windows App Installer.
+- **Microsoft Store**: Microsoft Store distribution is planned for a future release.
 
 ### For Developers
 
 Clone the repository and build from source:
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/Sahaj1207/FLOAT.git
 cd FLOAT
 ```
 
@@ -136,7 +149,7 @@ npm run dev
 
 ### MSIX Release Packaging
 
-To compile the production bundle, build the Rust binary with custom protocol, generate AppxManifest, pack the MSIX, sign with a developer certificate, and install locally:
+To compile the production bundle, build the Rust binary with custom protocol, generate the AppxManifest, pack the MSIX, sign it with a developer certificate, and install it locally:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\package-msix.ps1
@@ -166,9 +179,17 @@ powershell -ExecutionPolicy Bypass -File .\scripts\package-msix.ps1
 
 ## 📂 Project Structure
 
-```
+```text
 FLOAT/
 ├── .vscode/                # Recommended workspace extensions
+├── assets/
+│   └── screenshots/        # Official FLOAT screenshots
+│       ├── float-media.png
+│       ├── float-notification.png
+│       ├── float-notifications.png
+│       ├── float-orb.png
+│       ├── float-pill.png
+│       └── float-settings.png
 ├── docs/                   # Full documentation
 │   ├── USER_GUIDE.md       # Complete end-user manual
 │   └── DEVELOPMENT.md      # Architecture, IPC, and packaging guide
@@ -181,14 +202,14 @@ FLOAT/
 │   ├── App.tsx
 │   ├── index.css
 │   └── main.tsx
-├── src-tauri/               # Rust Backend
+├── src-tauri/              # Rust Backend
 │   ├── icons/              # Application icons for Windows AppX
 │   ├── src/
 │   │   ├── focus.rs        # Windows Focus Assist / Quiet Hours detection
 │   │   ├── lib.rs          # Window sync, commands, and event registration
 │   │   ├── main.rs         # Application entry point
 │   │   ├── media.rs        # Windows GSMTC media session monitoring & controls
-│   │   └── notifications.rs# Windows UserNotificationListener event listener
+│   │   └── notifications.rs # Windows UserNotificationListener event listener
 │   ├── Cargo.toml
 │   └── tauri.conf.json
 ├── .gitignore
@@ -203,7 +224,11 @@ FLOAT/
 
 ## 📦 Project Status
 
-FLOAT v1.0.1 is the latest release. Future enhancements and bug fixes will be tracked through GitHub Issues and Pull Requests.
+**FLOAT v1.0.1** is the latest public release.
+
+The v1.0.1 release focuses on stabilizing the interaction model while preserving the core media, notification, Orb, and glass interface experience.
+
+Future enhancements and bug fixes will be tracked through GitHub Issues and Pull Requests.
 
 ---
 
