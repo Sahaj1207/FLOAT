@@ -4,6 +4,7 @@ import { MediaSession } from '../../platform/media';
 import { mediaPlayPause } from '../../platform';
 import { mediaTimeline } from './mediaTimeline';
 import { useAlbumArt } from './useAlbumArt';
+import { AudioBars } from './AudioBars';
 import './MediaWidgetPill.css';
 
 interface Props {
@@ -171,11 +172,8 @@ export const MediaWidgetPill: React.FC<Props> = ({ media, sessionCount = 1, isPr
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                className="equalizer-bars"
               >
-                <span className="bar bar-1" />
-                <span className="bar bar-2" />
-                <span className="bar bar-3" />
+                <AudioBars className="equalizer-bars" barClass="bar" />
               </motion.div>
             ) : (
               <motion.div 

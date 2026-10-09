@@ -108,6 +108,31 @@ export async function subscribeToAutostart(
   });
 }
 
+export interface AudioLevelsPayload {
+  /** Low, mid, high band levels, 0..1. */
+  levels: number[];
+  silent: boolean;
+}
+
+/** Start or stop native loopback capture for the equalizer. */
+export async function setVisualizerActive(active: boolean): Promise<void> {
+  try {
+    await invoke("set_visualizer_active", { active });
+  } catch {
+    // Not in a Tauri context
+  }
+}
+
+export async function subscribeToAudioLevels(
+  callback: (payload: AudioLevelsPayload) => void
+): Promise<UnlistenFn> {
+  try {
+    return await listen<AudioLevelsPayload>("audio-levels", (event) => callback(event.payload));
+  } catch {
+    return () => {};
+  }
+}
+
 export async function setHideInFullscreen(enabled: boolean): Promise<void> {
   try {
     await invoke("set_hide_in_fullscreen", { enabled });

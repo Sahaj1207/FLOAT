@@ -2,6 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Activity } from "../../activities/types";
 import { useAlbumArt } from "./useAlbumArt";
+import { AudioBars } from "./AudioBars";
 import "./SplitBubble.css";
 
 interface SplitBubbleProps {
@@ -40,11 +41,15 @@ const MediaMinimal: React.FC<{ activity: Extract<Activity, { kind: "media" }> }>
   return (
     <>
       {art && <img className="split-bubble-art" src={art} alt="" draggable={false} />}
-      <span className={`split-bubble-eq ${playing ? "playing" : ""} ${art ? "over-art" : ""}`}>
-        <span />
-        <span />
-        <span />
-      </span>
+      {playing ? (
+        <AudioBars className={`split-bubble-eq playing ${art ? "over-art" : ""}`} barClass="split-bubble-bar" />
+      ) : (
+        <span className={`split-bubble-eq ${art ? "over-art" : ""}`}>
+          <span />
+          <span />
+          <span />
+        </span>
+      )}
     </>
   );
 };

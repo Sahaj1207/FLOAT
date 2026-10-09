@@ -1,0 +1,5 @@
+/* While live levels arrive, inline heights replace the fallback keyframes. */
+.audio-live > span {
+  animation: none !important;
+  transition: height 80ms linear;
+}

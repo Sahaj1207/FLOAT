@@ -2,6 +2,7 @@ import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MediaSession } from "../../platform/media";
 import { AppIcon } from "./AppIcon";
+import { AudioBars } from "./AudioBars";
 import "./FloatOrb.css";
 
 export interface OrbNotificationState {
@@ -203,11 +204,8 @@ export const FloatOrb: React.FC<FloatOrbProps> = ({
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
                   transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                  className="orb-equalizer-bars"
                 >
-                  <span className="orb-bar orb-bar-1" />
-                  <span className="orb-bar orb-bar-2" />
-                  <span className="orb-bar orb-bar-3" />
+                  <AudioBars className="orb-equalizer-bars" barClass="orb-bar" />
                 </motion.div>
               ) : hasMedia ? (
                 <motion.div
