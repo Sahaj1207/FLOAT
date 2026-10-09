@@ -24,6 +24,11 @@ import {
   subscribeToWindowFocus,
   subscribeToIslandCommand,
   changeVolume,
+  subscribeToVolumeChanged,
+  subscribeToPower,
+  subscribeToPrivacy,
+  getPrivacyState,
+  PrivacyState,
   HitRect,
   getMultiSessionState,
   selectMediaSession,
@@ -35,7 +40,7 @@ import { MediaSession, MultiSessionState, SessionPositionPayload } from "../../p
 import { mediaTimeline } from "./mediaTimeline";
 import { loadSettings, saveSettings, subscribeToSettings, FloatSettings } from "../../services/settings";
 import { useActivities } from "../../activities/useActivities";
-import { ActivityPriority } from "../../activities/types";
+import { ActivityPriority, isStatusActivity } from "../../activities/types";
 import "./FloatShell.css";
 
 export type IslandVisualMode = "orb" | "compact" | "compactPreview" | "expanded";
@@ -67,6 +72,7 @@ const BUBBLE_GAP = 8;
 const MORPH_SETTLE_MS = 700;
 const NOTIFICATION_DWELL_MS = 3500;
 const VOLUME_HUD_MS = 1600;
+const STATUS_HUD_MS = 2600;
 const VOLUME_STEP = 0.02;
 const WHEEL_NOTCH = 100;
 const SKIP_COOLDOWN_MS = 600;
@@ -915,6 +921,59 @@ const FloatShell: React.FC = () => {
     }
   };
 
+  // --- System status activities ------------------------------------------
+  const [privacy, setPrivacy] = useState<PrivacyState>({ microphone: null, camera: null });
+  const privacyRef = useRef(privacy);
+
+  useEffect(() => {
+    let isMounted = true;
+    const unlisteners: Promise<() => void>[] = [];
+
+    // Hardware volume keys and other apps changing the volume.
+    unlisteners.push(subscribeToVolumeChanged((state) => showVolume(state)));
+
+    unlisteners.push(subscribeToPower(({ percent, charging, low }) => {
+      show(
+        { kind: "battery", id: "battery", priority: ActivityPriority.battery, percent, charging, low },
+        STATUS_HUD_MS
+      );
+    }));
+
+    getPrivacyState().then((state) => {
+      if (!isMounted) return;
+      privacyRef.current = state;
+      setPrivacy(state);
+    });
+    unlisteners.push(subscribeToPrivacy((next) => {
+      const prev = privacyRef.current;
+      privacyRef.current = next;
+      setPrivacy(next);
+      // Announce whichever device just started (or stopped) being used.
+      const changed = (["camera", "microphone"] as const).find((d) => prev[d] !== next[d]);
+      if (changed) {
+        show(
+          { kind: "privacy", id: "privacy", priority: ActivityPriority.privacy, device: changed, app: next[changed] },
+          STATUS_HUD_MS
+        );
+      }
+    }));
+
+    return () => {
+      isMounted = false;
+      unlisteners.forEach((p) => p.then((fn) => fn()));
+    };
+  }, [show, showVolume]);
+
+  // Announce Focus Assist turning on or off (not its initial state).
+  const prevFocusRef = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    const status = focusState?.status;
+    const prev = prevFocusRef.current;
+    prevFocusRef.current = status;
+    if (!prev || !status || status === "unknown" || prev === "unknown" || prev === status) return;
+    show({ kind: "focus", id: "focus", priority: ActivityPriority.focus, active: status === "active" }, STATUS_HUD_MS);
+  }, [focusState?.status, show]);
+
   const pillNotification: OrbNotificationState | null =
     primary?.kind === "notification"
       ? { hasNotification: true, appId: primary.appId, appName: primary.appName, title: primary.title, body: primary.body }
@@ -943,6 +1002,12 @@ const FloatShell: React.FC = () => {
     >
       <span className="notch-ear left" />
       <span className="notch-ear right" />
+      {(privacy.camera || privacy.microphone) && (
+        <span className="privacy-dots" aria-label="Camera or microphone in use">
+          {privacy.camera && <span className="privacy-dot camera" title={`Camera: ${privacy.camera}`} />}
+          {privacy.microphone && <span className="privacy-dot microphone" title={`Microphone: ${privacy.microphone}`} />}
+        </span>
+      )}
       <LayoutGroup>
         {isExpanded ? (
           <FloatSurface
@@ -994,6 +1059,7 @@ const FloatShell: React.FC = () => {
             onDismissNotification={handleDismissNotification}
             showContent={settings.notificationContent}
             volume={primary?.kind === "volume" ? primary : null}
+            status={isStatusActivity(primary) ? primary : null}
             onVolumeChange={showVolume}
           />
         )}

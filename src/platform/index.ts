@@ -139,6 +139,43 @@ export async function toggleMute(): Promise<VolumeState | null> {
   }
 }
 
+/** Fires when the system volume changes (including hardware volume keys). */
+export async function subscribeToVolumeChanged(
+  callback: (state: VolumeState) => void
+): Promise<UnlistenFn> {
+  return await listen<VolumeState>("volume-changed", (event) => callback(event.payload));
+}
+
+export interface PowerPayload {
+  percent: number;
+  charging: boolean;
+  /** This change crossed a low-battery threshold while discharging. */
+  low: boolean;
+}
+
+/** Fires on plug / unplug and when crossing 20% / 10% on battery. */
+export async function subscribeToPower(callback: (payload: PowerPayload) => void): Promise<UnlistenFn> {
+  return await listen<PowerPayload>("power-changed", (event) => callback(event.payload));
+}
+
+export interface PrivacyState {
+  /** Name of an app using the microphone / camera, or null. */
+  microphone: string | null;
+  camera: string | null;
+}
+
+export async function getPrivacyState(): Promise<PrivacyState> {
+  try {
+    return await invoke<PrivacyState>("get_privacy_state");
+  } catch {
+    return { microphone: null, camera: null };
+  }
+}
+
+export async function subscribeToPrivacy(callback: (state: PrivacyState) => void): Promise<UnlistenFn> {
+  return await listen<PrivacyState>("privacy-changed", (event) => callback(event.payload));
+}
+
 export interface AudioLevelsPayload {
   /** Low, mid, high band levels, 0..1. */
   levels: number[];

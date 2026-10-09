@@ -13,6 +13,7 @@ mod autostart;
 mod focus;
 mod media;
 mod notifications;
+mod sysmon;
 mod tray;
 mod visualizer;
 mod volume;
@@ -43,6 +44,7 @@ pub fn run() {
             volume::get_volume,
             volume::change_volume,
             volume::toggle_mute,
+            sysmon::get_privacy_state,
             log_from_js,
             media::media_play_pause,
             media::media_next,
@@ -63,6 +65,9 @@ pub fn run() {
             }
             if let Err(e) = tray::init(app) {
                 eprintln!("Failed to init tray: {}", e);
+            }
+            if let Err(e) = sysmon::init(app) {
+                eprintln!("Failed to init system monitor: {}", e);
             }
             if let Err(e) = media::init(app) {
                 eprintln!("Failed to init media: {}", e);
