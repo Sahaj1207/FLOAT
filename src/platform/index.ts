@@ -108,6 +108,37 @@ export async function subscribeToAutostart(
   });
 }
 
+export interface VolumeState {
+  /** 0..1 */
+  level: number;
+  muted: boolean;
+}
+
+export async function getVolume(): Promise<VolumeState | null> {
+  try {
+    return await invoke<VolumeState | null>("get_volume");
+  } catch {
+    return null;
+  }
+}
+
+/** Nudge system volume by delta (-1..1); returns the new state. */
+export async function changeVolume(delta: number): Promise<VolumeState | null> {
+  try {
+    return await invoke<VolumeState | null>("change_volume", { delta });
+  } catch {
+    return null;
+  }
+}
+
+export async function toggleMute(): Promise<VolumeState | null> {
+  try {
+    return await invoke<VolumeState | null>("toggle_mute");
+  } catch {
+    return null;
+  }
+}
+
 export interface AudioLevelsPayload {
   /** Low, mid, high band levels, 0..1. */
   levels: number[];

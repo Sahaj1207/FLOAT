@@ -4,6 +4,8 @@ import { MediaSession } from "../../platform/media";
 import { MediaWidgetPill } from "./MediaWidgetPill";
 import { OrbNotificationState } from "./FloatOrb";
 import { AppIcon } from "./AppIcon";
+import { VolumeHud } from "./VolumeHud";
+import { VolumeActivity } from "../../activities/types";
 import "./FloatPill.css";
 
 interface FloatPillProps {
@@ -15,6 +17,8 @@ interface FloatPillProps {
   isNotificationActive?: boolean;
   onDismissNotification?: () => void;
   showContent?: boolean;
+  volume?: VolumeActivity | null;
+  onVolumeChange?: (state: { level: number; muted: boolean }) => void;
 }
 
 export const FloatPill: React.FC<FloatPillProps> = ({
@@ -26,6 +30,8 @@ export const FloatPill: React.FC<FloatPillProps> = ({
   isNotificationActive = false,
   onDismissNotification,
   showContent = true,
+  volume = null,
+  onVolumeChange = () => {},
 }) => {
   return (
     <motion.div 
@@ -34,7 +40,9 @@ export const FloatPill: React.FC<FloatPillProps> = ({
       onClick={onClick}
     >
       <div className="float-pill-content">
-        {isNotificationActive && notification?.hasNotification ? (
+        {volume ? (
+          <VolumeHud activity={volume} onChange={onVolumeChange} />
+        ) : isNotificationActive && notification?.hasNotification ? (
           <div className="float-pill-notification-banner">
             <div className="pill-notif-app-indicator">
               {showContent ? (

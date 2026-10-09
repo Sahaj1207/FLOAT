@@ -23,6 +23,7 @@ import {
   subscribeToIslandHover,
   subscribeToWindowFocus,
   subscribeToIslandCommand,
+  changeVolume,
   HitRect,
   getMultiSessionState,
   selectMediaSession,
@@ -55,6 +56,11 @@ const BUBBLE_GAP = 8;
 // Long enough for the morph spring to settle before hit regions shrink.
 const MORPH_SETTLE_MS = 700;
 const NOTIFICATION_DWELL_MS = 3500;
+const VOLUME_HUD_MS = 1600;
+const VOLUME_STEP = 0.02;
+const WHEEL_NOTCH = 100;
+const SKIP_COOLDOWN_MS = 600;
+const SWIPE_DISMISS_PX = 12;
 
 const DOUBLE_TAP_WINDOW_MS = 250;
 const IDLE_TO_ORB_DELAY_MS = 3000;
@@ -132,8 +138,12 @@ const FloatShell: React.FC = () => {
   const accent = useArtColor(useAlbumArt(activeMedia));
   const accentGlow = !!accent && !!activeMedia?.isPlaying;
   const isNotificationActive = primary?.kind === "notification";
-  const isNotificationActiveRef = useRef(isNotificationActive);
-  isNotificationActiveRef.current = isNotificationActive;
+  // Any transient (notification, volume HUD...) holds the island awake.
+  const hasTransient = primary !== null && primary.kind !== "media";
+  const hasTransientRef = useRef(hasTransient);
+  hasTransientRef.current = hasTransient;
+  const primaryRef = useRef(primary);
+  primaryRef.current = primary;
 
   const clearHoverTimers = useCallback(() => {
     if (previewTimerRef.current) {
@@ -174,7 +184,7 @@ const FloatShell: React.FC = () => {
   const resetIdleToOrbTimer = useCallback(() => {
     clearIdleToOrbTimer();
     if (
-      isNotificationActiveRef.current ||
+      hasTransientRef.current ||
       visualModeRef.current !== "compact" ||
       isDraggingRef.current ||
       hoveringRef.current
@@ -188,7 +198,7 @@ const FloatShell: React.FC = () => {
         !isDraggingRef.current &&
         !hoveringRef.current &&
         visualModeRef.current === "compact" &&
-        !isNotificationActiveRef.current
+        !hasTransientRef.current
       ) {
         console.log("[ISLAND] idle ~3s untouched -> morph to Orb");
         transitionTo("orb", "idle-to-orb");
@@ -397,7 +407,7 @@ const FloatShell: React.FC = () => {
 
   // Ambient idle timer: Compact Pill -> ~3s untouched -> Orb
   useEffect(() => {
-    if (visualMode === "compact" && !isNotificationActive) {
+    if (visualMode === "compact" && !hasTransient) {
       resetIdleToOrbTimer();
     } else {
       clearIdleToOrbTimer();
@@ -405,7 +415,7 @@ const FloatShell: React.FC = () => {
     return () => {
       clearIdleToOrbTimer();
     };
-  }, [visualMode, isNotificationActive, resetIdleToOrbTimer, clearIdleToOrbTimer]);
+  }, [visualMode, hasTransient, resetIdleToOrbTimer, clearIdleToOrbTimer]);
 
   useEffect(() => {
     return () => {
@@ -708,7 +718,7 @@ const FloatShell: React.FC = () => {
           transitionTo("compact", "hover-leave");
         }
       }, 160);
-    } else if (mode === "compact" && !isNotificationActiveRef.current) {
+    } else if (mode === "compact" && !hasTransientRef.current) {
       resetIdleToOrbTimer();
     }
   };
@@ -797,6 +807,16 @@ const FloatShell: React.FC = () => {
     if (!dragStartRef.current) return;
     const dx = e.screenX - dragStartRef.current.x;
     const dy = e.screenY - dragStartRef.current.y;
+
+    // Swipe up on a notification banner dismisses it instead of dragging.
+    if (primaryRef.current?.kind === "notification" && dy < -SWIPE_DISMISS_PX && Math.abs(dy) > Math.abs(dx)) {
+      dragStartRef.current = null;
+      setPressed(false);
+      clearClickTimer();
+      lastClickTimeRef.current = 0;
+      handleDismissNotification();
+      return;
+    }
     const dist = Math.sqrt(dx * dx + dy * dy);
 
     if (dist > 5) {
@@ -823,6 +843,52 @@ const FloatShell: React.FC = () => {
     }, 100);
   };
 
+  // --- Wheel gestures ------------------------------------------------------
+  // Vertical: system volume. Horizontal (or Shift+wheel): previous/next track.
+  const wheelRef = useRef({
+    volumeDelta: 0,
+    flushTimer: null as ReturnType<typeof setTimeout> | null,
+    skip: 0,
+    lastSkip: 0,
+  });
+
+  const showVolume = useCallback((state: { level: number; muted: boolean }) => {
+    show(
+      { kind: "volume", id: "volume", priority: ActivityPriority.volume, level: state.level, muted: state.muted },
+      VOLUME_HUD_MS
+    );
+  }, [show]);
+
+  const handleWheel = (e: React.WheelEvent) => {
+    if (visualModeRef.current === "expanded") return;
+    const wheel = wheelRef.current;
+    const horizontal = e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY);
+
+    if (horizontal) {
+      if (!activeMedia?.hasMedia) return;
+      wheel.skip += e.shiftKey ? e.deltaY : e.deltaX;
+      const now = Date.now();
+      if (Math.abs(wheel.skip) >= WHEEL_NOTCH && now - wheel.lastSkip > SKIP_COOLDOWN_MS) {
+        (wheel.skip > 0 ? mediaNext : mediaPrev)(activeMedia.id);
+        wheel.skip = 0;
+        wheel.lastSkip = now;
+      }
+      return;
+    }
+
+    // One mouse-wheel notch (deltaY 100) = 2%. Touchpads send many small
+    // deltas, so batch them into one native call per flush.
+    wheel.volumeDelta += (-e.deltaY / WHEEL_NOTCH) * VOLUME_STEP;
+    if (!wheel.flushTimer) {
+      wheel.flushTimer = setTimeout(() => {
+        const delta = Math.max(-0.2, Math.min(0.2, wheel.volumeDelta));
+        wheel.volumeDelta = 0;
+        wheel.flushTimer = null;
+        changeVolume(delta).then((state) => state && showVolume(state));
+      }, 40);
+    }
+  };
+
   const pillNotification: OrbNotificationState | null =
     primary?.kind === "notification"
       ? { hasNotification: true, appId: primary.appId, appName: primary.appName, title: primary.title, body: primary.body }
@@ -843,6 +909,7 @@ const FloatShell: React.FC = () => {
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
+      onWheel={handleWheel}
     >
       <LayoutGroup>
         {isExpanded ? (
@@ -894,6 +961,8 @@ const FloatShell: React.FC = () => {
             isNotificationActive={isNotificationActive}
             onDismissNotification={handleDismissNotification}
             showContent={settings.notificationContent}
+            volume={primary?.kind === "volume" ? primary : null}
+            onVolumeChange={showVolume}
           />
         )}
       </LayoutGroup>

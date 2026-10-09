@@ -15,6 +15,7 @@ mod media;
 mod notifications;
 mod tray;
 mod visualizer;
+mod volume;
 mod window;
 
 #[tauri::command]
@@ -39,6 +40,9 @@ pub fn run() {
             autostart::set_autostart,
             tray::get_hotkey,
             visualizer::set_visualizer_active,
+            volume::get_volume,
+            volume::change_volume,
+            volume::toggle_mute,
             log_from_js,
             media::media_play_pause,
             media::media_next,

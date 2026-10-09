@@ -8,6 +8,8 @@ import { MediaSession } from "../platform/media";
 export const ActivityPriority = {
   media: 10,
   notification: 100,
+  // User-initiated feedback wins over everything else.
+  volume: 120,
 } as const;
 
 export interface NotificationActivity {
@@ -27,6 +29,14 @@ export interface MediaActivity {
   session: MediaSession;
 }
 
-export type Activity = NotificationActivity | MediaActivity;
+export interface VolumeActivity {
+  kind: "volume";
+  id: string;
+  priority: number;
+  level: number;
+  muted: boolean;
+}
+
+export type Activity = NotificationActivity | MediaActivity | VolumeActivity;
 
 export type ActivityKind = Activity["kind"];
