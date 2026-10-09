@@ -431,3 +431,57 @@
   background: #34d399;
   box-shadow: 0 0 6px rgba(52, 211, 153, 0.4);
 }
+
+/* ---- Horizontal layout (Home tab): art beside the details ---- */
+
+.media-widget-surface.horizontal {
+  padding: 0;
+  justify-content: center;
+}
+
+.media-widget-surface.horizontal .media-info-layout {
+  flex-direction: row;
+  align-items: center;
+  gap: 18px;
+}
+
+.media-widget-surface.horizontal .media-art-container {
+  width: 132px;
+  height: 132px;
+  border-radius: 16px;
+  margin: 0;
+}
+
+.media-widget-surface.horizontal .media-details {
+  align-items: stretch;
+  justify-content: center;
+  gap: 4px;
+  height: 100%;
+  min-width: 0;
+}
+
+.media-widget-surface.horizontal .media-text {
+  max-width: 100%;
+  text-align: left;
+  margin: 0;
+}
+
+.media-widget-surface.horizontal .media-text-inner,
+.media-widget-surface.horizontal .media-title-wrapper {
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+.media-widget-surface.horizontal .media-artist {
+  text-align: left;
+}
+
+.media-widget-surface.horizontal .media-controls {
+  justify-content: flex-start;
+  gap: 18px;
+  margin-left: -8px;
+}
+
+.media-widget-surface.horizontal .session-switcher-bottom {
+  justify-content: flex-start;
+}

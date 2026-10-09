@@ -45,6 +45,7 @@ pub fn run() {
             volume::change_volume,
             volume::toggle_mute,
             sysmon::get_privacy_state,
+            sysmon::get_power_state,
             log_from_js,
             media::media_play_pause,
             media::media_next,

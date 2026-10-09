@@ -57,15 +57,15 @@ const NOTIFICATION_MIN_WIDTH = 340;
 const BUBBLE_SIZE = 38;
 // The optional orb floats just below the edge instead.
 const ORB_TOP = 8;
-const SURFACE_WIDTH = 460;
-const SURFACE_HEIGHT = 330;
+const SURFACE_WIDTH = 580;
+const SURFACE_HEIGHT = 232;
 const NOTIF_PREVIEW_WIDTH = 240;
 const NOTIF_PREVIEW_HEIGHT = 56;
 const QUICK_ACTIONS_WIDTH = 176;
 const QUICK_ACTIONS_HEIGHT = 48;
 
 // Must match the native window width (window.rs) and #root's padding-top.
-const WINDOW_WIDTH = 500;
+const WINDOW_WIDTH = 640;
 const HIT_PADDING = 4;
 const BUBBLE_GAP = 8;
 // Long enough for the morph spring to settle before hit regions shrink.

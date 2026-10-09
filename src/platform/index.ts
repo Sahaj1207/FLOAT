@@ -153,6 +153,15 @@ export interface PowerPayload {
   low: boolean;
 }
 
+/** Battery level and charging state, or null on machines without a battery. */
+export async function getPowerState(): Promise<PowerPayload | null> {
+  try {
+    return await invoke<PowerPayload | null>("get_power_state");
+  } catch {
+    return null;
+  }
+}
+
 /** Fires on plug / unplug and when crossing 20% / 10% on battery. */
 export async function subscribeToPower(callback: (payload: PowerPayload) => void): Promise<UnlistenFn> {
   return await listen<PowerPayload>("power-changed", (event) => callback(event.payload));

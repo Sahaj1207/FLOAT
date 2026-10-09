@@ -10,9 +10,11 @@ interface Props {
   media: MediaSession | null;
   multiState?: MultiSessionState | null;
   onSelectSession?: (sessionId: string) => void;
+  /** "horizontal": art beside the details (Home tab); default stacks them. */
+  layout?: "vertical" | "horizontal";
 }
 
-export const MediaWidgetSurface: React.FC<Props> = ({ media, multiState, onSelectSession }) => {
+export const MediaWidgetSurface: React.FC<Props> = ({ media, multiState, onSelectSession, layout = "vertical" }) => {
   const albumArt = useAlbumArt(media);
   const [isSeekingState, setIsSeekingState] = useState(false);
 
@@ -218,7 +220,7 @@ export const MediaWidgetSurface: React.FC<Props> = ({ media, multiState, onSelec
   const allSessions = multiState?.sessions || [];
 
   return (
-    <div className="media-widget-surface" onClick={(e) => e.stopPropagation()}>
+    <div className={`media-widget-surface ${layout}`} onClick={(e) => e.stopPropagation()}>
       <div className="media-info-layout">
         <motion.div 
           layoutId="media-art" 

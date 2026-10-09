@@ -19,9 +19,10 @@ use windows::Win32::UI::WindowsAndMessaging::{
     GetClassNameW, GetCursorPos, GetForegroundWindow, GetWindowRect,
 };
 
-/// Logical size of the island window. Large enough for the expanded surface
-/// plus a split bubble beside the compact pill.
-pub const WINDOW_WIDTH: f64 = 500.0;
+/// Logical size of the island window. Large enough for the expanded panel
+/// plus a split bubble beside the widest notch. Keep WINDOW_WIDTH in sync
+/// with FloatShell.tsx.
+pub const WINDOW_WIDTH: f64 = 640.0;
 pub const WINDOW_HEIGHT: f64 = 400.0;
 
 const TICK: Duration = Duration::from_millis(16);
@@ -53,10 +54,21 @@ struct HoverPayload {
     inside: bool,
 }
 
+/// The island's horizontal center and the window's top, in physical px.
+/// Storing the center keeps the island in place if the window size changes.
 #[derive(Serialize, Deserialize)]
 struct SavedPosition {
-    x: i32,
+    center_x: i32,
     y: i32,
+}
+
+/// Physical window width, from the fixed logical size and the DPI scale.
+fn physical_width(app: &AppHandle) -> i32 {
+    let scale = app
+        .get_webview_window("main")
+        .and_then(|w| w.scale_factor().ok())
+        .unwrap_or(1.0);
+    (WINDOW_WIDTH * scale).round() as i32
 }
 
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -99,7 +111,7 @@ pub fn current_focus_status() -> &'static str {
 }
 
 fn position_file(app: &AppHandle) -> Option<std::path::PathBuf> {
-    app.path().app_config_dir().ok().map(|d| d.join("window.json"))
+    app.path().app_config_dir().ok().map(|d| d.join("window-position.json"))
 }
 
 fn load_position(app: &AppHandle) -> Option<PhysicalPosition<i32>> {
@@ -108,12 +120,12 @@ fn load_position(app: &AppHandle) -> Option<PhysicalPosition<i32>> {
     // Only restore onto a monitor that still exists.
     let on_screen = app.available_monitors().ok()?.iter().any(|m| {
         let (p, s) = (m.position(), m.size());
-        saved.x >= p.x - 16
-            && saved.x < p.x + s.width as i32
+        saved.center_x >= p.x
+            && saved.center_x < p.x + s.width as i32
             && saved.y >= p.y - 16
             && saved.y < p.y + s.height as i32
     });
-    on_screen.then_some(PhysicalPosition::new(saved.x, saved.y))
+    on_screen.then_some(PhysicalPosition::new(saved.center_x - physical_width(app) / 2, saved.y))
 }
 
 fn save_position(app: &AppHandle, pos: PhysicalPosition<i32>) {
@@ -121,7 +133,7 @@ fn save_position(app: &AppHandle, pos: PhysicalPosition<i32>) {
     if let Some(dir) = path.parent() {
         let _ = std::fs::create_dir_all(dir);
     }
-    let saved = SavedPosition { x: pos.x, y: pos.y };
+    let saved = SavedPosition { center_x: pos.x + physical_width(app) / 2, y: pos.y };
     if let Ok(text) = serde_json::to_string(&saved) {
         let _ = std::fs::write(path, text);
     }

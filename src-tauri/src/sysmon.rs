@@ -33,7 +33,7 @@ struct VolumePayload {
 }
 
 #[derive(Clone, Copy, PartialEq, Serialize)]
-struct PowerPayload {
+pub struct PowerPayload {
     percent: u8,
     charging: bool,
     /// Set when this change crossed a low-battery threshold while discharging.
@@ -227,6 +227,12 @@ fn run(app: AppHandle) {
             }
         }
     }
+}
+
+/// Battery level and charging state, or None without a battery.
+#[tauri::command]
+pub fn get_power_state() -> Option<PowerPayload> {
+    read_power().map(|(percent, charging)| PowerPayload { percent, charging, low: false })
 }
 
 /// Current camera / microphone use, for the frontend's initial state.
