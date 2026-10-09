@@ -185,6 +185,57 @@ export async function subscribeToPrivacy(callback: (state: PrivacyState) => void
   return await listen<PrivacyState>("privacy-changed", (event) => callback(event.payload));
 }
 
+export async function setVolume(level: number): Promise<VolumeState | null> {
+  try {
+    return await invoke<VolumeState | null>("set_volume", { level });
+  } catch {
+    return null;
+  }
+}
+
+export interface ConnectivityState {
+  wifi: { available: boolean; on: boolean; ssid: string | null; signal: number | null };
+  bluetooth: { available: boolean; on: boolean; devices: string[] };
+  /** Name of a non-Wi-Fi internet connection (e.g. Ethernet). */
+  wired: string | null;
+}
+
+export async function getConnectivity(): Promise<ConnectivityState | null> {
+  try {
+    return await invoke<ConnectivityState>("get_connectivity");
+  } catch {
+    return null;
+  }
+}
+
+/** Turn a radio on or off. Rejects with a message if Windows refuses. */
+export async function setRadio(kind: "wifi" | "bluetooth", on: boolean): Promise<ConnectivityState> {
+  return await invoke<ConnectivityState>("set_radio", { kind, on });
+}
+
+export async function subscribeToConnectivity(
+  callback: (state: ConnectivityState) => void
+): Promise<UnlistenFn> {
+  return await listen<ConnectivityState>("connectivity-changed", (event) => callback(event.payload));
+}
+
+/** Fires when a Bluetooth device connects or disconnects. */
+export async function subscribeToBluetoothDevice(
+  callback: (event: { name: string; connected: boolean }) => void
+): Promise<UnlistenFn> {
+  return await listen<{ name: string; connected: boolean }>("bluetooth-device", (event) => callback(event.payload));
+}
+
+export type SettingsPage = "network-wifi" | "bluetooth" | "sound" | "quiethours" | "batterysaver";
+
+export async function openSettingsPage(page: SettingsPage): Promise<void> {
+  try {
+    await invoke("open_settings_page", { page });
+  } catch (e) {
+    console.error("openSettingsPage failed:", e);
+  }
+}
+
 export interface AudioLevelsPayload {
   /** Low, mid, high band levels, 0..1. */
   levels: number[];

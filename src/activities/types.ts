@@ -13,6 +13,7 @@ export const ActivityPriority = {
   notification: 100,
   focus: 104,
   privacy: 105,
+  bluetooth: 108,
   battery: 110,
   timerDone: 115,
   // User-initiated feedback wins over everything else.
@@ -62,6 +63,14 @@ export interface PrivacyActivity {
   app: string | null;
 }
 
+export interface BluetoothActivity {
+  kind: "bluetooth";
+  id: string;
+  priority: number;
+  device: string;
+  connected: boolean;
+}
+
 export interface FocusActivity {
   kind: "focus";
   id: string;
@@ -91,12 +100,13 @@ export type Activity =
   | VolumeActivity
   | BatteryActivity
   | PrivacyActivity
-  | FocusActivity;
+  | FocusActivity
+  | BluetoothActivity;
 
 /** Short system-status activities rendered by StatusHud. */
-export type StatusActivity = BatteryActivity | PrivacyActivity | FocusActivity | TimerDoneActivity;
+export type StatusActivity = BatteryActivity | PrivacyActivity | FocusActivity | TimerDoneActivity | BluetoothActivity;
 
 export const isStatusActivity = (a: Activity | null): a is StatusActivity =>
-  a !== null && (a.kind === "battery" || a.kind === "privacy" || a.kind === "focus" || a.kind === "timerDone");
+  a !== null && (a.kind === "battery" || a.kind === "privacy" || a.kind === "focus" || a.kind === "timerDone" || a.kind === "bluetooth");
 
 export type ActivityKind = Activity["kind"];

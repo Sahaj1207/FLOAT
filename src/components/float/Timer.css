@@ -81,7 +81,7 @@
 
 /* Home tile */
 .timer-tile {
-  gap: 8px;
+  gap: 6px;
 }
 
 .timer-tile-head {
@@ -116,7 +116,7 @@
 }
 
 .timer-preset {
-  padding: 5px 0;
+  padding: 4px 0;
   border: none;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.08);

@@ -28,6 +28,7 @@ import {
   subscribeToPower,
   subscribeToPrivacy,
   getPrivacyState,
+  subscribeToBluetoothDevice,
   PrivacyState,
   HitRect,
   getMultiSessionState,
@@ -950,6 +951,13 @@ const FloatShell: React.FC = () => {
     // Hardware volume keys and other apps changing the volume.
     unlisteners.push(subscribeToVolumeChanged((state) => showVolume(state)));
 
+    unlisteners.push(subscribeToBluetoothDevice(({ name, connected }) => {
+      show(
+        { kind: "bluetooth", id: "bluetooth", priority: ActivityPriority.bluetooth, device: name, connected },
+        STATUS_HUD_MS
+      );
+    }));
+
     unlisteners.push(subscribeToPower(({ percent, charging, low }) => {
       show(
         { kind: "battery", id: "battery", priority: ActivityPriority.battery, percent, charging, low },
@@ -1037,6 +1045,7 @@ const FloatShell: React.FC = () => {
             notifications={notifications}
             onDismissNotification={handleDismissNotificationItem}
             onClearAllNotifications={handleClearAllNotifications}
+            focusActive={focusState?.status === "active"}
           />
         ) : visualMode === "orb" ? (
           <FloatOrb

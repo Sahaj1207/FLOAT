@@ -10,6 +10,7 @@ macro_rules! dlog {
 
 mod appicon;
 mod autostart;
+mod connectivity;
 mod focus;
 mod media;
 mod notifications;
@@ -43,9 +44,13 @@ pub fn run() {
             visualizer::set_visualizer_active,
             volume::get_volume,
             volume::change_volume,
+            volume::set_volume,
             volume::toggle_mute,
             sysmon::get_privacy_state,
             sysmon::get_power_state,
+            connectivity::get_connectivity,
+            connectivity::set_radio,
+            connectivity::open_settings_page,
             log_from_js,
             media::media_play_pause,
             media::media_next,
@@ -69,6 +74,9 @@ pub fn run() {
             }
             if let Err(e) = sysmon::init(app) {
                 eprintln!("Failed to init system monitor: {}", e);
+            }
+            if let Err(e) = connectivity::init(app) {
+                eprintln!("Failed to init connectivity: {}", e);
             }
             if let Err(e) = media::init(app) {
                 eprintln!("Failed to init media: {}", e);

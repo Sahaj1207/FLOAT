@@ -58,6 +58,18 @@ pub async fn change_volume(delta: f32) -> Option<VolumeState> {
     .await
 }
 
+/// Set the volume to `level` (0..1).
+#[tauri::command]
+pub async fn set_volume(level: f32) -> Option<VolumeState> {
+    blocking(move || {
+        with_endpoint(|endpoint| unsafe {
+            endpoint.SetMasterVolumeLevelScalar(level.clamp(0.0, 1.0), std::ptr::null())?;
+            read(endpoint)
+        })
+    })
+    .await
+}
+
 #[tauri::command]
 pub async fn toggle_mute() -> Option<VolumeState> {
     blocking(|| {

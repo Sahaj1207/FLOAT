@@ -27,6 +27,16 @@ export const StatusHud: React.FC<{ activity: StatusActivity }> = ({ activity }) 
           <span className="status-hud-detail">{formatTimer(activity.durationMs)}</span>
         </div>
       );
+    case "bluetooth":
+      return (
+        <div className="status-hud">
+          <svg className="status-hud-icon bluetooth" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="m7 7 10 10-5 5V2l5 5L7 17" />
+          </svg>
+          <span className="status-hud-label">{activity.connected ? "Connected" : "Disconnected"}</span>
+          <span className="status-hud-detail">{activity.device}</span>
+        </div>
+      );
     case "focus":
       return (
         <div className="status-hud">

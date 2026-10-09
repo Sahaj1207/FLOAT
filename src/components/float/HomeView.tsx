@@ -3,6 +3,7 @@ import { MediaSession, MultiSessionState } from "../../platform/media";
 import { getPowerState, subscribeToPower, PowerPayload } from "../../platform";
 import { MediaWidgetSurface } from "./MediaWidgetSurface";
 import { TimerTile } from "./Timer";
+import { QuickToggles } from "./ControlCenter";
 import "./HomeView.css";
 
 interface HomeViewProps {
@@ -29,6 +30,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ media, multiState, onSelectS
     <div className="home-widgets">
       <ClockTile />
       <TimerTile />
+      <QuickToggles />
     </div>
   </div>
 );
