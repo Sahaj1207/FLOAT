@@ -182,10 +182,10 @@ To view stored notifications at any time:
 
 ---
 
-## 17. Expanded Surface Overview
+## 17. Expanded Panel Overview
 
-- **Dimensions**: 460 × 330 px with 28 px corner radius.
-- **How to Open**: Click anywhere on the resting Compact Pill.
+- **Dimensions**: 580 × 232 px, hanging from the top edge with 28 px bottom corners.
+- **How to Open**: Click the notch, use the global hotkey, or click the tray icon.
 - **How to Close**:
   - Click the collapse chevron (`⌃`) in the top navigation bar.
   - Press the `Escape` key.
@@ -195,10 +195,26 @@ To view stored notifications at any time:
 
 ## 18. Navigation Tabs
 
-The Expanded Surface includes three sections:
-1. **Media Tab (Music Note icon)**: Album artwork, track title, artist, interactive progress scrubber, playback controls, and multi-session switcher.
-2. **Notifications Tab (Bell icon + Count Badge)**: Scrollable notification history deck with individual dismissal and Clear All.
-3. **Settings Tab (Gear icon)**: Full personalization and visual customization deck.
+Content tabs sit on the left of the top bar, system tabs on the right:
+1. **Home (house)**: The player (large album art, title, artist, the current lyric line when Synced Lyrics is on, progress scrubber, controls and session switcher) with a widget column: time, date and battery; a Timer / Stopwatch; and Wi-Fi / Bluetooth quick toggles.
+2. **Shelf (tray)**: Files you've dropped on the notch. Drag a tile out into any app, double-click to open it, or hover for *Show in Explorer* and *Remove*. **Clear** empties the shelf. FLOAT keeps references, not copies.
+3. **Clipboard (clipboard)**: Recent copied text and images, newest first. Click a card to copy it again. Hover to remove one, or **Clear** them all.
+4. **Notifications (bell + count)**: Notification history with individual dismissal and Clear All.
+5. **Controls (sliders)**: Wi-Fi and Bluetooth switches (with the current network and connected devices), volume and brightness sliders, battery and Focus status, and shortcuts to the matching Windows Settings pages. Windows doesn't allow apps to turn Focus on or off, so its tile opens Focus settings.
+6. **Settings (gear)**: Appearance, behavior, notifications and system options.
+
+---
+
+## 18a. Live Activities in the Notch
+
+Besides music and notifications, the notch briefly shows:
+- **Volume / Brightness** when you use the keys, scroll over the notch, or move the sliders.
+- **Charging** when you plug in, **Low Battery** at 20% and 10%.
+- **Bluetooth** devices connecting or disconnecting.
+- **Camera / Microphone in use**, naming the app; small green (camera) and orange (microphone) dots stay beside the notch while in use.
+- **Focus** turning on or off.
+- **Timer** countdowns (they take over the notch and move music to the side bubble) and a chime when one finishes.
+- **Added to Shelf** after you drop files on the notch.
 
 ---
 
@@ -218,6 +234,8 @@ All settings are stored in `localStorage` (`float_settings_v1`) and take effect 
 | **Notification Preview** | `On` / `Off` | `On` | Toggles automatic 3.5s toast banner expansion. |
 | **Notification Content** | `On` / `Off` | `On` | When `Off`, hides notification title/body for privacy. |
 | **Hide in Fullscreen** | `On` / `Off` | `On` | Hides the island while a fullscreen game, video or presentation is focused. |
+| **Synced Lyrics** | `On` / `Off` | `Off` | Shows the current lyric line on Home. Sends the track title and artist to lrclib.net. |
+| **Clipboard History** | `On` / `Off` | `On` | Keeps recent copies in memory only. Turning it off clears the history. |
 | **Launch at Startup** | `On` / `Off` | `Off` | Starts FLOAT when you sign in. Stored by Windows, not in `localStorage`. |
 
 ---

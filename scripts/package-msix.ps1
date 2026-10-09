@@ -131,6 +131,8 @@ $manifestContent = @"
   <Capabilities>
     <rescap:Capability Name="runFullTrust" />
     <rescap:Capability Name="userNotificationListener" />
+    <!-- Wi-Fi / Bluetooth toggles (Windows.Devices.Radios) in packaged installs -->
+    <DeviceCapability Name="radios" />
   </Capabilities>
 </Package>
 "@

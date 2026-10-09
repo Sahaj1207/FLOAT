@@ -12,7 +12,6 @@ Public release.
 
 ## ✨ Features
 
-- **Dynamic Pill Interface**: An unobtrusive resting pill at the top-center of your screen that dynamically adapts to system activity.
 - **MacBook-Style Notch**: Solid black, flush with the top edge, with concave corners that join it to the bezel. It grows downward to fit whatever is live: a quiet notch when idle, a slim strip for music, a taller drop-down for notifications.
 - **Optional Orb Mode**: Prefer a floating circle? Set Idle Behavior to Orb and the island shrinks to a 48×48 orb after ~3 seconds untouched.
 - **Interactive Awakening**: Hovering over or interacting with the Orb smoothly restores the active compact pill.
@@ -36,8 +35,13 @@ Public release.
 - **Real App Icons**: Notifications show the sending app's icon.
 - **Gestures**: Scroll over the island to change volume (with an on-island volume HUD), scroll sideways to skip tracks, swipe a notification up to dismiss it.
 - **Spring Physics**: Morphs follow your Animation Intensity, from calm to bouncy, and the island squishes when pressed.
-- **Framer Motion Spring Physics**: Natural, physical layout animations and morph transitions.
-- **Expanded Surface**: 460×330 px interactive panel featuring three dedicated sections: Media, Notifications, and Settings.
+- **Home Panel**: Click the notch for a Mac-style panel: big album art beside the track, live lyrics and controls, plus widgets for the time, battery, a timer and Wi-Fi/Bluetooth toggles.
+- **Timer & Stopwatch**: Start one from Home; it counts down live in the notch and chimes when done.
+- **File Shelf**: Drag files onto the notch to park them, then drag them out into any app later.
+- **Clipboard History**: Recent copied text and images, one click to copy again. In memory only; content apps mark as private (passwords) is never kept.
+- **Control Center**: Wi-Fi and Bluetooth toggles, volume and brightness sliders, battery and Focus status.
+- **System Live Activities**: Volume and brightness HUDs for the hardware keys, charging and low-battery alerts, Bluetooth devices connecting, Focus turning on or off, and Mac-style green/orange dots while the camera or microphone is in use.
+- **Synced Lyrics (opt-in)**: The current lyric line under the playing track, from LRCLIB.
 - **Persistent User Preferences**: Local persistence for transparency, pill length, orb size, idle behavior, and privacy toggles.
 - **Tray Icon & Global Hotkey**: Open the island from the tray or with `Ctrl+Alt+Space` (falls back to `Alt+Shift+Space` or `Ctrl+Alt+I` if another app owns it).
 - **Launch at Startup**: Optional, from Settings or the tray menu.
@@ -179,6 +183,9 @@ powershell -ExecutionPolicy Bypass -File .\scripts\package-msix.ps1
 - **Local Processing**: All media and notification data is processed locally on your machine using standard Windows WinRT and GSMTC APIs.
 - **No Cloud Account**: FLOAT does not require external user accounts, cloud servers, or API keys for its core functionality.
 - **Privacy Mode**: You can disable notification content previews in the Settings tab to hide message titles and bodies while retaining presence dots.
+- **Network Use**: The only feature that talks to the internet is **Synced Lyrics**, which is off by default. When enabled it sends the playing track's title, artist, album and length to [lrclib.net](https://lrclib.net).
+- **Clipboard History** stays in memory and is never written to disk. Content that apps flag as private (password managers) is skipped, and turning the feature off clears it.
+- **File Shelf** stores only file paths, in your app data folder; files are never copied or uploaded.
 
 ---
 

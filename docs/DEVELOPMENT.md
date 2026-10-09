@@ -49,11 +49,17 @@ FLOAT/
 │   ├── src/
 │   │   ├── appicon.rs      # App icons by AUMID via shell:AppsFolder, cached as PNG
 │   │   ├── autostart.rs    # Launch at startup (MSIX StartupTask / HKCU Run key)
+│   │   ├── brightness.rs   # Built-in display brightness via WMI (poll + set)
+│   │   ├── clipboard.rs    # In-memory clipboard history (text + images)
+│   │   ├── connectivity.rs # Wi-Fi / Bluetooth radios, SSID, connected devices
 │   │   ├── focus.rs        # Focus Assist status command
+│   │   ├── lyrics.rs       # LRCLIB synced lyrics (opt-in network)
 │   │   ├── lib.rs          # Plugin, command and module wiring
 │   │   ├── main.rs         # Application binary entry point
 │   │   ├── media.rs        # Windows GSMTC media session monitoring
 │   │   ├── notifications.rs# Windows UserNotificationListener events (with polling fallback)
+│   │   ├── shelf.rs        # File shelf persistence, thumbnails, open/reveal
+│   │   ├── sysmon.rs       # Volume, battery and camera/mic polling
 │   │   ├── tray.rs         # Tray icon, global hotkey, island commands
 │   │   ├── visualizer.rs   # WASAPI loopback capture -> 3-band audio levels
 │   │   ├── volume.rs       # System volume via Core Audio
@@ -93,6 +99,14 @@ Keep `WINDOW_WIDTH` / `ISLAND_TOP` in `FloatShell.tsx` in sync with `WINDOW_WIDT
 The island is flush with the top edge (only the orb floats, `ORB_TOP`). `FloatShell` derives width, height and per-corner radii from the visual mode and the primary activity (`NOTCH_IDLE_*`, `ACTIVITY_HEIGHT`, `PREVIEW_HEIGHT`, `NOTIFICATION_*`). Morphs and the press squish use `transform-origin: 50% 0%` so the notch never detaches from the edge. The concave "ears" are two radial-gradient spans beside the shell, shown only in the solid Notch style.
 
 Morph springs come from `MORPH_SPRINGS[animationIntensity]`.
+
+### Expanded Panel
+`FloatSurface` renders tabs from `LEFT_TABS` / `RIGHT_TABS` with icons and labels in `TAB_ICONS` / `TAB_LABELS`; add a tab by extending `SurfaceTab` and the `body` switch. Home (`HomeView`) composes the horizontal `MediaWidgetSurface` (with `CurrentLyric` as its `subline`) and the widget column (`ClockTile`, `TimerTile`, `QuickToggles`).
+
+Timer state lives in `activities/timerStore.ts` (wall-clock based, outside React); a running timer is passed to `useActivities` as an ongoing activity.
+
+### Background Threads
+Each native monitor owns its thread and only emits on change: `window.rs` (cursor hit testing, ~60 Hz), `sysmon.rs` (volume 10 Hz, battery 0.5 Hz, camera/mic 1 Hz), `connectivity.rs` (every 3 s), `clipboard.rs` (sequence number, 2 Hz), `brightness.rs` (2 Hz, owns the non-Send WMI connection), `visualizer.rs` (only while an equalizer is visible). Together they idle well under 1% CPU.
 
 ### Live Activities
 `useActivities` merges ongoing activities (media) with transient ones (notifications) pushed through `show(activity, lifetimeMs, onExpire)`, sorted by `ActivityPriority`. The first activity owns the pill; the second is rendered as a `SplitBubble` beside it in compact modes. New activity kinds (timers, HUDs, battery…) are added to `activities/types.ts` and given a pill and bubble rendering.
@@ -205,6 +219,15 @@ Controls resolve the target session by `SourceAppUserModelId` (win-gsmtc session
 - `get_app_icon(app_id: String)`: The app's icon as base64 PNG, or `null`. Rendered through `shell:AppsFolder`, so it works for Win32 and packaged apps.
 - `get_volume()`, `change_volume(delta: f32)`, `toggle_mute()`: System output volume (`{ level, muted }`).
 - `set_visualizer_active(active: bool)`: Starts/stops loopback capture. The frontend ref-counts mounted equalizers (`AudioBars`).
+- `set_volume(level: f32)`: Absolute volume (0..1).
+- `get_power_state()`: `{ percent, charging, low }`, or `null` without a battery.
+- `get_privacy_state()`: `{ microphone, camera }` app names currently using them.
+- `get_brightness()` / `set_brightness(level: u8)`: Built-in panel brightness (0-100), `null` if unsupported.
+- `get_connectivity()`, `set_radio(kind: "wifi" | "bluetooth", on: bool)`: Radio state and toggles.
+- `open_settings_page(page)`: Opens an allowlisted `ms-settings:` page.
+- `get_shelf()`, `add_to_shelf(paths)`, `remove_from_shelf(path)`, `clear_shelf()`, `open_shelf_item(path, reveal)`, `get_shelf_thumbnail(path)`, `shelf_drag_icon(path)`: File shelf. Only paths already on the shelf can be opened or rendered; dragging out uses `tauri-plugin-drag`.
+- `get_clipboard_history()`, `copy_clipboard_entry(id)`, `remove_clipboard_entry(id)`, `clear_clipboard_history()`, `set_clipboard_history_enabled(enabled)`: Clipboard history.
+- `get_lyrics(title, artist, album?, duration?)`: Synced lyric lines from LRCLIB, cached per track. Call only when the user has enabled Synced Lyrics.
 
 ### Events (Rust → Frontend)
 - `multi-session-changed`, `session-position-changed`: Media state.
@@ -214,6 +237,11 @@ Controls resolve the target session by `SourceAppUserModelId` (win-gsmtc session
 - `island-command`: `"open"` or `"toggle"`, from the tray, hotkey or a second launch.
 - `autostart-changed`: Launch-at-startup state changed (e.g. from the tray).
 - `audio-levels`: `{ levels: [low, mid, high], silent }` at ~30 Hz while the visualizer is active.
+- `volume-changed`, `brightness-changed`: Level changes from any source (keys, other apps).
+- `power-changed`: Plug/unplug, or crossing 20% / 10% on battery.
+- `privacy-changed`: Camera / microphone use started or stopped.
+- `connectivity-changed`, `bluetooth-device`: Radio / network / device changes.
+- `clipboard-changed`: The clipboard history list after a new copy.
 
 ### Notification Delivery
 `NotificationChanged` requires package identity. When registering it fails (unpackaged and dev builds), `notifications.rs` diffs the active toast list every 1.5 s and emits the same events, so notifications work in `npm run tauri dev` too.
