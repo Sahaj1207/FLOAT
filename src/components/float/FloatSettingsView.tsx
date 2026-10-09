@@ -9,6 +9,7 @@ import {
   subscribeToSettings,
   DEFAULT_FLOAT_SETTINGS,
 } from "../../services/settings";
+import { getAutostart, getHotkey, setAutostart, subscribeToAutostart } from "../../platform";
 import "./FloatSettingsView.css";
 
 interface FloatSettingsViewProps {
@@ -84,6 +85,34 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = () => {
     const nextSettings = { ...settings, notificationContent: !settings.notificationContent };
     setSettings(nextSettings);
     saveSettings(nextSettings);
+  };
+
+  // Launch at startup lives in the OS, not in saved settings.
+  const [autostart, setAutostartState] = useState(false);
+  const [hotkey, setHotkey] = useState<string | null>(null);
+  useEffect(() => {
+    let isMounted = true;
+    let unlisten: (() => void) | null = null;
+    getHotkey().then((key) => {
+      if (isMounted) setHotkey(key);
+    });
+    getAutostart().then((enabled) => {
+      if (isMounted) setAutostartState(enabled);
+    });
+    subscribeToAutostart((enabled) => {
+      if (isMounted) setAutostartState(enabled);
+    }).then((fn) => {
+      if (isMounted) unlisten = fn;
+      else fn();
+    });
+    return () => {
+      isMounted = false;
+      unlisten?.();
+    };
+  }, []);
+
+  const handleToggleAutostart = () => {
+    setAutostart(!autostart).then(setAutostartState);
   };
 
   const handleToggleHideInFullscreen = () => {
@@ -544,6 +573,24 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = () => {
               onClick={handleToggleHideInFullscreen}
               data-no-drag="true"
               aria-label="Toggle Hide in Fullscreen"
+            >
+              <span className="float-setting-switch-handle" />
+            </button>
+          </div>
+
+          <div className="float-setting-toggle-row">
+            <div className="float-setting-toggle-left">
+              <span className="float-setting-toggle-title">Launch at Startup</span>
+              <span className="float-setting-toggle-desc">Start FLOAT when you sign in to Windows{hotkey ? `. ${hotkey} opens the island anytime` : ""}</span>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={autostart}
+              className={`float-setting-switch ${autostart ? "checked" : ""}`}
+              onClick={handleToggleAutostart}
+              data-no-drag="true"
+              aria-label="Toggle Launch at Startup"
             >
               <span className="float-setting-switch-handle" />
             </button>

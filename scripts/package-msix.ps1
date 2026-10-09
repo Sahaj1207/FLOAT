@@ -84,7 +84,8 @@ $manifestContent = @"
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
-  IgnorableNamespaces="uap rescap">
+  xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+  IgnorableNamespaces="uap rescap desktop">
 
   <Identity
     Name="FLOAT.Island"
@@ -118,6 +119,12 @@ $manifestContent = @"
         Square44x44Logo="Assets\Square44x44Logo.png">
         <uap:DefaultTile Wide310x150Logo="Assets\Square150x150Logo.png" />
       </uap:VisualElements>
+      <Extensions>
+        <!-- TaskId must match STARTUP_TASK_ID in src-tauri/src/autostart.rs -->
+        <desktop:Extension Category="windows.startupTask" Executable="float.exe" EntryPoint="Windows.FullTrustApplication">
+          <desktop:StartupTask TaskId="FLOATStartup" Enabled="false" DisplayName="FLOAT" />
+        </desktop:Extension>
+      </Extensions>
     </Application>
   </Applications>
 

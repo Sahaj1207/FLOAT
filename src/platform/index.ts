@@ -63,6 +63,51 @@ export async function subscribeToWindowFocus(
   }
 }
 
+export type IslandCommand = "open" | "toggle";
+
+/** Commands from the tray icon, global hotkey, or a second app launch. */
+export async function subscribeToIslandCommand(
+  callback: (command: IslandCommand) => void
+): Promise<UnlistenFn> {
+  return await listen<IslandCommand>("island-command", (event) => {
+    callback(event.payload);
+  });
+}
+
+/** The global hotkey that opens the island, or null if none could be registered. */
+export async function getHotkey(): Promise<string | null> {
+  try {
+    return await invoke<string | null>("get_hotkey");
+  } catch {
+    return null;
+  }
+}
+
+export async function getAutostart(): Promise<boolean> {
+  try {
+    return await invoke<boolean>("get_autostart");
+  } catch {
+    return false;
+  }
+}
+
+/** Returns the resulting state, which may differ from the request. */
+export async function setAutostart(enabled: boolean): Promise<boolean> {
+  try {
+    return await invoke<boolean>("set_autostart", { enabled });
+  } catch {
+    return false;
+  }
+}
+
+export async function subscribeToAutostart(
+  callback: (enabled: boolean) => void
+): Promise<UnlistenFn> {
+  return await listen<boolean>("autostart-changed", (event) => {
+    callback(event.payload);
+  });
+}
+
 export async function setHideInFullscreen(enabled: boolean): Promise<void> {
   try {
     await invoke("set_hide_in_fullscreen", { enabled });

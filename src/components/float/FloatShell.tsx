@@ -20,6 +20,7 @@ import {
   setHitRegions,
   subscribeToIslandHover,
   subscribeToWindowFocus,
+  subscribeToIslandCommand,
   HitRect,
   getMultiSessionState,
   selectMediaSession,
@@ -361,6 +362,26 @@ const FloatShell: React.FC = () => {
       unlisten?.();
     };
   }, [collapse]);
+
+  // Tray icon, global hotkey and second launches
+  useEffect(() => {
+    let isMounted = true;
+    let unlisten: (() => void) | null = null;
+    subscribeToIslandCommand((command) => {
+      if (command === "toggle" && visualModeRef.current === "expanded") {
+        collapse();
+      } else if (visualModeRef.current !== "expanded") {
+        transitionTo("expanded", `command-${command}`);
+      }
+    }).then((fn) => {
+      if (isMounted) unlisten = fn;
+      else fn();
+    });
+    return () => {
+      isMounted = false;
+      unlisten?.();
+    };
+  }, [collapse, transitionTo]);
 
   // Ambient idle timer: Compact Pill -> ~3s untouched -> Orb
   useEffect(() => {

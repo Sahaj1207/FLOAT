@@ -8,9 +8,11 @@ macro_rules! dlog {
     };
 }
 
+mod autostart;
 mod focus;
 mod media;
 mod notifications;
+mod tray;
 mod window;
 
 #[tauri::command]
@@ -21,11 +23,19 @@ fn log_from_js(msg: String) {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        // Must be registered first: a second launch just opens the island.
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            tray::command_island(app, tray::IslandCommand::Open);
+        }))
         .plugin(tauri_plugin_opener::init())
+        .plugin(tray::global_shortcut_plugin())
         .invoke_handler(tauri::generate_handler![
             window::set_hit_regions,
             window::set_hide_in_fullscreen,
             window::reset_window_position,
+            autostart::get_autostart,
+            autostart::set_autostart,
+            tray::get_hotkey,
             log_from_js,
             media::media_play_pause,
             media::media_next,
@@ -42,6 +52,9 @@ pub fn run() {
         .setup(|app| {
             if let Err(e) = window::init(app) {
                 eprintln!("Failed to init window: {}", e);
+            }
+            if let Err(e) = tray::init(app) {
+                eprintln!("Failed to init tray: {}", e);
             }
             if let Err(e) = media::init(app) {
                 eprintln!("Failed to init media: {}", e);
