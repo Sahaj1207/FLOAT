@@ -86,6 +86,12 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = () => {
     saveSettings(nextSettings);
   };
 
+  const handleToggleHideInFullscreen = () => {
+    const nextSettings = { ...settings, hideInFullscreen: !settings.hideInFullscreen };
+    setSettings(nextSettings);
+    saveSettings(nextSettings);
+  };
+
   const handleReset = () => {
     const nextSettings = { ...DEFAULT_FLOAT_SETTINGS };
     setSettings(nextSettings);
@@ -499,6 +505,45 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = () => {
               onClick={handleToggleContent}
               data-no-drag="true"
               aria-label="Toggle Notification Content"
+            >
+              <span className="float-setting-switch-handle" />
+            </button>
+          </div>
+        </div>
+
+        {/* System */}
+        <div className="float-setting-card">
+          <div className="float-setting-label-row">
+            <div className="float-setting-label-left">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="float-setting-icon"
+              >
+                <rect x="2" y="3" width="20" height="14" rx="2" />
+                <path d="M8 21h8M12 17v4" />
+              </svg>
+              <span className="float-setting-name">System</span>
+            </div>
+          </div>
+
+          <div className="float-setting-toggle-row">
+            <div className="float-setting-toggle-left">
+              <span className="float-setting-toggle-title">Hide in Fullscreen</span>
+              <span className="float-setting-toggle-desc">Get out of the way of fullscreen games, videos and presentations</span>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={settings.hideInFullscreen}
+              className={`float-setting-switch ${settings.hideInFullscreen ? "checked" : ""}`}
+              onClick={handleToggleHideInFullscreen}
+              data-no-drag="true"
+              aria-label="Toggle Hide in Fullscreen"
             >
               <span className="float-setting-switch-handle" />
             </button>

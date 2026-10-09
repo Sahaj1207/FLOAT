@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { motion, LayoutGroup } from "framer-motion";
+import { motion, LayoutGroup, AnimatePresence } from "framer-motion";
 import { FloatPill } from "./FloatPill";
 import { FloatSurface } from "./FloatSurface";
 import { FloatOrb, OrbNotificationState, OrbFocusState } from "./FloatOrb";
+import { SplitBubble } from "./SplitBubble";
 import {
   startWindowDrag,
   subscribeToMultiSessionState,
@@ -12,10 +13,14 @@ import {
   NotificationItem,
   removeNotification,
   clearAllNotifications,
+  getActiveNotifications,
   subscribeToFocusPresence,
   getFocusPresence,
   FocusPresencePayload,
-  syncWindowSize,
+  setHitRegions,
+  subscribeToIslandHover,
+  subscribeToWindowFocus,
+  HitRect,
   getMultiSessionState,
   selectMediaSession,
   mediaPlayPause,
@@ -25,6 +30,8 @@ import {
 import { MediaSession, MultiSessionState, SessionPositionPayload } from "../../platform/media";
 import { mediaTimeline } from "./mediaTimeline";
 import { loadSettings, saveSettings, subscribeToSettings, FloatSettings } from "../../services/settings";
+import { useActivities } from "../../activities/useActivities";
+import { ActivityPriority } from "../../activities/types";
 import "./FloatShell.css";
 
 export type IslandVisualMode = "orb" | "compact" | "compactPreview" | "expanded";
@@ -37,10 +44,14 @@ const NOTIF_PREVIEW_HEIGHT = 56;
 const QUICK_ACTIONS_WIDTH = 176;
 const QUICK_ACTIONS_HEIGHT = 48;
 
-const PILL_BOUNDS_W = 280;
-const PILL_BOUNDS_H = 88;
-const SURFACE_BOUNDS_W = SURFACE_WIDTH + 40;
-const SURFACE_BOUNDS_H = SURFACE_HEIGHT + 60;
+// Must match the native window width (window.rs) and #root's padding-top.
+const WINDOW_WIDTH = 500;
+const ISLAND_TOP = 8;
+const HIT_PADDING = 4;
+const BUBBLE_GAP = 8;
+// Long enough for the morph spring to settle before hit regions shrink.
+const MORPH_SETTLE_MS = 700;
+const NOTIFICATION_DWELL_MS = 3500;
 
 const DOUBLE_TAP_WINDOW_MS = 250;
 const IDLE_TO_ORB_DELAY_MS = 3000;
@@ -64,7 +75,6 @@ const FloatShell: React.FC = () => {
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [notificationState, setNotificationState] = useState<OrbNotificationState | null>(null);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-  const [isNotificationActive, setIsNotificationActive] = useState(false);
   const [notificationPreviewOpen, setNotificationPreviewOpen] = useState(false);
   const [quickActionsOpen, setQuickActionsOpen] = useState(false);
   const [focusState, setFocusState] = useState<OrbFocusState | null>(null);
@@ -78,17 +88,39 @@ const FloatShell: React.FC = () => {
   const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastClickTimeRef = useRef<number>(0);
   const notificationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const notificationDwellTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const idleToOrbTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
   const isDraggingRef = useRef(false);
   const shellRef = useRef<HTMLDivElement>(null);
+  const hoveringRef = useRef(false);
 
-  const isNotificationActiveRef = useRef(isNotificationActive);
-  isNotificationActiveRef.current = isNotificationActive;
+  const settingsRef = useRef(settings);
+  settingsRef.current = settings;
 
   const visualModeRef = useRef(visualMode);
   visualModeRef.current = visualMode;
+
+  const allSessions = multiState?.sessions || [];
+
+  // Effective selected session ID:
+  // Priority: explicit local selection > multiState.selectedSessionId > multiState.activeSessionId > first session with media > first session
+  const effectiveSelectedId = (selectedSessionId && allSessions.some(s => s.id === selectedSessionId))
+    ? selectedSessionId
+    : (multiState?.selectedSessionId && allSessions.some(s => s.id === multiState.selectedSessionId))
+    ? multiState.selectedSessionId
+    : (multiState?.activeSessionId && allSessions.some(s => s.id === multiState.activeSessionId))
+    ? multiState.activeSessionId
+    : (allSessions.find(s => s.hasMedia || (s.title && s.title.trim().length > 0))?.id || allSessions[0]?.id || null);
+
+  // Authoritative single-session snapshot: all displayed media fields MUST derive from this object
+  const activeMedia: MediaSession | null = effectiveSelectedId
+    ? allSessions.find(s => s.id === effectiveSelectedId) || null
+    : null;
+
+  const { primary, secondary, show, dismissKind } = useActivities(activeMedia);
+  const isNotificationActive = primary?.kind === "notification";
+  const isNotificationActiveRef = useRef(isNotificationActive);
+  isNotificationActiveRef.current = isNotificationActive;
 
   const clearHoverTimers = useCallback(() => {
     if (previewTimerRef.current) {
@@ -116,31 +148,23 @@ const FloatShell: React.FC = () => {
   }, []);
 
   const transitionTo = useCallback((nextMode: IslandVisualMode, reason: string) => {
-    console.log(`[ISLAND] visual: ${visualMode} -> ${nextMode} reason=${reason}`);
+    console.log(`[ISLAND] visual: ${visualModeRef.current} -> ${nextMode} reason=${reason}`);
     clearHoverTimers();
     clearClickTimer();
     clearIdleToOrbTimer();
     lastClickTimeRef.current = 0;
     setNotificationPreviewOpen(false);
     setQuickActionsOpen(false);
-
-    if (nextMode === "expanded") {
-      console.log(`[WINDOW] compact -> expanded reason=${reason}`);
-      syncWindowSize(SURFACE_BOUNDS_W, SURFACE_BOUNDS_H);
-    } else if (visualMode === "expanded") {
-      console.log(`[WINDOW] expanded -> compact reason=${reason}`);
-      syncWindowSize(PILL_BOUNDS_W, PILL_BOUNDS_H);
-    }
-
     setVisualMode(nextMode);
-  }, [visualMode, clearHoverTimers, clearClickTimer, clearIdleToOrbTimer]);
+  }, [clearHoverTimers, clearClickTimer, clearIdleToOrbTimer]);
 
   const resetIdleToOrbTimer = useCallback(() => {
     clearIdleToOrbTimer();
     if (
       isNotificationActiveRef.current ||
       visualModeRef.current !== "compact" ||
-      isDraggingRef.current
+      isDraggingRef.current ||
+      hoveringRef.current
     ) {
       return;
     }
@@ -149,6 +173,7 @@ const FloatShell: React.FC = () => {
       idleToOrbTimerRef.current = null;
       if (
         !isDraggingRef.current &&
+        !hoveringRef.current &&
         visualModeRef.current === "compact" &&
         !isNotificationActiveRef.current
       ) {
@@ -159,21 +184,20 @@ const FloatShell: React.FC = () => {
   }, [clearIdleToOrbTimer, transitionTo]);
 
   const handleDismissNotification = useCallback(() => {
-    if (notificationDwellTimerRef.current) {
-      clearTimeout(notificationDwellTimerRef.current);
-      notificationDwellTimerRef.current = null;
-    }
-    setIsNotificationActive(false);
+    dismissKind("notification");
     setNotificationPreviewOpen(false);
-  }, []);
+  }, [dismissKind]);
 
   const handleDismissNotificationItem = useCallback((id: number) => {
     removeNotification(id);
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
-    if (notifications.length <= 1) {
-      setNotificationState((prev) => (prev ? { ...prev, hasNotification: false } : null));
-    }
-  }, [notifications.length]);
+    setNotifications((prev) => {
+      const remaining = prev.filter((n) => n.id !== id);
+      if (remaining.length === 0) {
+        setNotificationState((state) => (state ? { ...state, hasNotification: false } : null));
+      }
+      return remaining;
+    });
+  }, []);
 
   const handleClearAllNotifications = useCallback(() => {
     clearAllNotifications();
@@ -182,9 +206,9 @@ const FloatShell: React.FC = () => {
       hasNotification: false,
       isNew: false,
     });
-    setIsNotificationActive(false);
+    dismissKind("notification");
     setNotificationPreviewOpen(false);
-  }, []);
+  }, [dismissKind]);
 
   const handlePillClick = useCallback(() => {
     if (isDraggingRef.current) return;
@@ -298,26 +322,45 @@ const FloatShell: React.FC = () => {
     transitionTo(dest, "user-collapse");
   }, [settings, transitionTo]);
 
-  // Keyboard Escape listener to dismiss transient Quick Actions or Notification Preview
+  // Keyboard Escape: dismiss the topmost transient surface
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        if (quickActionsOpen) {
-          setQuickActionsOpen(false);
-          if (settings.idleBehavior === "alwaysPill") {
-            transitionTo("compact", "escape-quick-actions");
-          }
-        } else if (notificationPreviewOpen) {
-          setNotificationPreviewOpen(false);
-          if (settings.idleBehavior === "alwaysPill") {
-            transitionTo("compact", "escape-notification-preview");
-          }
+      if (e.key !== "Escape") return;
+      if (visualModeRef.current === "expanded") {
+        collapse();
+      } else if (quickActionsOpen) {
+        setQuickActionsOpen(false);
+        if (settings.idleBehavior === "alwaysPill") {
+          transitionTo("compact", "escape-quick-actions");
+        }
+      } else if (notificationPreviewOpen) {
+        setNotificationPreviewOpen(false);
+        if (settings.idleBehavior === "alwaysPill") {
+          transitionTo("compact", "escape-notification-preview");
         }
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [quickActionsOpen, notificationPreviewOpen, settings.idleBehavior, transitionTo]);
+  }, [quickActionsOpen, notificationPreviewOpen, settings.idleBehavior, transitionTo, collapse]);
+
+  // Clicking anywhere outside the island (the window losing focus) collapses it
+  useEffect(() => {
+    let isMounted = true;
+    let unlisten: (() => void) | null = null;
+    subscribeToWindowFocus((focused) => {
+      if (!focused && visualModeRef.current === "expanded") {
+        collapse();
+      }
+    }).then((fn) => {
+      if (isMounted) unlisten = fn;
+      else fn();
+    });
+    return () => {
+      isMounted = false;
+      unlisten?.();
+    };
+  }, [collapse]);
 
   // Ambient idle timer: Compact Pill -> ~3s untouched -> Orb
   useEffect(() => {
@@ -331,9 +374,7 @@ const FloatShell: React.FC = () => {
     };
   }, [visualMode, isNotificationActive, resetIdleToOrbTimer, clearIdleToOrbTimer]);
 
-  // Initial window sync
   useEffect(() => {
-    syncWindowSize(PILL_BOUNDS_W, PILL_BOUNDS_H);
     return () => {
       clearHoverTimers();
       clearClickTimer();
@@ -398,6 +439,7 @@ const FloatShell: React.FC = () => {
 
     subscribeToNotificationPresence((payload: NotificationPresencePayload) => {
       if (!isMounted) return;
+      const cfg = settingsRef.current;
 
       // 1. Update persistent notification collection
       if (payload.initialItems) {
@@ -420,7 +462,7 @@ const FloatShell: React.FC = () => {
         setNotifications((prev) => prev.filter((n) => n.id !== remId));
       }
 
-      // 2. Manage temporary arrival presentation and presence indicator
+      // 2. Presence indicator, and a transient activity for new arrivals
       if (payload.hasNotification) {
         setNotificationState({
           hasNotification: true,
@@ -430,27 +472,26 @@ const FloatShell: React.FC = () => {
           body: payload.body,
         });
 
-        // Trigger dynamic notification presentation on new notification arrival
-        if (payload.isNew && settings.notificationPresence) {
-          if (settings.notificationPreview) {
-            setIsNotificationActive(true);
-
-            if (visualModeRef.current === "orb") {
+        if (payload.isNew && cfg.notificationPresence) {
+          if (cfg.notificationPreview) {
+            const openedPreview = visualModeRef.current === "orb";
+            if (openedPreview) {
               setNotificationPreviewOpen(true);
             }
-
-            if (notificationDwellTimerRef.current) {
-              clearTimeout(notificationDwellTimerRef.current);
-            }
-
-            // Dwell for 3.5 seconds then smoothly return to resting/media state
-            notificationDwellTimerRef.current = setTimeout(() => {
-              if (isMounted) {
-                setIsNotificationActive(false);
-                setNotificationPreviewOpen(false);
+            show(
+              {
+                kind: "notification",
+                id: `notification:${payload.item?.id ?? Date.now()}`,
+                priority: ActivityPriority.notification,
+                appName: payload.appName,
+                title: payload.title,
+                body: payload.body,
+              },
+              NOTIFICATION_DWELL_MS,
+              () => {
+                if (openedPreview) setNotificationPreviewOpen(false);
               }
-              notificationDwellTimerRef.current = null;
-            }, 3500);
+            );
           }
 
           if (notificationTimerRef.current) {
@@ -470,11 +511,7 @@ const FloatShell: React.FC = () => {
           clearTimeout(notificationTimerRef.current);
           notificationTimerRef.current = null;
         }
-        if (notificationDwellTimerRef.current) {
-          clearTimeout(notificationDwellTimerRef.current);
-          notificationDwellTimerRef.current = null;
-        }
-        setIsNotificationActive(false);
+        dismissKind("notification");
         setNotificationPreviewOpen(false);
         setNotificationState({
           hasNotification: false,
@@ -486,17 +523,22 @@ const FloatShell: React.FC = () => {
       else fn();
     });
 
+    // The native seed event fires during startup, usually before this
+    // listener exists, so fetch the current list explicitly.
+    getActiveNotifications().then((items) => {
+      if (!isMounted || items.length === 0) return;
+      setNotifications((prev) => (prev.length > 0 ? prev : items));
+      setNotificationState((prev) => prev ?? { hasNotification: true, isNew: false });
+    });
+
     return () => {
       isMounted = false;
       if (notificationTimerRef.current) {
         clearTimeout(notificationTimerRef.current);
       }
-      if (notificationDwellTimerRef.current) {
-        clearTimeout(notificationDwellTimerRef.current);
-      }
       unlisten?.();
     };
-  }, [settings.notificationPresence, settings.notificationPreview]);
+  }, [show, dismissKind]);
 
   // Listen to Windows Focus / Quiet Hours presence events
   useEffect(() => {
@@ -543,23 +585,6 @@ const FloatShell: React.FC = () => {
       });
     });
   }, []);
-
-  const allSessions = multiState?.sessions || [];
-
-  // Effective selected session ID:
-  // Priority: explicit local selection > multiState.selectedSessionId > multiState.activeSessionId > first session with media > first session
-  const effectiveSelectedId = (selectedSessionId && allSessions.some(s => s.id === selectedSessionId))
-    ? selectedSessionId
-    : (multiState?.selectedSessionId && allSessions.some(s => s.id === multiState.selectedSessionId))
-    ? multiState.selectedSessionId
-    : (multiState?.activeSessionId && allSessions.some(s => s.id === multiState.activeSessionId))
-    ? multiState.activeSessionId
-    : (allSessions.find(s => s.hasMedia || (s.title && s.title.trim().length > 0))?.id || allSessions[0]?.id || null);
-
-  // Authoritative single-session snapshot: all displayed media fields MUST derive from this object
-  const activeMedia: MediaSession | null = effectiveSelectedId
-    ? allSessions.find(s => s.id === effectiveSelectedId) || null
-    : null;
 
   const handleQuickPrev = useCallback(() => {
     mediaPrev(activeMedia?.id);
@@ -608,8 +633,6 @@ const FloatShell: React.FC = () => {
   // Sync authoritative state parameter updates to the central timeline manager
   useEffect(() => {
     if (activeMedia) {
-      console.log(`[MEDIA DISPLAY] session=${activeMedia.id}`);
-      console.log(`[MEDIA SNAPSHOT] session=${activeMedia.id} title=${activeMedia.title || "none"} artist=${activeMedia.artist || "none"} position=${activeMedia.position ?? 0} duration=${activeMedia.duration ?? 0}`);
       mediaTimeline.sync(
         activeMedia.id,
         activeMedia.title,
@@ -622,46 +645,105 @@ const FloatShell: React.FC = () => {
     }
   }, [activeMedia?.id, activeMedia?.title, activeMedia?.position, activeMedia?.duration, activeMedia?.isPlaying]);
 
-  const handlePointerEnter = (e: React.PointerEvent) => {
-    console.log("[ISLAND] pointer-enter");
-    if (isDraggingRef.current || visualMode === "expanded") return;
-    const target = e.target as HTMLElement;
-    if (target.closest("button, a, input, [data-no-drag]")) return;
-
+  // Hover comes from the native hit-test monitor: the window is click-through
+  // outside the island, so DOM pointerenter/leave are not reliable.
+  const handleHoverChange = (inside: boolean) => {
+    hoveringRef.current = inside;
+    const mode = visualModeRef.current;
     clearHoverTimers();
-    clearIdleToOrbTimer();
-    if (visualMode === "orb") {
-      if (!notificationPreviewOpen) {
-        console.log("[ISLAND] orb hover -> compact");
-        transitionTo("compact", "orb-hover");
-      }
-      return;
-    }
 
-    if (visualMode === "compact") {
-      console.log("[ISLAND] preview-dwell-start");
-      previewTimerRef.current = setTimeout(() => {
-        if (!isDraggingRef.current) {
-          transitionTo("compactPreview", "hover-dwell");
+    if (inside) {
+      clearIdleToOrbTimer();
+      if (isDraggingRef.current || mode === "expanded") return;
+      if (mode === "orb") {
+        if (!notificationPreviewOpen) {
+          transitionTo("compact", "orb-hover");
         }
-      }, 200);
-    }
-  };
-
-  const handlePointerLeave = () => {
-    console.log("[ISLAND] pointer-leave");
-    clearHoverTimers();
-    if (visualMode === "compactPreview") {
-      console.log("[ISLAND] visual compactPreview -> compact delay start");
+      } else if (mode === "compact") {
+        previewTimerRef.current = setTimeout(() => {
+          if (!isDraggingRef.current) {
+            transitionTo("compactPreview", "hover-dwell");
+          }
+        }, 200);
+      }
+    } else if (mode === "compactPreview") {
       leaveTimerRef.current = setTimeout(() => {
         if (!isDraggingRef.current) {
           transitionTo("compact", "hover-leave");
         }
       }, 160);
-    } else if (visualMode === "compact" && !isNotificationActive) {
+    } else if (mode === "compact" && !isNotificationActiveRef.current) {
       resetIdleToOrbTimer();
     }
   };
+  const hoverHandlerRef = useRef(handleHoverChange);
+  hoverHandlerRef.current = handleHoverChange;
+
+  useEffect(() => {
+    let isMounted = true;
+    let unlisten: (() => void) | null = null;
+    subscribeToIslandHover((inside) => hoverHandlerRef.current(inside)).then((fn) => {
+      if (isMounted) unlisten = fn;
+      else fn();
+    });
+    return () => {
+      isMounted = false;
+      unlisten?.();
+    };
+  }, []);
+
+  // --- Geometry & hit regions -------------------------------------------
+  const islandWidth = isExpanded
+    ? SURFACE_WIDTH
+    : visualMode === "orb"
+    ? (notificationPreviewOpen ? NOTIF_PREVIEW_WIDTH : quickActionsOpen ? QUICK_ACTIONS_WIDTH : orbSize)
+    : pillWidth;
+  const islandHeight = isExpanded
+    ? SURFACE_HEIGHT
+    : visualMode === "orb"
+    ? (notificationPreviewOpen ? NOTIF_PREVIEW_HEIGHT : quickActionsOpen ? QUICK_ACTIONS_HEIGHT : orbSize)
+    : PILL_HEIGHT;
+  const islandRadius = isExpanded
+    ? 28
+    : (visualMode === "orb" && !notificationPreviewOpen && !quickActionsOpen ? Math.round(orbSize / 2) : 24);
+
+  const bubbleActivity =
+    secondary && (visualMode === "compact" || visualMode === "compactPreview") ? secondary : null;
+  const hasBubble = bubbleActivity !== null;
+
+  const prevGeometryRef = useRef({ width: islandWidth, height: islandHeight });
+  useEffect(() => {
+    const regionsFor = (width: number, height: number): HitRect[] => {
+      const left = (WINDOW_WIDTH - width) / 2;
+      const regions: HitRect[] = [{
+        x: left - HIT_PADDING,
+        y: ISLAND_TOP - HIT_PADDING,
+        width: width + HIT_PADDING * 2,
+        height: height + HIT_PADDING * 2,
+      }];
+      if (hasBubble) {
+        regions.push({
+          x: left + width + BUBBLE_GAP - HIT_PADDING,
+          y: ISLAND_TOP - HIT_PADDING,
+          width: PILL_HEIGHT + HIT_PADDING * 2,
+          height: PILL_HEIGHT + HIT_PADDING * 2,
+        });
+      }
+      return regions;
+    };
+
+    // While morphing, cover both the old and new shape so the island never
+    // turns click-through under the cursor mid-animation.
+    const prev = prevGeometryRef.current;
+    setHitRegions([
+      ...regionsFor(Math.max(prev.width, islandWidth), Math.max(prev.height, islandHeight)),
+      ...regionsFor(islandWidth, islandHeight),
+    ]);
+    prevGeometryRef.current = { width: islandWidth, height: islandHeight };
+
+    const settle = setTimeout(() => setHitRegions(regionsFor(islandWidth, islandHeight)), MORPH_SETTLE_MS);
+    return () => clearTimeout(settle);
+  }, [islandWidth, islandHeight, hasBubble]);
 
   const handlePointerDown = (e: React.PointerEvent) => {
     if (e.button !== 0) return;
@@ -687,7 +769,7 @@ const FloatShell: React.FC = () => {
       lastClickTimeRef.current = 0;
       isDraggingRef.current = true;
 
-      if (visualMode === "compactPreview") {
+      if (visualModeRef.current === "compactPreview") {
         setVisualMode("compact");
       }
       startWindowDrag();
@@ -701,28 +783,17 @@ const FloatShell: React.FC = () => {
     }, 100);
   };
 
+  const pillNotification: OrbNotificationState | null =
+    primary?.kind === "notification"
+      ? { hasNotification: true, appName: primary.appName, title: primary.title, body: primary.body }
+      : notificationState;
+
   return (
     <motion.div
       ref={shellRef}
       className="float-shell"
-      animate={{
-        width: isExpanded
-          ? SURFACE_WIDTH
-          : visualMode === "orb"
-          ? (notificationPreviewOpen ? NOTIF_PREVIEW_WIDTH : quickActionsOpen ? QUICK_ACTIONS_WIDTH : orbSize)
-          : pillWidth,
-        height: isExpanded
-          ? SURFACE_HEIGHT
-          : visualMode === "orb"
-          ? (notificationPreviewOpen ? NOTIF_PREVIEW_HEIGHT : quickActionsOpen ? QUICK_ACTIONS_HEIGHT : orbSize)
-          : PILL_HEIGHT,
-        borderRadius: isExpanded
-          ? 28
-          : (visualMode === "orb" && !notificationPreviewOpen && !quickActionsOpen ? Math.round(orbSize / 2) : 24),
-      }}
+      animate={{ width: islandWidth, height: islandHeight, borderRadius: islandRadius }}
       transition={springTransition}
-      onPointerEnter={handlePointerEnter}
-      onPointerLeave={handlePointerLeave}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
@@ -773,13 +844,24 @@ const FloatShell: React.FC = () => {
             media={activeMedia}
             sessionCount={allSessions.length}
             isPreview={visualMode === "compactPreview"}
-            notification={notificationState}
+            notification={pillNotification}
             isNotificationActive={isNotificationActive}
             onDismissNotification={handleDismissNotification}
             showContent={settings.notificationContent}
           />
         )}
       </LayoutGroup>
+      <AnimatePresence>
+        {bubbleActivity && (
+          <SplitBubble
+            key={bubbleActivity.kind}
+            activity={bubbleActivity}
+            size={PILL_HEIGHT}
+            gap={BUBBLE_GAP}
+            onClick={() => transitionTo("expanded", "bubble-click")}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };

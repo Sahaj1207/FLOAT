@@ -1,0 +1,85 @@
+.split-bubble {
+  position: absolute;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  overflow: hidden;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  color: var(--float-text-primary);
+
+  background: var(--float-bg);
+  backdrop-filter: blur(var(--float-blur));
+  -webkit-backdrop-filter: blur(var(--float-blur));
+  border: 1px solid var(--float-border);
+  box-shadow: var(--float-shadow);
+  transition: border-color var(--float-transition);
+}
+
+.split-bubble:hover {
+  border-color: var(--float-border-hover);
+}
+
+.split-bubble-art {
+  position: absolute;
+  inset: 4px;
+  width: calc(100% - 8px);
+  height: calc(100% - 8px);
+  border-radius: 50%;
+  object-fit: cover;
+  opacity: 0.85;
+}
+
+.split-bubble-eq {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+}
+
+.split-bubble-eq.over-art {
+  padding: 4px 5px;
+  height: 20px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.split-bubble-eq span {
+  width: 3px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--float-text-primary);
+}
+
+.split-bubble-eq.playing span {
+  animation: split-bubble-eq 0.9s ease-in-out infinite;
+}
+
+.split-bubble-eq.playing span:nth-child(2) {
+  animation-delay: -0.3s;
+}
+
+.split-bubble-eq.playing span:nth-child(3) {
+  animation-delay: -0.6s;
+}
+
+@keyframes split-bubble-eq {
+  0%,
+  100% {
+    height: 4px;
+  }
+  50% {
+    height: calc(12px * var(--float-anim-eq-amp));
+  }
+}
+
+.split-bubble-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--float-text-primary);
+}

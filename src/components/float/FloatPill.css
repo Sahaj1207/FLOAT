@@ -87,37 +87,33 @@
 
 .pill-notif-text-block {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
   overflow: hidden;
   white-space: nowrap;
   flex: 1;
   min-width: 0;
+  line-height: 1.25;
 }
 
-.pill-notif-app-name {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: #60a5fa;
-  flex-shrink: 0;
-}
-
-.pill-notif-divider {
-  color: var(--float-text-secondary);
-  font-size: 10px;
-  opacity: 0.5;
-  flex-shrink: 0;
-}
-
+.pill-notif-heading,
 .pill-notif-body {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--float-text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.pill-notif-heading {
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--float-text-primary);
+}
+
+.pill-notif-body {
+  font-size: 11px;
+  font-weight: 450;
+  color: var(--float-text-secondary);
 }
 
 .pill-notif-close-btn {

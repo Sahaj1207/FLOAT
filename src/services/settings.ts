@@ -1,3 +1,5 @@
+import { setHideInFullscreen } from "../platform";
+
 export type AnimationIntensity = "subtle" | "balanced" | "expressive";
 export type IdleBehavior = "alwaysOrb" | "remember" | "alwaysPill";
 export type RestingMode = "orb" | "compact";
@@ -14,6 +16,7 @@ export interface FloatSettings {
   idleBehavior: IdleBehavior;    // "alwaysOrb" | "remember" | "alwaysPill", default "remember"
   rememberedRestingMode: RestingMode; // "orb" | "compact", default "compact"
   visualStyle: VisualStyle;      // "default" | "minimal" | "softGlass", default "default"
+  hideInFullscreen: boolean;     // hide the island while a fullscreen app is focused, default true
 }
 
 export const DEFAULT_FLOAT_SETTINGS: FloatSettings = {
@@ -27,6 +30,7 @@ export const DEFAULT_FLOAT_SETTINGS: FloatSettings = {
   idleBehavior: "remember",
   rememberedRestingMode: "compact",
   visualStyle: "default",
+  hideInFullscreen: true,
 };
 
 const SETTINGS_STORAGE_KEY = "float_settings_v1";
@@ -90,6 +94,11 @@ export function loadSettings(): FloatSettings {
       ? (parsed.visualStyle as VisualStyle)
       : DEFAULT_FLOAT_SETTINGS.visualStyle;
 
+    const hideInFullscreen =
+      typeof parsed.hideInFullscreen === "boolean"
+        ? parsed.hideInFullscreen
+        : DEFAULT_FLOAT_SETTINGS.hideInFullscreen;
+
     return {
       transparency,
       pillLength,
@@ -101,6 +110,7 @@ export function loadSettings(): FloatSettings {
       idleBehavior,
       rememberedRestingMode,
       visualStyle,
+      hideInFullscreen,
     };
   } catch {
     return DEFAULT_FLOAT_SETTINGS;
@@ -111,10 +121,16 @@ export function saveSettings(settings: FloatSettings): void {
   try {
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
     applySettingsToDOM(settings);
+    applySettingsToNative(settings);
     listeners.forEach((l) => l(settings));
   } catch (e) {
     console.error("Failed to save FLOAT settings:", e);
   }
+}
+
+/** Push the settings the native side acts on (window visibility) to Rust. */
+export function applySettingsToNative(settings: FloatSettings): void {
+  setHideInFullscreen(settings.hideInFullscreen);
 }
 
 export function applySettingsToDOM(settings: FloatSettings): void {

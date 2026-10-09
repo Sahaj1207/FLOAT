@@ -122,6 +122,6 @@ body {
 #root {
   display: flex;
   justify-content: center;
-  /* Position the surface near the top of the native window */
-  padding-top: 12px;
+  /* Island hangs from the top edge; keep in sync with ISLAND_TOP in FloatShell */
+  padding-top: 8px;
 }

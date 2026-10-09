@@ -23,17 +23,51 @@ export async function startWindowDrag(): Promise<void> {
   }
 }
 
+/** A rectangle in logical px relative to the island window's top-left. */
+export interface HitRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 /**
- * Resize the native window to match the current island dimensions.
+ * Tell the native side where the island currently is. Everywhere outside
+ * these rectangles the window is click-through.
  */
-export async function syncWindowSize(
-  width: number,
-  height: number
-): Promise<void> {
+export async function setHitRegions(regions: HitRect[]): Promise<void> {
   try {
-    await invoke("sync_window_size", { width, height });
-  } catch (e) {
-    console.error("syncWindowSize failed:", e);
+    await invoke("set_hit_regions", { regions });
+  } catch {
+    // Not in a Tauri context
+  }
+}
+
+/** Fires when the cursor enters or leaves the island's hit regions. */
+export async function subscribeToIslandHover(
+  callback: (inside: boolean) => void
+): Promise<UnlistenFn> {
+  return await listen<{ inside: boolean }>("island-hover", (event) => {
+    callback(event.payload.inside);
+  });
+}
+
+/** Fires when the island window gains or loses keyboard focus. */
+export async function subscribeToWindowFocus(
+  callback: (focused: boolean) => void
+): Promise<UnlistenFn> {
+  try {
+    return await getCurrentWindow().onFocusChanged((event) => callback(event.payload));
+  } catch {
+    return () => {};
+  }
+}
+
+export async function setHideInFullscreen(enabled: boolean): Promise<void> {
+  try {
+    await invoke("set_hide_in_fullscreen", { enabled });
+  } catch {
+    // Not in a Tauri context
   }
 }
 

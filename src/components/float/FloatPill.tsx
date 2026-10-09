@@ -39,21 +39,18 @@ export const FloatPill: React.FC<FloatPillProps> = ({
               <span className="pill-notif-dot" />
             </div>
             <div className="pill-notif-text-block">
-              <span className="pill-notif-app-name">
-                {notification.appName || "Notification"}
-              </span>
               {showContent && (notification.title || notification.body) ? (
                 <>
-                  <span className="pill-notif-divider">•</span>
+                  <span className="pill-notif-heading">
+                    {notification.title || notification.appName || "Notification"}
+                  </span>
                   <span className="pill-notif-body">
-                    {notification.title
-                      ? `${notification.title}${notification.body ? ': ' + notification.body : ''}`
-                      : notification.body}
+                    {notification.title ? notification.body || notification.appName : notification.body}
                   </span>
                 </>
               ) : (
                 <>
-                  <span className="pill-notif-divider">•</span>
+                  <span className="pill-notif-heading">{notification.appName || "Notification"}</span>
                   <span className="pill-notif-body">New notification</span>
                 </>
               )}

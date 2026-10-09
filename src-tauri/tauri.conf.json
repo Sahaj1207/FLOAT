@@ -15,15 +15,15 @@
       {
         "label": "main",
         "title": "FLOAT",
-        "width": 280,
-        "height": 88,
+        "width": 500,
+        "height": 400,
+        "visible": false,
         "decorations": false,
         "transparent": true,
         "shadow": false,
         "alwaysOnTop": true,
         "resizable": false,
-        "skipTaskbar": true,
-        "center": true
+        "skipTaskbar": true
       }
     ],
     "security": {
