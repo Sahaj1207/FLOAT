@@ -14,6 +14,7 @@ export interface NotificationActivity {
   kind: "notification";
   id: string;
   priority: number;
+  appId?: string;
   appName?: string;
   title?: string;
   body?: string;

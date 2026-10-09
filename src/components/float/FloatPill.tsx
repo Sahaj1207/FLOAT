@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { MediaSession } from "../../platform/media";
 import { MediaWidgetPill } from "./MediaWidgetPill";
 import { OrbNotificationState } from "./FloatOrb";
+import { AppIcon } from "./AppIcon";
 import "./FloatPill.css";
 
 interface FloatPillProps {
@@ -36,7 +37,11 @@ export const FloatPill: React.FC<FloatPillProps> = ({
         {isNotificationActive && notification?.hasNotification ? (
           <div className="float-pill-notification-banner">
             <div className="pill-notif-app-indicator">
-              <span className="pill-notif-dot" />
+              {showContent ? (
+                <AppIcon appId={notification.appId} appName={notification.appName} size={26} />
+              ) : (
+                <span className="pill-notif-dot" />
+              )}
             </div>
             <div className="pill-notif-text-block">
               {showContent && (notification.title || notification.body) ? (

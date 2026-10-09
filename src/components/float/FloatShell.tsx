@@ -488,6 +488,7 @@ const FloatShell: React.FC = () => {
         setNotificationState({
           hasNotification: true,
           isNew: payload.isNew,
+          appId: payload.item?.appId,
           appName: payload.appName,
           title: payload.title,
           body: payload.body,
@@ -504,6 +505,7 @@ const FloatShell: React.FC = () => {
                 kind: "notification",
                 id: `notification:${payload.item?.id ?? Date.now()}`,
                 priority: ActivityPriority.notification,
+                appId: payload.item?.appId,
                 appName: payload.appName,
                 title: payload.title,
                 body: payload.body,
@@ -806,7 +808,7 @@ const FloatShell: React.FC = () => {
 
   const pillNotification: OrbNotificationState | null =
     primary?.kind === "notification"
-      ? { hasNotification: true, appName: primary.appName, title: primary.title, body: primary.body }
+      ? { hasNotification: true, appId: primary.appId, appName: primary.appName, title: primary.title, body: primary.body }
       : notificationState;
 
   return (

@@ -987,6 +987,7 @@ name = "float"
 version = "1.0.1"
 dependencies = [
  "base64 0.23.1",
+ "png 0.17.16",
  "serde",
  "serde_json",
  "tauri",

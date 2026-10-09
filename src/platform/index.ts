@@ -160,6 +160,7 @@ export interface NotificationItem {
   title: string;
   body: string;
   timestamp: number;
+  appId?: string;
   isRead?: boolean;
 }
 
@@ -195,6 +196,15 @@ export async function clearAllNotifications(): Promise<void> {
     await invoke("clear_all_notifications");
   } catch (e) {
     console.error("clearAllNotifications failed:", e);
+  }
+}
+
+/** Base64 PNG logo for an app (by AppUserModelId), or null. */
+export async function getAppIcon(appId: string): Promise<string | null> {
+  try {
+    return await invoke<string | null>("get_app_icon", { appId });
+  } catch {
+    return null;
   }
 }
 

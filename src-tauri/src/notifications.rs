@@ -16,6 +16,9 @@ pub struct NotificationItem {
     pub title: String,
     pub body: String,
     pub timestamp: u64,
+    /// AppUserModelId of the sender; key for `get_app_icon`.
+    #[serde(rename = "appId", skip_serializing_if = "Option::is_none")]
+    pub app_id: Option<String>,
 }
 
 #[derive(Clone, Serialize, Debug)]
@@ -40,8 +43,14 @@ pub struct NotificationPresencePayload {
 
 fn extract_item(n: &windows::UI::Notifications::UserNotification) -> Option<NotificationItem> {
     let id = n.Id().ok()?;
-    let app_name = n.AppInfo()
-        .ok()
+    let app_info = n.AppInfo().ok();
+    let app_id = app_info
+        .as_ref()
+        .and_then(|info| info.AppUserModelId().ok())
+        .map(|h| h.to_string())
+        .filter(|s| !s.is_empty());
+    let app_name = app_info
+        .as_ref()
         .and_then(|info| info.DisplayInfo().ok())
         .and_then(|disp| disp.DisplayName().ok())
         .map(|h| h.to_string())
@@ -96,6 +105,7 @@ fn extract_item(n: &windows::UI::Notifications::UserNotification) -> Option<Noti
         title: title_trunc,
         body: body_trunc,
         timestamp,
+        app_id,
     })
 }
 

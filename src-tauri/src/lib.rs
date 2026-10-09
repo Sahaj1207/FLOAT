@@ -8,6 +8,7 @@ macro_rules! dlog {
     };
 }
 
+mod appicon;
 mod autostart;
 mod focus;
 mod media;
@@ -47,7 +48,8 @@ pub fn run() {
             focus::get_focus_presence,
             notifications::remove_notification,
             notifications::clear_all_notifications,
-            notifications::get_active_notifications
+            notifications::get_active_notifications,
+            appicon::get_app_icon
         ])
         .setup(|app| {
             if let Err(e) = window::init(app) {

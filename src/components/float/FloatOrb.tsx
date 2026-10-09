@@ -1,11 +1,13 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MediaSession } from "../../platform/media";
+import { AppIcon } from "./AppIcon";
 import "./FloatOrb.css";
 
 export interface OrbNotificationState {
   hasNotification?: boolean;
   isNew?: boolean;
+  appId?: string;
   appName?: string;
   title?: string;
   body?: string;
@@ -69,7 +71,11 @@ export const FloatOrb: React.FC<FloatOrbProps> = ({
         >
           <div className="orb-preview-header">
             <div className="orb-preview-app-row">
-              <span className="orb-preview-dot" />
+              {showContent ? (
+                <AppIcon appId={notification?.appId} appName={notification?.appName} size={14} />
+              ) : (
+                <span className="orb-preview-dot" />
+              )}
               <span className="orb-preview-app-name">
                 {showContent ? (notification?.appName || "Notification") : "Notification"}
               </span>

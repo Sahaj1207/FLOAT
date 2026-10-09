@@ -1,6 +1,7 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { NotificationItem } from "../../platform";
+import { AppIcon } from "./AppIcon";
 import "./FloatNotificationsView.css";
 
 interface FloatNotificationsViewProps {
@@ -111,7 +112,7 @@ export const FloatNotificationsView: React.FC<FloatNotificationsViewProps> = ({
                 >
                   <div className="float-notif-card-top">
                     <div className="float-notif-app-badge" style={{ background: accent.bg, color: accent.text }}>
-                      <span className="float-notif-dot" style={{ background: accent.dot }} />
+                      <AppIcon appId={item.appId} appName={item.appName} size={14} />
                       <span className="float-notif-app-name">{item.appName || "App"}</span>
                     </div>
                     <div className="float-notif-meta-right">
