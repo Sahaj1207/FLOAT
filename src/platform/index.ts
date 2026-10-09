@@ -238,6 +238,26 @@ export async function openSettingsPage(page: SettingsPage): Promise<void> {
   }
 }
 
+export interface LyricLine {
+  /** Seconds from the start of the track. */
+  time: number;
+  text: string;
+}
+
+/** Synced lyrics from LRCLIB (network). Only call when the user opted in. */
+export async function getLyrics(
+  title: string,
+  artist: string,
+  album?: string,
+  duration?: number
+): Promise<LyricLine[] | null> {
+  try {
+    return await invoke<LyricLine[] | null>("get_lyrics", { title, artist, album, duration });
+  } catch {
+    return null;
+  }
+}
+
 /* ------------------------------------------------------------------ */
 /*  Clipboard history                                                   */
 /* ------------------------------------------------------------------ */

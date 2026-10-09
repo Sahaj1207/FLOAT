@@ -117,6 +117,12 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = () => {
     setAutostart(!autostart).then(setAutostartState);
   };
 
+  const handleToggleSyncedLyrics = () => {
+    const nextSettings = { ...settings, syncedLyrics: !settings.syncedLyrics };
+    setSettings(nextSettings);
+    saveSettings(nextSettings);
+  };
+
   const handleToggleClipboardHistory = () => {
     const nextSettings = { ...settings, clipboardHistory: !settings.clipboardHistory };
     setSettings(nextSettings);
@@ -592,6 +598,24 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = () => {
               onClick={handleToggleHideInFullscreen}
               data-no-drag="true"
               aria-label="Toggle Hide in Fullscreen"
+            >
+              <span className="float-setting-switch-handle" />
+            </button>
+          </div>
+
+          <div className="float-setting-toggle-row">
+            <div className="float-setting-toggle-left">
+              <span className="float-setting-toggle-title">Synced Lyrics</span>
+              <span className="float-setting-toggle-desc">Show the current lyric line on Home. Sends the track title and artist to lrclib.net</span>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={settings.syncedLyrics}
+              className={`float-setting-switch ${settings.syncedLyrics ? "checked" : ""}`}
+              onClick={handleToggleSyncedLyrics}
+              data-no-drag="true"
+              aria-label="Toggle Synced Lyrics"
             >
               <span className="float-setting-switch-handle" />
             </button>

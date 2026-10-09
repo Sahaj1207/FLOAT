@@ -13,6 +13,7 @@ mod autostart;
 mod clipboard;
 mod connectivity;
 mod focus;
+mod lyrics;
 mod media;
 mod notifications;
 mod shelf;
@@ -59,6 +60,7 @@ pub fn run() {
             clipboard::remove_clipboard_entry,
             clipboard::clear_clipboard_history,
             clipboard::set_clipboard_history_enabled,
+            lyrics::get_lyrics,
             shelf::get_shelf,
             shelf::add_to_shelf,
             shelf::remove_from_shelf,

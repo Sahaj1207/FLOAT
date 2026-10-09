@@ -12,9 +12,11 @@ interface Props {
   onSelectSession?: (sessionId: string) => void;
   /** "horizontal": art beside the details (Home tab); default stacks them. */
   layout?: "vertical" | "horizontal";
+  /** Rendered under the title/artist (e.g. the current lyric). */
+  subline?: React.ReactNode;
 }
 
-export const MediaWidgetSurface: React.FC<Props> = ({ media, multiState, onSelectSession, layout = "vertical" }) => {
+export const MediaWidgetSurface: React.FC<Props> = ({ media, multiState, onSelectSession, layout = "vertical", subline }) => {
   const albumArt = useAlbumArt(media);
   const [isSeekingState, setIsSeekingState] = useState(false);
 
@@ -293,6 +295,8 @@ export const MediaWidgetSurface: React.FC<Props> = ({ media, multiState, onSelec
               </motion.div>
             </AnimatePresence>
           </motion.div>
+
+          {subline}
 
           <div className="media-progress-wrapper">
             <div 

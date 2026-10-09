@@ -18,6 +18,7 @@ export interface FloatSettings {
   visualStyle: VisualStyle;      // "notch" (solid black) | glass styles, default "notch"
   hideInFullscreen: boolean;     // hide the island while a fullscreen app is focused, default true
   clipboardHistory: boolean;     // keep an in-memory clipboard history, default true
+  syncedLyrics: boolean;         // fetch lyrics from LRCLIB (network, opt-in), default false
 }
 
 export const PILL_LENGTH_MIN = 220;
@@ -36,6 +37,7 @@ export const DEFAULT_FLOAT_SETTINGS: FloatSettings = {
   visualStyle: "notch",
   hideInFullscreen: true,
   clipboardHistory: true,
+  syncedLyrics: false,
 };
 
 const SETTINGS_STORAGE_KEY = "float_settings_v1";
@@ -122,6 +124,9 @@ export function loadSettings(): FloatSettings {
         ? parsed.clipboardHistory
         : DEFAULT_FLOAT_SETTINGS.clipboardHistory;
 
+    const syncedLyrics =
+      typeof parsed.syncedLyrics === "boolean" ? parsed.syncedLyrics : DEFAULT_FLOAT_SETTINGS.syncedLyrics;
+
     return {
       transparency,
       pillLength,
@@ -135,6 +140,7 @@ export function loadSettings(): FloatSettings {
       visualStyle,
       hideInFullscreen,
       clipboardHistory,
+      syncedLyrics,
     };
   } catch {
     return DEFAULT_FLOAT_SETTINGS;

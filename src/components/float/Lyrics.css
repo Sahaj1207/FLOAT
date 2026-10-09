@@ -1,0 +1,16 @@
+.lyric-line {
+  position: relative;
+  height: 18px;
+  overflow: hidden;
+}
+
+.lyric-line span {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--float-accent);
+}

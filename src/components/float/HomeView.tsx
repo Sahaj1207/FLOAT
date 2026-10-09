@@ -4,6 +4,7 @@ import { getPowerState, subscribeToPower, PowerPayload } from "../../platform";
 import { MediaWidgetSurface } from "./MediaWidgetSurface";
 import { TimerTile } from "./Timer";
 import { QuickToggles } from "./ControlCenter";
+import { CurrentLyric } from "./Lyrics";
 import "./HomeView.css";
 
 interface HomeViewProps {
@@ -17,7 +18,13 @@ export const HomeView: React.FC<HomeViewProps> = ({ media, multiState, onSelectS
   <div className="home-view">
     <div className="home-media">
       {media?.hasMedia ? (
-        <MediaWidgetSurface media={media} multiState={multiState} onSelectSession={onSelectSession} layout="horizontal" />
+        <MediaWidgetSurface
+          media={media}
+          multiState={multiState}
+          onSelectSession={onSelectSession}
+          layout="horizontal"
+          subline={<CurrentLyric media={media} />}
+        />
       ) : (
         <div className="home-media-empty">
           <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28">
