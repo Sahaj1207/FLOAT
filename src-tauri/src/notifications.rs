@@ -99,6 +99,85 @@ fn extract_item(n: &windows::UI::Notifications::UserNotification) -> Option<Noti
     })
 }
 
+fn added_payload(item: Option<NotificationItem>) -> NotificationPresencePayload {
+    NotificationPresencePayload {
+        has_notification: true,
+        is_new: true,
+        app_name: item.as_ref().map(|i| i.app_name.clone()),
+        title: item.as_ref().map(|i| i.title.clone()),
+        body: item.as_ref().map(|i| i.body.clone()),
+        item,
+        removed_id: None,
+        initial_items: None,
+    }
+}
+
+fn removed_payload(id: u32, remaining: usize) -> NotificationPresencePayload {
+    NotificationPresencePayload {
+        has_notification: remaining > 0,
+        is_new: false,
+        item: None,
+        removed_id: Some(id),
+        initial_items: None,
+        app_name: None,
+        title: None,
+        body: None,
+    }
+}
+
+const POLL_INTERVAL: std::time::Duration = std::time::Duration::from_millis(1500);
+
+/// Fallback for when NotificationChanged cannot be registered (it requires
+/// package identity, so unpackaged and dev builds always land here): diff
+/// the active toast list on an interval and emit the same events.
+async fn poll_notifications(
+    app: AppHandle,
+    listener: UserNotificationListener,
+    active_ids: Arc<Mutex<HashSet<u32>>>,
+) {
+    use windows::UI::Notifications::NotificationKinds;
+    loop {
+        tokio::time::sleep(POLL_INTERVAL).await;
+
+        let notifs = match listener.GetNotificationsAsync(NotificationKinds::Toast) {
+            Ok(op) => match op.await {
+                Ok(n) => n,
+                Err(_) => continue,
+            },
+            Err(_) => continue,
+        };
+
+        let (added, removed, remaining) = {
+            let Ok(mut ids) = active_ids.lock() else { continue };
+            let mut current = HashSet::new();
+            let mut added = Vec::new();
+            for n in &notifs {
+                let Ok(id) = n.Id() else { continue };
+                current.insert(id);
+                if !ids.contains(&id) {
+                    added.push(extract_item(&n));
+                }
+            }
+            let removed: Vec<u32> = ids.difference(&current).copied().collect();
+            *ids = current;
+            (added, removed, ids.len())
+        };
+        drop(notifs);
+
+        for id in removed {
+            dlog!("[NOTIFICATIONS] (poll) REMOVED id: {}", id);
+            let _ = app.emit("notification-presence", removed_payload(id, remaining));
+        }
+        // Oldest first, so the newest ends up as the visible preview.
+        let mut added = added;
+        added.sort_by_key(|i| i.as_ref().map(|i| i.timestamp).unwrap_or(0));
+        for item in added {
+            dlog!("[NOTIFICATIONS] (poll) ADDED {:?}", item.as_ref().map(|i| i.id));
+            let _ = app.emit("notification-presence", added_payload(item));
+        }
+    }
+}
+
 pub fn init(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let app_handle = app.handle().clone();
 
@@ -211,17 +290,7 @@ async fn setup_notification_listener(app: AppHandle) -> Result<(), Box<dyn std::
                                 None
                             };
 
-                            let payload = NotificationPresencePayload {
-                                has_notification: true,
-                                is_new: true,
-                                item: item.clone(),
-                                removed_id: None,
-                                initial_items: None,
-                                app_name: item.as_ref().map(|i| i.app_name.clone()),
-                                title: item.as_ref().map(|i| i.title.clone()),
-                                body: item.as_ref().map(|i| i.body.clone()),
-                            };
-                            let _ = app_clone.emit("notification-presence", payload);
+                            let _ = app_clone.emit("notification-presence", added_payload(item));
                         }
                         UserNotificationChangedKind::Removed => {
                             dlog!("[NOTIFICATIONS] Windows notification REMOVED (id: {})", id);
@@ -231,26 +300,14 @@ async fn setup_notification_listener(app: AppHandle) -> Result<(), Box<dyn std::
                             } else {
                                 0
                             };
-                            let has_notification = remaining_count > 0;
-                            dlog!(
-                                "[NOTIFICATIONS] Remaining active notifications: {} (has_notification: {})",
-                                remaining_count, has_notification
+                            dlog!("[NOTIFICATIONS] Remaining active notifications: {}", remaining_count);
+                            let _ = app_clone.emit(
+                                "notification-presence",
+                                removed_payload(id, remaining_count),
                             );
-                            let payload = NotificationPresencePayload {
-                                has_notification,
-                                is_new: false,
-                                item: None,
-                                removed_id: Some(id),
-                                initial_items: None,
-                                app_name: None,
-                                title: None,
-                                body: None,
-                            };
-                            let _ = app_clone.emit("notification-presence", payload);
                         }
                         _ => {}
                     }
-                    crate::focus::emit_focus_presence(&app_clone);
                 }
             }
             Ok(())
@@ -262,7 +319,11 @@ async fn setup_notification_listener(app: AppHandle) -> Result<(), Box<dyn std::
             dlog!("[NOTIFICATIONS] NotificationChanged event listener successfully registered (token: {:?})", token);
         }
         Err(e) => {
-            eprintln!("[NOTIFICATIONS] Failed to register NotificationChanged handler: {:?}", e);
+            dlog!(
+                "[NOTIFICATIONS] NotificationChanged unavailable ({:?}); falling back to polling",
+                e
+            );
+            tauri::async_runtime::spawn(poll_notifications(app, listener, active_ids));
         }
     }
 
