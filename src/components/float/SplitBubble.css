@@ -52,7 +52,7 @@
   width: 3px;
   height: 4px;
   border-radius: 2px;
-  background: var(--float-text-primary);
+  background: var(--float-accent);
 }
 
 .split-bubble-eq.playing span {

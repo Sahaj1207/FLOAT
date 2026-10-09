@@ -32,3 +32,13 @@
 .float-shell:hover .island-glass {
   border-color: var(--float-border-hover);
 }
+
+.island-glass {
+  transition: border-color var(--float-transition), box-shadow 600ms ease;
+}
+
+.float-shell.accent-glow .island-glass,
+.float-shell.accent-glow .split-bubble {
+  border-color: color-mix(in srgb, var(--float-accent) 28%, var(--float-border));
+  box-shadow: var(--float-shadow), 0 0 22px -6px color-mix(in srgb, var(--float-accent) 55%, transparent);
+}

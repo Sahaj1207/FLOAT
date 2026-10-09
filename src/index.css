@@ -16,6 +16,9 @@
   --float-border: rgba(255, 255, 255, 0.12);
   --float-border-hover: rgba(255, 255, 255, 0.18);
 
+  /* Accent: album-art color while media is active (set on .float-shell) */
+  --float-accent: var(--float-text-primary);
+
   /* Text */
   --float-text-primary: rgba(255, 255, 255, 0.95);
   --float-text-secondary: rgba(255, 255, 255, 0.6);

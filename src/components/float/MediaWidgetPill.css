@@ -234,7 +234,7 @@
 
 .equalizer-bars .bar {
   width: 2px;
-  background-color: var(--float-text-primary);
+  background-color: var(--float-accent);
   border-radius: 1px;
   will-change: height;
 }
@@ -311,7 +311,7 @@
 
 .media-pill-progress-fill {
   height: 100%;
-  background: var(--float-text-primary);
+  background: var(--float-accent);
 }
 
 @media (prefers-reduced-motion: reduce) {

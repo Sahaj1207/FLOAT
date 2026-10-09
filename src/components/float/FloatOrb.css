@@ -76,7 +76,7 @@
 
 .orb-equalizer-bars .orb-bar {
   width: 2px;
-  background-color: var(--float-text-primary);
+  background-color: var(--float-accent);
   border-radius: 1px;
   will-change: height;
 }

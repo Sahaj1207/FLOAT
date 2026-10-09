@@ -246,7 +246,7 @@
 .media-progress-fill {
   position: relative;
   height: 100%;
-  background: var(--float-text-primary);
+  background: var(--float-accent);
   border-radius: 3px;
   transition: width 0.05s linear;
 }

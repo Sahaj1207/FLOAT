@@ -234,7 +234,7 @@ export const MediaWidgetPill: React.FC<Props> = ({ media, sessionCount = 1, isPr
         </button>
       </motion.div>
 
-      {media.duration && media.duration > 0 && (
+      {(media.duration ?? 0) > 0 && (
         <div className={`media-pill-progress-overlay ${isPreview ? 'preview-visible' : ''}`}>
           <div 
             ref={fillRef}

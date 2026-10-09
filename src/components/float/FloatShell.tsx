@@ -4,6 +4,8 @@ import { FloatPill } from "./FloatPill";
 import { FloatSurface } from "./FloatSurface";
 import { FloatOrb, OrbNotificationState, OrbFocusState } from "./FloatOrb";
 import { SplitBubble } from "./SplitBubble";
+import { useAlbumArt } from "./useAlbumArt";
+import { useArtColor } from "./useArtColor";
 import {
   startWindowDrag,
   subscribeToMultiSessionState,
@@ -119,6 +121,10 @@ const FloatShell: React.FC = () => {
     : null;
 
   const { primary, secondary, show, dismissKind } = useActivities(activeMedia);
+
+  // Album-art accent tints the equalizer, progress and a soft glow.
+  const accent = useArtColor(useAlbumArt(activeMedia));
+  const accentGlow = !!accent && !!activeMedia?.isPlaying;
   const isNotificationActive = primary?.kind === "notification";
   const isNotificationActiveRef = useRef(isNotificationActive);
   isNotificationActiveRef.current = isNotificationActive;
@@ -814,7 +820,8 @@ const FloatShell: React.FC = () => {
   return (
     <motion.div
       ref={shellRef}
-      className="float-shell"
+      className={`float-shell ${accentGlow ? "accent-glow" : ""}`}
+      style={accent ? ({ "--float-accent": accent } as React.CSSProperties) : undefined}
       animate={{ width: islandWidth, height: islandHeight, borderRadius: islandRadius }}
       transition={springTransition}
       onPointerDown={handlePointerDown}
