@@ -59,12 +59,17 @@ const NOTIFICATION_DWELL_MS = 3500;
 const DOUBLE_TAP_WINDOW_MS = 250;
 const IDLE_TO_ORB_DELAY_MS = 3000;
 
-const springTransition = {
-  type: "spring" as const,
-  stiffness: 380,
-  damping: 34,
-  mass: 0.85,
+// Morph spring per Animation Intensity. Damping ratios ~1.0 / 0.78 / 0.62:
+// subtle never overshoots, balanced settles with a slight Dynamic Island
+// bounce, expressive is playful.
+const MORPH_SPRINGS = {
+  subtle: { type: "spring" as const, stiffness: 420, damping: 40, mass: 0.85 },
+  balanced: { type: "spring" as const, stiffness: 380, damping: 28, mass: 0.85 },
+  expressive: { type: "spring" as const, stiffness: 340, damping: 21, mass: 0.85 },
 };
+// How far the island squishes while pressed.
+const PRESS_SCALE = { subtle: 0.985, balanced: 0.97, expressive: 0.955 };
+const PRESS_SPRING = { type: "spring" as const, stiffness: 600, damping: 30 };
 
 const getRestingDestination = (cfg: FloatSettings): "orb" | "compact" => {
   if (cfg.idleBehavior === "alwaysOrb") return "orb";
@@ -96,6 +101,7 @@ const FloatShell: React.FC = () => {
   const isDraggingRef = useRef(false);
   const shellRef = useRef<HTMLDivElement>(null);
   const hoveringRef = useRef(false);
+  const [pressed, setPressed] = useState(false);
 
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
@@ -678,6 +684,7 @@ const FloatShell: React.FC = () => {
   // outside the island, so DOM pointerenter/leave are not reliable.
   const handleHoverChange = (inside: boolean) => {
     hoveringRef.current = inside;
+    if (!inside) setPressed(false);
     const mode = visualModeRef.current;
     clearHoverTimers();
 
@@ -783,6 +790,7 @@ const FloatShell: React.FC = () => {
     clearIdleToOrbTimer();
     isDraggingRef.current = false;
     dragStartRef.current = { x: e.screenX, y: e.screenY };
+    setPressed(true);
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
@@ -797,6 +805,8 @@ const FloatShell: React.FC = () => {
       clearIdleToOrbTimer();
       lastClickTimeRef.current = 0;
       isDraggingRef.current = true;
+      // The native drag loop swallows pointerup, so release the squish now.
+      setPressed(false);
 
       if (visualModeRef.current === "compactPreview") {
         setVisualMode("compact");
@@ -807,6 +817,7 @@ const FloatShell: React.FC = () => {
 
   const handlePointerUp = () => {
     dragStartRef.current = null;
+    setPressed(false);
     setTimeout(() => {
       isDraggingRef.current = false;
     }, 100);
@@ -822,8 +833,13 @@ const FloatShell: React.FC = () => {
       ref={shellRef}
       className={`float-shell ${accentGlow ? "accent-glow" : ""}`}
       style={accent ? ({ "--float-accent": accent } as React.CSSProperties) : undefined}
-      animate={{ width: islandWidth, height: islandHeight, borderRadius: islandRadius }}
-      transition={springTransition}
+      animate={{
+        width: islandWidth,
+        height: islandHeight,
+        borderRadius: islandRadius,
+        scale: pressed && !isExpanded ? PRESS_SCALE[settings.animationIntensity] : 1,
+      }}
+      transition={{ ...MORPH_SPRINGS[settings.animationIntensity], scale: PRESS_SPRING }}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
