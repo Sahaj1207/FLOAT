@@ -145,9 +145,10 @@ When a new Windows notification arrives:
 
 ## 13. Coexistence: Media + Notifications
 
-- If Spotify is playing when a notification arrives, the island temporarily morphs to display the notification banner for 3.5 seconds.
+- If Spotify is playing when a notification arrives, the notification takes over the pill for 3.5 seconds and the music detaches into a small **split bubble** beside it, showing the album art and a live equalizer.
+- Click the bubble to open the media player.
 - Spotify audio continues playing without interruption.
-- When the 3.5-second preview finishes, the island morphs back to the media player, resuming the live equalizer and track title marquee.
+- When the 3.5-second preview finishes, the bubble merges back and the island returns to the media player.
 
 ---
 
@@ -211,6 +212,8 @@ All settings are stored in `localStorage` (`float_settings_v1`) and take effect 
 | **Notification Presence** | `On` / `Off` | `On` | Toggles the glowing notification dot on the Orb. |
 | **Notification Preview** | `On` / `Off` | `On` | Toggles automatic 3.5s toast banner expansion. |
 | **Notification Content** | `On` / `Off` | `On` | When `Off`, hides notification title/body for privacy. |
+| **Hide in Fullscreen** | `On` / `Off` | `On` | Hides the island while a fullscreen game, video or presentation is focused. |
+| **Launch at Startup** | `On` / `Off` | `Off` | Starts FLOAT when you sign in. Stored by Windows, not in `localStorage`. |
 
 ---
 
@@ -219,16 +222,20 @@ All settings are stored in `localStorage` (`float_settings_v1`) and take effect 
 - **Single Click**: Expands Pill to Surface; opens Orb Quick Actions / Preview.
 - **Double Click**: Toggles between Compact Pill and Orb.
 - **Hover**: Expands Compact Pill to Compact Preview; wakes Orb to Compact Pill.
-- **Pull-Down to Dismiss**: Drag the island downwards by >18 px to reveal the `✕` target and dismiss/hide FLOAT.
-- **Window Drag**: Drag horizontally or upwards to reposition FLOAT anywhere on screen.
+- **Window Drag**: Drag the island to reposition it anywhere on screen. The position is remembered; dropping it within a short distance of top-center snaps it exactly back.
 - **Escape Key**: Closes the Expanded Surface or transient previews.
+- **Click Outside**: Collapses the Expanded Surface.
+- **Global Hotkey**: `Ctrl+Alt+Space` toggles the Expanded Surface from anywhere. If another app already owns it, FLOAT uses `Alt+Shift+Space` or `Ctrl+Alt+I` instead; Settings → System shows which one is active.
+- **Tray Icon**: Left-click to open the island. Right-click for Show Island, Reset Position, Launch at Startup and Quit.
 
 ---
 
 ## 21. Window Management & Always-on-Top
 
 - **Always on Top**: FLOAT floats above standard application windows and borderless games.
-- **Transparent Hitbox**: The transparent bounds around the pill pass mouse clicks through to underlying desktop elements.
+- **Transparent Hitbox**: Only the island (and split bubble) catch the mouse. Everything around them passes clicks through to the apps underneath.
+- **Fullscreen**: With **Hide in Fullscreen** on, the island hides while a fullscreen app is focused and returns afterwards.
+- **Hide / Show**: Use the tray menu's **Show Island** item to hide FLOAT without quitting.
 - **No Taskbar Clutter**: Runs with `skipTaskbar: true` to avoid cluttering your taskbar.
 
 ---
@@ -236,7 +243,7 @@ All settings are stored in `localStorage` (`float_settings_v1`) and take effect 
 ## 22. Multi-Monitor & DPI Scaling
 
 - **DPI Awareness**: FLOAT uses Per-Monitor V2 DPI awareness. Glass borders, typography, and album artwork remain sharp across 100%, 125%, 150%, 175%, and 200% Windows display scaling.
-- **Positioning**: Automatically centers at the top of your primary display upon launch.
+- **Positioning**: Starts at the top-center of your display, or wherever you last dragged it if that monitor is still connected. Use **Reset Position** in the tray menu to return to top-center.
 
 ---
 
@@ -245,7 +252,7 @@ All settings are stored in `localStorage` (`float_settings_v1`) and take effect 
 ### Notifications are not appearing in FLOAT
 1. Ensure notifications are enabled in **Windows Settings → System → Notifications**.
 2. Verify that **Focus Assist / Do Not Disturb** is not actively silencing notifications.
-3. Ensure FLOAT was installed as a packaged application (`FLOAT.msix`). Standalone unpackaged `.exe` runs cannot access the Windows UserNotificationListener API due to Windows AppModel security restrictions.
+3. Install FLOAT as a packaged application (`FLOAT.msix`) for instant delivery. Unpackaged `.exe` runs cannot subscribe to live notification events, so they check for new notifications every 1.5 seconds instead.
 
 ### Media controls are not responding
 1. Ensure the media application (Spotify, Chrome, Edge) is registered with Windows GSMTC.

@@ -28,11 +28,16 @@ Public release.
 - **Notification Count Badge**: Real-time unread count badge in the surface navigation bar.
 - **Scrollable Notification List**: Scroll container with fixed headers and custom slim glass scrollbars.
 - **Individual Dismissal & Clear All**: Dismiss single notifications with one click or clear the entire history at once.
-- **Media & Notification Coexistence**: Notifications temporarily overlay media without stopping playback or losing track metadata.
+- **Live Activities & Split Island**: When two things are live at once (for example a notification arrives while music plays), the top one owns the pill and the other detaches into a bubble beside it, Dynamic Island style.
+- **Click-Through Window**: Only the island itself catches the mouse; the space around it passes clicks to the apps underneath, and morphs never resize the native window.
+- **Hide in Fullscreen**: The island gets out of the way of fullscreen games, videos and presentations.
 - **Glassmorphism Aesthetic**: Translucent acrylic/mica aesthetic with customizable transparency, border highlights, and blur depth.
 - **Framer Motion Spring Physics**: Natural, physical layout animations and morph transitions.
 - **Expanded Surface**: 460×330 px interactive panel featuring three dedicated sections: Media, Notifications, and Settings.
 - **Persistent User Preferences**: Local persistence for transparency, pill length, orb size, idle behavior, and privacy toggles.
+- **Tray Icon & Global Hotkey**: Open the island from the tray or with `Ctrl+Alt+Space` (falls back to `Alt+Shift+Space` or `Ctrl+Alt+I` if another app owns it).
+- **Launch at Startup**: Optional, from Settings or the tray menu.
+- **Remembered Position**: Drag the island anywhere; it remembers where you left it and snaps back to top-center when dropped nearby.
 - **Multi-Monitor & DPI Aware**: Crisp rendering across standard and high-DPI Windows display scaling.
 - **Packaged AppModel Identity**: MSIX package architecture with native Windows restricted capabilities.
 
@@ -51,6 +56,7 @@ Active State (Media / Pill / Orb)
      │
      ▼ (Windows toast arrives)
 Temporary Preview Banner (~3.5s)
+     │   (media keeps playing in a split bubble beside the pill)
      │
      ▼ (3.5s dwell expires)
 Exact Previous State Restored (Media / Pill / Orb)
@@ -104,8 +110,12 @@ Pill / Orb ──( Click )──► Expanded Surface [ Media | Notifications | S
 | **Hover (200ms dwell)** | Compact Pill | Expands to Compact Preview |
 | **Hover** | Orb | Wakes up and morphs to Compact Pill |
 | **Pointer Leave** | Compact Preview | Returns to Compact Pill (160ms delay) |
-| **Drag (Horizontal/Up)** | Island | Repositions FLOAT window on desktop |
+| **Click** | Split Bubble | Opens Expanded Surface |
+| **Click outside** | Expanded Surface | Collapses back to resting mode |
+| **Drag** | Island | Repositions FLOAT; drops near top-center snap back to it |
 | **Escape Key** | Expanded Surface / Preview | Closes surface / preview and returns to resting mode |
+| **`Ctrl+Alt+Space`** | Anywhere | Toggles the Expanded Surface (see Settings for the active hotkey) |
+| **Left-click** | Tray icon | Opens the Expanded Surface |
 
 ---
 
@@ -144,7 +154,7 @@ cd FLOAT
 npm install
 
 # Start Vite dev server + Tauri desktop window
-npm run dev
+npm run tauri dev
 ```
 
 ### MSIX Release Packaging

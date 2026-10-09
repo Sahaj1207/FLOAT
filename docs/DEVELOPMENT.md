@@ -36,6 +36,9 @@ FLOAT/
 │   ├── platform/           # Tauri IPC bindings & types
 │   │   ├── index.ts        # Platform command exports
 │   │   └── media.ts        # Media session types & events
+│   ├── activities/         # Live-activity model and priority stack
+│   │   ├── types.ts        # Activity kinds and priorities
+│   │   └── useActivities.ts# Ongoing + transient activity stack (primary / split bubble)
 │   ├── services/           # Settings persistence and CSS custom properties
 │   │   └── settings.ts     # localStorage settings store & listeners
 │   ├── App.tsx             # Root component
@@ -44,11 +47,14 @@ FLOAT/
 ├── src-tauri/               # Rust Backend (Tauri 2.0)
 │   ├── icons/              # Application and AppX visual assets
 │   ├── src/
-│   │   ├── focus.rs        # Windows Focus Assist / Quiet Hours detection
-│   │   ├── lib.rs          # Tauri command handlers & window sync logic
+│   │   ├── autostart.rs    # Launch at startup (MSIX StartupTask / HKCU Run key)
+│   │   ├── focus.rs        # Focus Assist status command
+│   │   ├── lib.rs          # Plugin, command and module wiring
 │   │   ├── main.rs         # Application binary entry point
 │   │   ├── media.rs        # Windows GSMTC media session monitoring
-│   │   └── notifications.rs# Windows UserNotificationListener event listener
+│   │   ├── notifications.rs# Windows UserNotificationListener events (with polling fallback)
+│   │   ├── tray.rs         # Tray icon, global hotkey, island commands
+│   │   └── window.rs       # Fixed click-through window, hit testing, fullscreen hide, position memory
 │   ├── Cargo.toml          # Rust dependencies & crate metadata
 │   └── tauri.conf.json     # Tauri window & bundle configuration
 ├── .gitignore
@@ -73,6 +79,16 @@ The root UI controller maintains four primary visual modes:
 ### Layout & Physics
 All visual mode transitions share a unified Framer Motion spring configuration (`stiffness: 380, damping: 34, mass: 0.85`), ensuring physical object continuity (the Island morphs as a single physical entity).
 
+### Window Model
+The island lives in a single fixed 500 × 400 transparent window anchored at the top of the screen. The native window is never resized; all morphs are CSS springs inside it.
+
+`FloatShell` reports the island's current shape (and split bubble, if any) to Rust via `set_hit_regions`. While a morph is running it reports the union of the old and new shapes, then the settled shape once the spring finishes. A monitor thread in `window.rs` hit-tests the cursor against those regions at ~60 Hz and toggles `set_ignore_cursor_events`, so the window is click-through everywhere outside the island. Because the webview stops receiving mouse events when click-through, hover is driven by the native `island-hover` event rather than DOM pointer events.
+
+Keep `WINDOW_WIDTH` / `ISLAND_TOP` in `FloatShell.tsx` in sync with `WINDOW_WIDTH` in `window.rs` and `#root`'s `padding-top` in `index.css`.
+
+### Live Activities
+`useActivities` merges ongoing activities (media) with transient ones (notifications) pushed through `show(activity, lifetimeMs, onExpire)`, sorted by `ActivityPriority`. The first activity owns the pill; the second is rendered as a `SplitBubble` beside it in compact modes. New activity kinds (timers, HUDs, battery…) are added to `activities/types.ts` and given a pill and bubble rendering.
+
 ---
 
 ## 4. Rust Backend Architecture
@@ -85,8 +101,8 @@ Windows GSMTC (Spotify / YouTube / Media Players)
        ▼
 win-gsmtc / WinRT Background Task (Rust)
        │
-       ├─► Broadcasts full session state ("media-state-changed")
-       └─► Streams position ticks ("media-position-changed")
+       ├─► Broadcasts session state ("multi-session-changed"; album art excluded, see artKey)
+       └─► Streams position ticks ("session-position-changed")
        │
        ▼
 Frontend Platform Layer (`src/platform/media.ts`)
@@ -130,7 +146,7 @@ Rust Notification Bridge (`src-tauri/src/notifications.rs`)
 npm install
 
 # Run Vite dev server + Tauri window
-npm run dev
+npm run tauri dev
 ```
 
 ### Production MSIX Packaging
@@ -158,7 +174,10 @@ In production, FLOAT runs with the `custom-protocol` feature enabled in `Cargo.t
 - `media_play_pause(session_id: Option<String>)`: Toggles playback.
 - `media_next(session_id: Option<String>)`: Skips to next track.
 - `media_prev(session_id: Option<String>)`: Skips to previous track.
-- `media_seek_to(position_ms: u64, session_id: Option<String>)`: Scrubs to timeline position.
+- `media_seek(position: f64, session_id: Option<String>)`: Scrubs to a timeline position in seconds.
+- `get_album_art(session_id: String)`: Returns the session's album art as base64. Sessions carry an `artKey` content hash; fetch only when it changes.
+
+Controls resolve the target session by `SourceAppUserModelId` (win-gsmtc session ids are counters, not indices), using the track title to break ties between sessions from the same app.
 
 ### Notification Commands
 - `get_active_notifications()`: Returns all currently active notifications in Windows Action Center.
@@ -166,6 +185,23 @@ In production, FLOAT runs with the `custom-protocol` feature enabled in `Cargo.t
 - `clear_all_notifications()`: Clears all notifications from Windows Action Center.
 
 ### Window Commands
-- `sync_window_size(width: f64, height: f64)`: Adjusts the native window dimensions to match island bounds.
-- `start_window_drag()`: Initiates native OS window dragging.
-- `hide_window()`: Minimizes/hides the FLOAT window.
+- `set_hit_regions(regions: Vec<HitRect>)`: Logical-px rectangles (relative to the window) that should catch the mouse.
+- `set_hide_in_fullscreen(enabled: bool)`: Mirrors the Hide in Fullscreen setting.
+- `reset_window_position()`: Moves the island back to top-center and saves it.
+- Native window dragging uses Tauri's `startDragging()` from the frontend.
+
+### System Commands
+- `get_focus_presence()`: Current Focus Assist status (`normal` / `active` / `unknown`).
+- `get_autostart()` / `set_autostart(enabled: bool)`: Launch at startup; `set_autostart` returns the resulting state.
+- `get_hotkey()`: The global hotkey that was registered, or `null`.
+
+### Events (Rust → Frontend)
+- `multi-session-changed`, `session-position-changed`: Media state.
+- `notification-presence`: Notification added / removed / seeded.
+- `focus-presence`: Focus Assist status changed (polled every ~500 ms).
+- `island-hover`: `{ inside: bool }` when the cursor enters or leaves the hit regions.
+- `island-command`: `"open"` or `"toggle"`, from the tray, hotkey or a second launch.
+- `autostart-changed`: Launch-at-startup state changed (e.g. from the tray).
+
+### Notification Delivery
+`NotificationChanged` requires package identity. When registering it fails (unpackaged and dev builds), `notifications.rs` diffs the active toast list every 1.5 s and emits the same events, so notifications work in `npm run tauri dev` too.
