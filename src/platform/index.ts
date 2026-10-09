@@ -195,6 +195,28 @@ export async function setVolume(level: number): Promise<VolumeState | null> {
   }
 }
 
+/** Built-in display brightness 0-100, or null if it can't be controlled. */
+export async function getBrightness(): Promise<number | null> {
+  try {
+    return await invoke<number | null>("get_brightness");
+  } catch {
+    return null;
+  }
+}
+
+export async function setBrightness(level: number): Promise<void> {
+  try {
+    await invoke("set_brightness", { level: Math.round(level) });
+  } catch (e) {
+    console.error("setBrightness failed:", e);
+  }
+}
+
+/** Fires when brightness changes (including the brightness keys). */
+export async function subscribeToBrightness(callback: (level: number) => void): Promise<UnlistenFn> {
+  return await listen<number>("brightness-changed", (event) => callback(event.payload));
+}
+
 export interface ConnectivityState {
   wifi: { available: boolean; on: boolean; ssid: string | null; signal: number | null };
   bluetooth: { available: boolean; on: boolean; devices: string[] };

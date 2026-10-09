@@ -180,7 +180,7 @@ button.cc-badge {
   height: 6px;
   appearance: none;
   border-radius: 3px;
-  background: linear-gradient(to right, var(--float-accent) var(--cc-fill), rgba(255, 255, 255, 0.14) var(--cc-fill));
+  background: linear-gradient(to right, var(--cc-color, var(--float-accent)) var(--cc-fill), rgba(255, 255, 255, 0.14) var(--cc-fill));
   cursor: pointer;
 }
 
@@ -240,4 +240,8 @@ button.cc-badge {
 
 .cc-mini-button.on .cc-mini-value {
   color: #a78bfa;
+}
+
+.cc-badge.sun {
+  color: #ffd60a;
 }

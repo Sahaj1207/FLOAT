@@ -19,6 +19,7 @@ export const ActivityPriority = {
   timerDone: 115,
   // User-initiated feedback wins over everything else.
   volume: 120,
+  brightness: 120,
 } as const;
 
 export interface NotificationActivity {
@@ -72,6 +73,14 @@ export interface BluetoothActivity {
   connected: boolean;
 }
 
+export interface BrightnessActivity {
+  kind: "brightness";
+  id: string;
+  priority: number;
+  /** 0-100 */
+  level: number;
+}
+
 export interface ShelfActivity {
   kind: "shelf";
   id: string;
@@ -111,12 +120,13 @@ export type Activity =
   | PrivacyActivity
   | FocusActivity
   | BluetoothActivity
-  | ShelfActivity;
+  | ShelfActivity
+  | BrightnessActivity;
 
 /** Short system-status activities rendered by StatusHud. */
-export type StatusActivity = BatteryActivity | PrivacyActivity | FocusActivity | TimerDoneActivity | BluetoothActivity | ShelfActivity;
+export type StatusActivity = BatteryActivity | PrivacyActivity | FocusActivity | TimerDoneActivity | BluetoothActivity | ShelfActivity | BrightnessActivity;
 
 export const isStatusActivity = (a: Activity | null): a is StatusActivity =>
-  a !== null && (a.kind === "battery" || a.kind === "privacy" || a.kind === "focus" || a.kind === "timerDone" || a.kind === "bluetooth" || a.kind === "shelf");
+  a !== null && (a.kind === "battery" || a.kind === "privacy" || a.kind === "focus" || a.kind === "timerDone" || a.kind === "bluetooth" || a.kind === "shelf" || a.kind === "brightness");
 
 export type ActivityKind = Activity["kind"];

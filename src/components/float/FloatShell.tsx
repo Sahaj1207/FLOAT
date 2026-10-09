@@ -30,6 +30,7 @@ import {
   getPrivacyState,
   subscribeToBluetoothDevice,
   subscribeToFileDrag,
+  subscribeToBrightness,
   PrivacyState,
   HitRect,
   getMultiSessionState,
@@ -985,6 +986,10 @@ const FloatShell: React.FC = () => {
 
     // Hardware volume keys and other apps changing the volume.
     unlisteners.push(subscribeToVolumeChanged((state) => showVolume(state)));
+
+    unlisteners.push(subscribeToBrightness((level) => {
+      show({ kind: "brightness", id: "brightness", priority: ActivityPriority.brightness, level }, VOLUME_HUD_MS);
+    }));
 
     unlisteners.push(subscribeToBluetoothDevice(({ name, connected }) => {
       show(

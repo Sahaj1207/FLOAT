@@ -137,3 +137,30 @@
   height: 7px;
   border-radius: 50%;
 }
+
+/* Brightness HUD */
+.status-hud-icon.sun {
+  color: #ffd60a;
+}
+
+.status-hud-track {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.14);
+  overflow: hidden;
+}
+
+.status-hud-track-fill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--float-text-primary);
+  transition: width 0.15s ease;
+}
+
+.status-hud .status-hud-percent {
+  min-width: 26px;
+  text-align: right;
+  color: var(--float-text-secondary);
+}

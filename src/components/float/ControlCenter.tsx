@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
 import {
   ConnectivityState,
+  getBrightness,
   getPowerState,
+  setBrightness,
+  subscribeToBrightness,
   getVolume,
   openSettingsPage,
   PowerPayload,
@@ -13,6 +16,7 @@ import {
   VolumeState,
 } from "../../platform";
 import { useConnectivity } from "./useConnectivity";
+import { SunIcon } from "./StatusHud";
 import "./ControlCenter.css";
 
 /* ---- Icons ---------------------------------------------------------------- */
@@ -158,9 +162,12 @@ export const ControlsView: React.FC<{ focusActive: boolean }> = ({ focusActive }
   const { toggle, busy, error } = useRadioToggle(state, update);
   const [volume, setVolumeState] = useState<VolumeState | null>(null);
   const [power, setPower] = useState<PowerPayload | null>(null);
+  const [brightness, setBrightnessState] = useState<number | null>(null);
 
   useEffect(() => {
     let isMounted = true;
+    getBrightness().then((b) => isMounted && setBrightnessState(b));
+    const unlistenBrightness = subscribeToBrightness((b) => isMounted && setBrightnessState(b));
     getVolume().then((v) => isMounted && setVolumeState(v));
     getPowerState().then((p) => isMounted && setPower(p));
     const unlistenVolume = subscribeToVolumeChanged((v) => isMounted && setVolumeState(v));
@@ -168,6 +175,7 @@ export const ControlsView: React.FC<{ focusActive: boolean }> = ({ focusActive }
     return () => {
       isMounted = false;
       unlistenVolume.then((fn) => fn());
+      unlistenBrightness.then((fn) => fn());
       unlistenPower.then((fn) => fn());
     };
   }, []);
@@ -253,6 +261,32 @@ export const ControlsView: React.FC<{ focusActive: boolean }> = ({ focusActive }
                 style={{ "--cc-fill": `${volume.muted ? 0 : Math.round(volume.level * 100)}%` } as React.CSSProperties}
               />
               <span className="cc-value">{volume.muted ? "Muted" : Math.round(volume.level * 100)}</span>
+            </div>
+          </div>
+        )}
+        {brightness !== null && (
+          <div className="cc-card">
+            <div className="cc-card-head">
+              <span className="cc-badge sun">
+                <SunIcon className="cc-icon" />
+              </span>
+              <input
+                className="cc-slider"
+                type="range"
+                min={0}
+                max={100}
+                value={brightness}
+                onChange={(e) => {
+                  const level = Number(e.target.value);
+                  setBrightnessState(level);
+                  setBrightness(level);
+                }}
+                onClick={(e) => e.stopPropagation()}
+                data-no-drag="true"
+                aria-label="Brightness"
+                style={{ "--cc-fill": `${brightness}%`, "--cc-color": "#ffd60a" } as React.CSSProperties}
+              />
+              <span className="cc-value">{brightness}</span>
             </div>
           </div>
         )}

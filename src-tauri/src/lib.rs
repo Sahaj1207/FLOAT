@@ -10,6 +10,7 @@ macro_rules! dlog {
 
 mod appicon;
 mod autostart;
+mod brightness;
 mod clipboard;
 mod connectivity;
 mod focus;
@@ -61,6 +62,8 @@ pub fn run() {
             clipboard::clear_clipboard_history,
             clipboard::set_clipboard_history_enabled,
             lyrics::get_lyrics,
+            brightness::get_brightness,
+            brightness::set_brightness,
             shelf::get_shelf,
             shelf::add_to_shelf,
             shelf::remove_from_shelf,
@@ -92,6 +95,9 @@ pub fn run() {
             }
             if let Err(e) = sysmon::init(app) {
                 eprintln!("Failed to init system monitor: {}", e);
+            }
+            if let Err(e) = brightness::init(app) {
+                eprintln!("Failed to init brightness: {}", e);
             }
             if let Err(e) = clipboard::init(app) {
                 eprintln!("Failed to init clipboard history: {}", e);
