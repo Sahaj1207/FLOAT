@@ -1,0 +1,145 @@
+.timer-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: #ff9f0a;
+}
+
+.timer-readout {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: #ff9f0a;
+}
+
+.timer-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  background: rgba(255, 159, 10, 0.2);
+  color: #ff9f0a;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.timer-btn:hover {
+  background: rgba(255, 159, 10, 0.32);
+}
+
+.timer-btn:active {
+  transform: scale(0.92);
+}
+
+.timer-btn.md {
+  width: 28px;
+  height: 28px;
+}
+
+.timer-btn.sm {
+  width: 22px;
+  height: 22px;
+}
+
+.timer-btn svg {
+  width: 55%;
+  height: 55%;
+}
+
+.timer-btn.ghost {
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--float-text-secondary);
+}
+
+.timer-btn.ghost:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: var(--float-text-primary);
+}
+
+/* Notch content */
+.timer-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  animation: notifPillEntrance 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.timer-pill-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--float-text-primary);
+}
+
+.timer-pill-readout {
+  margin-left: auto;
+  font-size: 15px;
+}
+
+/* Home tile */
+.timer-tile {
+  gap: 8px;
+}
+
+.timer-tile-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--float-text-primary);
+}
+
+.timer-link {
+  margin-left: auto;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--float-text-secondary);
+  cursor: pointer;
+}
+
+.timer-link:hover {
+  color: #ff9f0a;
+}
+
+.timer-presets {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+
+.timer-preset {
+  padding: 5px 0;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--float-text-primary);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.timer-preset:hover {
+  background: rgba(255, 159, 10, 0.25);
+  color: #ff9f0a;
+}
+
+.timer-tile-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.timer-tile-readout {
+  flex: 1;
+  font-size: 20px;
+}

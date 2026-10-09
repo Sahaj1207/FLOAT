@@ -1,4 +1,5 @@
 import { MediaSession } from "../platform/media";
+import { TimerState } from "./timerStore";
 
 /**
  * Live activities are the things the island can show. At most two are
@@ -7,10 +8,13 @@ import { MediaSession } from "../platform/media";
  */
 export const ActivityPriority = {
   media: 10,
+  // A running timer outranks music, which moves to the split bubble.
+  timer: 30,
   notification: 100,
   focus: 104,
   privacy: 105,
   battery: 110,
+  timerDone: 115,
   // User-initiated feedback wins over everything else.
   volume: 120,
 } as const;
@@ -65,7 +69,23 @@ export interface FocusActivity {
   active: boolean;
 }
 
+export interface TimerActivity {
+  kind: "timer";
+  id: string;
+  priority: number;
+  state: TimerState;
+}
+
+export interface TimerDoneActivity {
+  kind: "timerDone";
+  id: string;
+  priority: number;
+  durationMs: number;
+}
+
 export type Activity =
+  | TimerActivity
+  | TimerDoneActivity
   | NotificationActivity
   | MediaActivity
   | VolumeActivity
@@ -74,9 +94,9 @@ export type Activity =
   | FocusActivity;
 
 /** Short system-status activities rendered by StatusHud. */
-export type StatusActivity = BatteryActivity | PrivacyActivity | FocusActivity;
+export type StatusActivity = BatteryActivity | PrivacyActivity | FocusActivity | TimerDoneActivity;
 
 export const isStatusActivity = (a: Activity | null): a is StatusActivity =>
-  a !== null && (a.kind === "battery" || a.kind === "privacy" || a.kind === "focus");
+  a !== null && (a.kind === "battery" || a.kind === "privacy" || a.kind === "focus" || a.kind === "timerDone");
 
 export type ActivityKind = Activity["kind"];

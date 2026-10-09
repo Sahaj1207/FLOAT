@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Activity } from "../../activities/types";
 import { useAlbumArt } from "./useAlbumArt";
 import { AudioBars } from "./AudioBars";
+import { TimerIcon } from "./Timer";
 import "./SplitBubble.css";
 
 interface SplitBubbleProps {
@@ -30,7 +31,13 @@ export const SplitBubble: React.FC<SplitBubbleProps> = ({ activity, size, gap, o
       data-no-drag="true"
       aria-label={activity.kind === "media" ? "Open media" : "Open activity"}
     >
-      {activity.kind === "media" ? <MediaMinimal activity={activity} /> : <span className="split-bubble-dot" />}
+      {activity.kind === "media" ? (
+        <MediaMinimal activity={activity} />
+      ) : activity.kind === "timer" ? (
+        <TimerIcon />
+      ) : (
+        <span className="split-bubble-dot" />
+      )}
     </motion.button>
   );
 };

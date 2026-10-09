@@ -14,7 +14,7 @@ interface TransientTimer {
  * (notifications, and later HUDs) are pushed with a lifetime. A transient of
  * the same kind replaces the previous one and restarts its timer.
  */
-export function useActivities(media: MediaSession | null) {
+export function useActivities(media: MediaSession | null, ongoing: Activity[] = []) {
   const [transients, setTransients] = useState<Activity[]>([]);
   const timers = useRef(new Map<ActivityKind, TransientTimer>());
 
@@ -57,12 +57,12 @@ export function useActivities(media: MediaSession | null) {
   }, []);
 
   const activities = useMemo(() => {
-    const list: Activity[] = [...transients];
+    const list: Activity[] = [...transients, ...ongoing];
     if (media?.hasMedia) {
       list.push({ kind: "media", id: `media:${media.id}`, priority: ActivityPriority.media, session: media });
     }
     return list.sort((a, b) => b.priority - a.priority);
-  }, [transients, media]);
+  }, [transients, ongoing, media]);
 
   return {
     activities,

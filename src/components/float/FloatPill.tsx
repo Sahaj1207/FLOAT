@@ -6,7 +6,8 @@ import { OrbNotificationState } from "./FloatOrb";
 import { AppIcon } from "./AppIcon";
 import { VolumeHud } from "./VolumeHud";
 import { IdleNotch } from "./IdleNotch";
-import { StatusActivity, VolumeActivity } from "../../activities/types";
+import { StatusActivity, TimerActivity, VolumeActivity } from "../../activities/types";
+import { TimerPill } from "./Timer";
 import { StatusHud } from "./StatusHud";
 import "./FloatPill.css";
 
@@ -21,6 +22,7 @@ interface FloatPillProps {
   showContent?: boolean;
   volume?: VolumeActivity | null;
   status?: StatusActivity | null;
+  timer?: TimerActivity | null;
   onVolumeChange?: (state: { level: number; muted: boolean }) => void;
 }
 
@@ -35,6 +37,7 @@ export const FloatPill: React.FC<FloatPillProps> = ({
   showContent = true,
   volume = null,
   status = null,
+  timer = null,
   onVolumeChange = () => {},
 }) => {
   return (
@@ -48,6 +51,8 @@ export const FloatPill: React.FC<FloatPillProps> = ({
           <VolumeHud activity={volume} onChange={onVolumeChange} />
         ) : status ? (
           <StatusHud activity={status} />
+        ) : timer ? (
+          <TimerPill state={timer.state} />
         ) : isNotificationActive && notification?.hasNotification ? (
           <div className="float-pill-notification-banner">
             <div className="pill-notif-app-indicator">

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, LayoutGroup, AnimatePresence } from "framer-motion";
 import { FloatPill } from "./FloatPill";
 import { FloatSurface } from "./FloatSurface";
@@ -40,7 +40,9 @@ import { MediaSession, MultiSessionState, SessionPositionPayload } from "../../p
 import { mediaTimeline } from "./mediaTimeline";
 import { loadSettings, saveSettings, subscribeToSettings, FloatSettings } from "../../services/settings";
 import { useActivities } from "../../activities/useActivities";
-import { ActivityPriority, isStatusActivity } from "../../activities/types";
+import { Activity, ActivityPriority, isStatusActivity } from "../../activities/types";
+import { timer, useTimerState } from "../../activities/timerStore";
+import { playChime } from "./Timer";
 import "./FloatShell.css";
 
 export type IslandVisualMode = "orb" | "compact" | "compactPreview" | "expanded";
@@ -73,6 +75,7 @@ const MORPH_SETTLE_MS = 700;
 const NOTIFICATION_DWELL_MS = 3500;
 const VOLUME_HUD_MS = 1600;
 const STATUS_HUD_MS = 2600;
+const TIMER_DONE_MS = 10_000;
 const VOLUME_STEP = 0.02;
 const WHEEL_NOTCH = 100;
 const SKIP_COOLDOWN_MS = 600;
@@ -148,7 +151,22 @@ const FloatShell: React.FC = () => {
     ? allSessions.find(s => s.id === effectiveSelectedId) || null
     : null;
 
-  const { primary, secondary, show, dismissKind } = useActivities(activeMedia);
+  // A running or paused timer / stopwatch is an ongoing activity.
+  const timerState = useTimerState();
+  const ongoing = useMemo<Activity[]>(
+    () => (timerState.active ? [{ kind: "timer", id: "timer", priority: ActivityPriority.timer, state: timerState }] : []),
+    [timerState]
+  );
+  const { primary, secondary, show, dismissKind } = useActivities(activeMedia, ongoing);
+
+  useEffect(
+    () =>
+      timer.onFinish((durationMs) => {
+        playChime();
+        show({ kind: "timerDone", id: "timerDone", priority: ActivityPriority.timerDone, durationMs }, TIMER_DONE_MS);
+      }),
+    [show]
+  );
 
   // Album-art accent tints the equalizer, progress and a soft glow.
   const accent = useArtColor(useAlbumArt(activeMedia));
@@ -1060,6 +1078,7 @@ const FloatShell: React.FC = () => {
             showContent={settings.notificationContent}
             volume={primary?.kind === "volume" ? primary : null}
             status={isStatusActivity(primary) ? primary : null}
+            timer={primary?.kind === "timer" ? primary : null}
             onVolumeChange={showVolume}
           />
         )}

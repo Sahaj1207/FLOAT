@@ -1,5 +1,7 @@
 import React from "react";
 import { BatteryActivity, StatusActivity } from "../../activities/types";
+import { TimerIcon } from "./Timer";
+import { formatTimer } from "../../activities/timerStore";
 import "./StatusHud.css";
 
 /** Brief system-status live activities: charging, low battery, camera/mic, Focus. */
@@ -15,6 +17,14 @@ export const StatusHud: React.FC<{ activity: StatusActivity }> = ({ activity }) 
             {activity.device === "camera" ? "Camera" : "Microphone"} {activity.app ? "in use" : "off"}
           </span>
           {activity.app && <span className="status-hud-detail">{activity.app}</span>}
+        </div>
+      );
+    case "timerDone":
+      return (
+        <div className="status-hud">
+          <TimerIcon />
+          <span className="status-hud-label">Timer done</span>
+          <span className="status-hud-detail">{formatTimer(activity.durationMs)}</span>
         </div>
       );
     case "focus":
