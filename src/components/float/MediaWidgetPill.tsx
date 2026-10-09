@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MediaSession } from '../../platform/media';
 import { mediaPlayPause } from '../../platform';
 import { mediaTimeline } from './mediaTimeline';
+import { useAlbumArt } from './useAlbumArt';
 import './MediaWidgetPill.css';
 
 interface Props {
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export const MediaWidgetPill: React.FC<Props> = ({ media, sessionCount = 1, isPreview = false }) => {
+  const albumArt = useAlbumArt(media);
   const fillRef = useRef<HTMLDivElement>(null);
 
   // Register preview progress bar element to central timeline manager
@@ -106,9 +108,9 @@ export const MediaWidgetPill: React.FC<Props> = ({ media, sessionCount = 1, isPr
               transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
               className="media-pill-art-inner"
             >
-              {media.albumArtBase64 ? (
+              {albumArt ? (
                 <img 
-                  src={`data:image/jpeg;base64,${media.albumArtBase64}`} 
+                  src={albumArt} 
                   alt="Art" 
                   className="media-pill-art"
                 />

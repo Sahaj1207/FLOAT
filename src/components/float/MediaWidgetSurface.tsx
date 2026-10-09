@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MediaSession, MultiSessionState } from '../../platform/media';
 import { mediaPlayPause, mediaNext, mediaPrev, mediaSeek, selectMediaSession } from '../../platform';
 import { mediaTimeline } from './mediaTimeline';
+import { useAlbumArt } from './useAlbumArt';
 import './MediaWidgetSurface.css';
 
 interface Props {
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export const MediaWidgetSurface: React.FC<Props> = ({ media, multiState, onSelectSession }) => {
+  const albumArt = useAlbumArt(media);
   const [isSeekingState, setIsSeekingState] = useState(false);
 
   // DOM Refs for direct updates from central MediaTimelineManager
@@ -231,9 +233,9 @@ export const MediaWidgetSurface: React.FC<Props> = ({ media, multiState, onSelec
               transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
               className="media-art-inner"
             >
-              {media.albumArtBase64 ? (
+              {albumArt ? (
                 <img 
-                  src={`data:image/jpeg;base64,${media.albumArtBase64}`} 
+                  src={albumArt} 
                   alt="Album Art" 
                   className="media-art"
                 />

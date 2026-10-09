@@ -17,8 +17,13 @@ pub struct MediaSession {
     pub artist: Option<String>,
     pub album: Option<String>,
     pub source: Option<String>,
-    #[serde(rename = "albumArtBase64")]
+    /// Base64 album art. Kept out of state broadcasts because it is large;
+    /// the frontend fetches it via `get_album_art` when `art_key` changes.
+    #[serde(skip)]
     pub album_art_base64: Option<String>,
+    /// Content hash of the current album art, or None when there is none.
+    #[serde(rename = "artKey")]
+    pub art_key: Option<String>,
     pub position: Option<f64>,
     pub duration: Option<f64>,
     #[serde(rename = "canPlayPause")]
@@ -53,7 +58,6 @@ pub struct MediaStateManager {
     pub active_id: Arc<Mutex<Option<String>>>,
     pub selected_id: Arc<Mutex<Option<String>>>,
     pub sessions: Arc<Mutex<HashMap<String, MediaSession>>>,
-    pub gsmtc_map: Arc<Mutex<HashMap<String, usize>>>,
 }
 
 #[cfg(target_os = "windows")]
@@ -69,7 +73,6 @@ pub fn init(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
         active_id: active_id.clone(),
         selected_id: selected_id.clone(),
         sessions: sessions.clone(),
-        gsmtc_map: gsmtc_map.clone(),
     });
     
     tauri::async_runtime::spawn(async move {
@@ -87,9 +90,25 @@ pub fn init(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
         active_id: Arc::new(Mutex::new(None::<String>)),
         selected_id: Arc::new(Mutex::new(None::<String>)),
         sessions: Arc::new(Mutex::new(HashMap::<String, MediaSession>::new())),
-        gsmtc_map: Arc::new(Mutex::new(HashMap::<String, usize>::new())),
     });
     Ok(())
+}
+
+fn art_hash(data: &[u8]) -> String {
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    data.hash(&mut hasher);
+    format!("{:016x}", hasher.finish())
+}
+
+/// Return the album art for a session as base64, if it has any.
+#[tauri::command]
+pub async fn get_album_art(
+    session_id: String,
+    state: tauri::State<'_, MediaStateManager>,
+) -> Result<Option<String>, String> {
+    let sessions = state.sessions.lock().await;
+    Ok(sessions.get(&session_id).and_then(|s| s.album_art_base64.clone()))
 }
 
 #[tauri::command]
@@ -281,14 +300,16 @@ async fn run_media_listener(
                                 let (sc, pc) = apply_model(&mut local_session, &model);
                                 let mut art_changed = false;
                                 if let Some(image) = image_opt {
-                                    let new_art = Some(STANDARD.encode(&image.data));
-                                    if local_session.album_art_base64 != new_art {
-                                        local_session.album_art_base64 = new_art;
+                                    let new_key = Some(art_hash(&image.data));
+                                    if local_session.art_key != new_key {
+                                        local_session.album_art_base64 = Some(STANDARD.encode(&image.data));
+                                        local_session.art_key = new_key;
                                         local_session.has_media = true;
                                         art_changed = true;
                                     }
-                                } else if local_session.album_art_base64.is_some() {
+                                } else if local_session.art_key.is_some() {
                                     local_session.album_art_base64 = None;
+                                    local_session.art_key = None;
                                     art_changed = true;
                                 }
                                 (sc || art_changed, pc)
@@ -360,6 +381,12 @@ async fn run_media_listener(
     Ok(())
 }
 
+/// Find the live GSMTC session that corresponds to one of our session ids.
+///
+/// win-gsmtc ids are a monotonically increasing counter, not indices into
+/// `GetSessions()`, so we match on the source AppUserModelId instead. When an
+/// app exposes several sessions under the same AUMID (e.g. browser tabs), the
+/// track title breaks the tie.
 #[cfg(target_os = "windows")]
 async fn resolve_target_session(
     target_id: Option<&str>,
@@ -368,52 +395,62 @@ async fn resolve_target_session(
     use windows::Media::Control::GlobalSystemMediaTransportControlsSessionManager;
 
     let selected_id = state.selected_id.lock().await.clone();
-    let tid_string = target_id.map(|s| s.to_string()).or(selected_id);
-    let tid = tid_string.as_deref();
-
-    let target_num_id = if let Some(t) = tid {
-        let gsmtc_map = state.gsmtc_map.lock().await;
-        gsmtc_map.get(t).copied()
-    } else {
-        None
+    let tid = target_id.map(|s| s.to_string()).or(selected_id);
+    let (source, title) = match &tid {
+        Some(id) => {
+            let sessions = state.sessions.lock().await;
+            match sessions.get(id) {
+                Some(s) => (s.source.clone(), s.title.clone()),
+                None => (None, None),
+            }
+        }
+        None => (None, None),
     };
 
     let manager = GlobalSystemMediaTransportControlsSessionManager::RequestAsync().ok()?.await.ok()?;
-    let sessions = manager.GetSessions().ok()?;
-    let count = sessions.Size().unwrap_or(0);
-    if count == 0 {
-        return None;
-    }
 
-    if let Some(tid) = tid {
-        // Step 1: Check gsmtc_map for exact numerical ID lookup
-        if let Some(num_id) = target_num_id {
-            if (num_id as u32) < count {
-                if let Ok(sess) = sessions.GetAt(num_id as u32) {
-                    return Some(sess);
-                }
-            }
-        }
+    if let Some(source) = source {
+        // Collect in a block so the (non-Send) session view is dropped
+        // before we await below.
+        let candidates: Vec<_> = {
+            let sessions = manager.GetSessions().ok()?;
+            (0..sessions.Size().unwrap_or(0))
+                .filter_map(|i| sessions.GetAt(i).ok())
+                .filter(|sess| {
+                    sess.SourceAppUserModelId()
+                        .map(|aumid| aumid.to_string() == source)
+                        .unwrap_or(false)
+                })
+                .collect()
+        };
 
-        // Step 2: Fallback to matching SourceAppUserModelId against target_id prefix
-        let source_part = tid.rfind('_').map(|i| &tid[..i]).unwrap_or(tid);
-        for i in 0..count {
-            if let Ok(sess) = sessions.GetAt(i) {
-                if let Ok(src) = sess.SourceAppUserModelId() {
-                    let src_str = src.to_string();
-                    if src_str == source_part || src_str.contains(source_part) || source_part.contains(&src_str) {
-                        return Some(sess);
+        if candidates.len() > 1 {
+            if let Some(title) = &title {
+                for sess in &candidates {
+                    let props = match sess.TryGetMediaPropertiesAsync() {
+                        Ok(op) => op.await.ok(),
+                        Err(_) => None,
+                    };
+                    let matches = props
+                        .and_then(|p| p.Title().ok())
+                        .map(|t| t.to_string() == *title)
+                        .unwrap_or(false);
+                    if matches {
+                        return Some(sess.clone());
                     }
                 }
             }
         }
+        if let Some(first) = candidates.into_iter().next() {
+            return Some(first);
+        }
     }
 
-    // Step 3: Default to current active GSMTC session or first available session
+    // Fall back to whatever Windows considers the current session.
     if let Ok(current) = manager.GetCurrentSession() {
         return Some(current);
     }
-    sessions.GetAt(0).ok()
+    manager.GetSessions().ok()?.GetAt(0).ok()
 }
 
 #[tauri::command]

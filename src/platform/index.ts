@@ -157,6 +157,15 @@ export async function getMultiSessionState(): Promise<MultiSessionState> {
   }
 }
 
+export async function getAlbumArt(sessionId: string): Promise<string | null> {
+  try {
+    return await invoke<string | null>("get_album_art", { sessionId });
+  } catch (e) {
+    console.error("getAlbumArt failed:", e);
+    return null;
+  }
+}
+
 export async function selectMediaSession(sessionId: string): Promise<void> {
   try {
     await invoke("select_media_session", { sessionId });

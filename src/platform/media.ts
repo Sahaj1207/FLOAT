@@ -6,7 +6,7 @@ export interface MediaSession {
   artist?: string;
   album?: string;
   source?: string;           // e.g., "Spotify", "Chrome"
-  albumArtBase64?: string;   // Image data as base64 string
+  artKey?: string;           // Hash of the current album art; fetch via getAlbumArt
   
   // Progress/position (in seconds)
   position?: number;

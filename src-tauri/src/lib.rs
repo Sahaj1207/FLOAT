@@ -119,6 +119,7 @@ pub fn run() {
             media::media_prev,
             media::media_seek,
             media::get_multi_session_state,
+            media::get_album_art,
             media::select_media_session,
             focus::get_focus_presence,
             notifications::remove_notification,
