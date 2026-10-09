@@ -239,6 +239,68 @@ export async function openSettingsPage(page: SettingsPage): Promise<void> {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Clipboard history                                                   */
+/* ------------------------------------------------------------------ */
+
+export interface ClipboardEntry {
+  id: number;
+  /** Unix ms when copied. */
+  at: number;
+  kind: "text" | "image";
+  text?: string;
+  /** base64 PNG thumbnail for images. */
+  thumb?: string;
+  width?: number;
+  height?: number;
+}
+
+export async function getClipboardHistory(): Promise<ClipboardEntry[]> {
+  try {
+    return await invoke<ClipboardEntry[]>("get_clipboard_history");
+  } catch {
+    return [];
+  }
+}
+
+export async function copyClipboardEntry(id: number): Promise<boolean> {
+  try {
+    await invoke("copy_clipboard_entry", { id });
+    return true;
+  } catch (e) {
+    console.error("copyClipboardEntry failed:", e);
+    return false;
+  }
+}
+
+export async function removeClipboardEntry(id: number): Promise<ClipboardEntry[]> {
+  try {
+    return await invoke<ClipboardEntry[]>("remove_clipboard_entry", { id });
+  } catch {
+    return [];
+  }
+}
+
+export async function clearClipboardHistory(): Promise<void> {
+  try {
+    await invoke("clear_clipboard_history");
+  } catch {
+    // Not in a Tauri context
+  }
+}
+
+export async function setClipboardHistoryEnabled(enabled: boolean): Promise<void> {
+  try {
+    await invoke("set_clipboard_history_enabled", { enabled });
+  } catch {
+    // Not in a Tauri context
+  }
+}
+
+export async function subscribeToClipboard(callback: (entries: ClipboardEntry[]) => void): Promise<UnlistenFn> {
+  return await listen<ClipboardEntry[]>("clipboard-changed", (event) => callback(event.payload));
+}
+
+/* ------------------------------------------------------------------ */
 /*  File shelf                                                          */
 /* ------------------------------------------------------------------ */
 

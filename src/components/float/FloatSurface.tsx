@@ -7,6 +7,7 @@ import { FloatNotificationsView } from "./FloatNotificationsView";
 import { FloatSettingsView } from "./FloatSettingsView";
 import { ControlsView } from "./ControlCenter";
 import { ShelfView } from "./Shelf";
+import { ClipboardView } from "./ClipboardView";
 import "./FloatSurface.css";
 
 interface FloatSurfaceProps {
@@ -20,7 +21,7 @@ interface FloatSurfaceProps {
   focusActive?: boolean;
 }
 
-export type SurfaceTab = "home" | "shelf" | "notifications" | "controls" | "settings";
+export type SurfaceTab = "home" | "shelf" | "clipboard" | "notifications" | "controls" | "settings";
 
 const icon = (children: React.ReactNode) => (
   <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -31,6 +32,7 @@ const icon = (children: React.ReactNode) => (
 const TAB_ICONS: Record<SurfaceTab, React.ReactNode> = {
   home: icon(<><path d="M3 10.5 12 3l9 7.5" /><path d="M5 9.5V21h14V9.5" /></>),
   shelf: icon(<><path d="M22 12h-6l-2 3h-4l-2-3H2" /><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" /></>),
+  clipboard: icon(<><rect x="8" y="2" width="8" height="4" rx="1" /><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /></>),
   controls: icon(<><path d="M4 7h10M18 7h2M4 17h2M10 17h10" /><circle cx="16" cy="7" r="2" /><circle cx="8" cy="17" r="2" /></>),
   notifications: icon(<><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></>),
   settings: icon(<><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></>),
@@ -39,13 +41,14 @@ const TAB_ICONS: Record<SurfaceTab, React.ReactNode> = {
 const TAB_LABELS: Record<SurfaceTab, string> = {
   home: "Home",
   shelf: "Shelf",
+  clipboard: "Clipboard",
   notifications: "Notifications",
   controls: "Controls",
   settings: "Settings",
 };
 
 // Content tabs sit on the left of the top bar; system tabs on the right.
-const LEFT_TABS: SurfaceTab[] = ["home", "shelf", "notifications"];
+const LEFT_TABS: SurfaceTab[] = ["home", "shelf", "clipboard", "notifications"];
 const RIGHT_TABS: SurfaceTab[] = ["controls", "settings"];
 
 const tabTransition = { duration: 0.18, ease: [0.16, 1, 0.3, 1] as const };
@@ -96,6 +99,8 @@ export const FloatSurface: React.FC<FloatSurfaceProps> = ({
         );
       case "shelf":
         return <ShelfView />;
+      case "clipboard":
+        return <ClipboardView />;
       case "controls":
         return <ControlsView focusActive={focusActive} />;
       case "settings":

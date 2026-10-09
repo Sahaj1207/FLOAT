@@ -117,6 +117,12 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = () => {
     setAutostart(!autostart).then(setAutostartState);
   };
 
+  const handleToggleClipboardHistory = () => {
+    const nextSettings = { ...settings, clipboardHistory: !settings.clipboardHistory };
+    setSettings(nextSettings);
+    saveSettings(nextSettings);
+  };
+
   const handleToggleHideInFullscreen = () => {
     const nextSettings = { ...settings, hideInFullscreen: !settings.hideInFullscreen };
     setSettings(nextSettings);
@@ -586,6 +592,24 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = () => {
               onClick={handleToggleHideInFullscreen}
               data-no-drag="true"
               aria-label="Toggle Hide in Fullscreen"
+            >
+              <span className="float-setting-switch-handle" />
+            </button>
+          </div>
+
+          <div className="float-setting-toggle-row">
+            <div className="float-setting-toggle-left">
+              <span className="float-setting-toggle-title">Clipboard History</span>
+              <span className="float-setting-toggle-desc">Remember recent copies in memory only. Content apps mark as private (like passwords) is never kept</span>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={settings.clipboardHistory}
+              className={`float-setting-switch ${settings.clipboardHistory ? "checked" : ""}`}
+              onClick={handleToggleClipboardHistory}
+              data-no-drag="true"
+              aria-label="Toggle Clipboard History"
             >
               <span className="float-setting-switch-handle" />
             </button>

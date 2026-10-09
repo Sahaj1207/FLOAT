@@ -1,4 +1,4 @@
-import { setHideInFullscreen } from "../platform";
+import { setClipboardHistoryEnabled, setHideInFullscreen } from "../platform";
 
 export type AnimationIntensity = "subtle" | "balanced" | "expressive";
 export type IdleBehavior = "alwaysOrb" | "remember" | "alwaysPill";
@@ -17,6 +17,7 @@ export interface FloatSettings {
   rememberedRestingMode: RestingMode; // "orb" | "compact", default "compact"
   visualStyle: VisualStyle;      // "notch" (solid black) | glass styles, default "notch"
   hideInFullscreen: boolean;     // hide the island while a fullscreen app is focused, default true
+  clipboardHistory: boolean;     // keep an in-memory clipboard history, default true
 }
 
 export const PILL_LENGTH_MIN = 220;
@@ -34,6 +35,7 @@ export const DEFAULT_FLOAT_SETTINGS: FloatSettings = {
   rememberedRestingMode: "compact",
   visualStyle: "notch",
   hideInFullscreen: true,
+  clipboardHistory: true,
 };
 
 const SETTINGS_STORAGE_KEY = "float_settings_v1";
@@ -115,6 +117,11 @@ export function loadSettings(): FloatSettings {
         ? parsed.hideInFullscreen
         : DEFAULT_FLOAT_SETTINGS.hideInFullscreen;
 
+    const clipboardHistory =
+      typeof parsed.clipboardHistory === "boolean"
+        ? parsed.clipboardHistory
+        : DEFAULT_FLOAT_SETTINGS.clipboardHistory;
+
     return {
       transparency,
       pillLength,
@@ -127,6 +134,7 @@ export function loadSettings(): FloatSettings {
       rememberedRestingMode,
       visualStyle,
       hideInFullscreen,
+      clipboardHistory,
     };
   } catch {
     return DEFAULT_FLOAT_SETTINGS;
@@ -147,6 +155,7 @@ export function saveSettings(settings: FloatSettings): void {
 /** Push the settings the native side acts on (window visibility) to Rust. */
 export function applySettingsToNative(settings: FloatSettings): void {
   setHideInFullscreen(settings.hideInFullscreen);
+  setClipboardHistoryEnabled(settings.clipboardHistory);
 }
 
 export function applySettingsToDOM(settings: FloatSettings): void {

@@ -10,6 +10,7 @@ macro_rules! dlog {
 
 mod appicon;
 mod autostart;
+mod clipboard;
 mod connectivity;
 mod focus;
 mod media;
@@ -53,6 +54,11 @@ pub fn run() {
             connectivity::get_connectivity,
             connectivity::set_radio,
             connectivity::open_settings_page,
+            clipboard::get_clipboard_history,
+            clipboard::copy_clipboard_entry,
+            clipboard::remove_clipboard_entry,
+            clipboard::clear_clipboard_history,
+            clipboard::set_clipboard_history_enabled,
             shelf::get_shelf,
             shelf::add_to_shelf,
             shelf::remove_from_shelf,
@@ -84,6 +90,9 @@ pub fn run() {
             }
             if let Err(e) = sysmon::init(app) {
                 eprintln!("Failed to init system monitor: {}", e);
+            }
+            if let Err(e) = clipboard::init(app) {
+                eprintln!("Failed to init clipboard history: {}", e);
             }
             if let Err(e) = connectivity::init(app) {
                 eprintln!("Failed to init connectivity: {}", e);

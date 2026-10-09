@@ -1,0 +1,150 @@
+.clip-view {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+  padding: 4px 16px 14px;
+  box-sizing: border-box;
+}
+
+.clip-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.clip-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--float-text-primary);
+}
+
+.clip-hint {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  color: var(--float-text-secondary);
+}
+
+.clip-clear {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--float-text-secondary);
+  cursor: pointer;
+}
+
+.clip-clear:hover {
+  color: var(--float-text-primary);
+}
+
+.clip-empty {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px dashed rgba(255, 255, 255, 0.14);
+  border-radius: 16px;
+  font-size: 12px;
+  color: var(--float-text-secondary);
+}
+
+/* Horizontal strip of cards, like the shelf. */
+.clip-list {
+  display: flex;
+  flex: 1;
+  gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 4px;
+}
+
+.clip-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 6px;
+  width: 150px;
+  flex-shrink: 0;
+  padding: 10px 11px 8px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  outline: none;
+  transition: background 0.15s ease;
+}
+
+.clip-item:hover,
+.clip-item:focus-visible {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.clip-item.copied {
+  background: rgba(52, 199, 89, 0.16);
+}
+
+.clip-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 11.5px;
+  line-height: 1.35;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--float-text-primary);
+}
+
+.clip-image {
+  max-width: 100%;
+  max-height: 86px;
+  align-self: center;
+  border-radius: 6px;
+  object-fit: contain;
+}
+
+.clip-meta {
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--float-text-secondary);
+}
+
+.clip-item.copied .clip-meta {
+  color: #34c759;
+  font-weight: 600;
+}
+
+.clip-remove {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  color: var(--float-text-primary);
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.clip-item:hover .clip-remove {
+  opacity: 1;
+}
+
+.clip-remove svg {
+  width: 10px;
+  height: 10px;
+}
