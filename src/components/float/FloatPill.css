@@ -32,21 +32,6 @@
   }
 }
 
-.float-pill-indicator {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.6);
-  flex-shrink: 0;
-}
-
-.float-pill-label {
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  color: var(--float-text-primary);
-}
-
 /* Notification Banner in Pill mode */
 .float-pill-notification-banner {
   display: flex;
@@ -136,16 +121,6 @@
 .pill-notif-close-btn:hover {
   background: rgba(255, 255, 255, 0.2);
   color: var(--float-text-primary);
-}
-
-.float-pill-unread-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #3b82f6;
-  box-shadow: 0 0 6px rgba(59, 130, 246, 0.5);
-  margin-left: 2px;
-  flex-shrink: 0;
 }
 
 /* Idle notch */

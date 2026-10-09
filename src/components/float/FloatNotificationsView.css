@@ -75,8 +75,6 @@
   padding-right: 4px;
   margin-right: -4px;
   padding-bottom: 8px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
 }
 
 .float-notifs-scroll-area::-webkit-scrollbar {

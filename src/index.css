@@ -142,3 +142,28 @@ body {
   /* The notch hangs flush from the top edge (FloatShell offsets the orb). */
   padding-top: 0;
 }
+
+/* ---- Scrollbars ----
+   Slim overlay-style bars everywhere. Note: setting scrollbar-width or
+   scrollbar-color on an element makes Chromium ignore these rules. */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-button {
+  display: none;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.26);
+}
