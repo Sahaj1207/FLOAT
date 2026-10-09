@@ -8,33 +8,36 @@ import { loadSettings, applySettingsToDOM } from "./services/settings";
 // Apply initial user settings to DOM
 applySettingsToDOM(loadSettings());
 
-// Redirect frontend logs to Rust stdout for easy debugging
-const originalLog = console.log;
-const originalError = console.error;
+// Redirect frontend logs to Rust stdout in development only. In release
+// builds every console call would otherwise cost an IPC round-trip.
+if (import.meta.env.DEV) {
+  const originalLog = console.log;
+  const originalError = console.error;
 
-console.log = (...args) => {
-  originalLog(...args);
-  invoke("log_from_js", { msg: args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(" ") }).catch(() => {});
-};
+  console.log = (...args) => {
+    originalLog(...args);
+    invoke("log_from_js", { msg: args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(" ") }).catch(() => {});
+  };
 
-console.error = (...args) => {
-  originalError(...args);
-  invoke("log_from_js", { msg: "[ERROR] " + args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(" ") }).catch(() => {});
-};
+  console.error = (...args) => {
+    originalError(...args);
+    invoke("log_from_js", { msg: "[ERROR] " + args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(" ") }).catch(() => {});
+  };
 
-window.onerror = (message, source, lineno, colno, error) => {
-  const msg = `UNCAUGHT ERROR: ${message} at ${source}:${lineno}:${colno} - ${error}`;
-  invoke("log_from_js", { msg }).catch(() => {});
-  return false;
-};
+  window.onerror = (message, source, lineno, colno, error) => {
+    const msg = `UNCAUGHT ERROR: ${message} at ${source}:${lineno}:${colno} - ${error}`;
+    invoke("log_from_js", { msg }).catch(() => {});
+    return false;
+  };
 
-// Also catch promise rejections
-window.onunhandledrejection = (event) => {
-  const msg = `UNHANDLED REJECTION: ${event.reason}`;
-  invoke("log_from_js", { msg }).catch(() => {});
-};
+  // Also catch promise rejections
+  window.onunhandledrejection = (event) => {
+    const msg = `UNHANDLED REJECTION: ${event.reason}`;
+    invoke("log_from_js", { msg }).catch(() => {});
+  };
 
-console.log("[MEDIA UI] Frontend log redirection initialized");
+  console.log("[MEDIA UI] Frontend log redirection initialized");
+}
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

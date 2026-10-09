@@ -22,7 +22,6 @@ export class MediaTimelineManager {
     duration: number,
     isPlaying: boolean
   ) {
-    console.log(`[MEDIA TIMELINE] session=${sessionId || "none"} position=${position} duration=${duration}`);
 
     const isSessionChange = this.currentSessionId !== sessionId;
     const isTrackChange = !isSessionChange && this.currentTitle !== title;

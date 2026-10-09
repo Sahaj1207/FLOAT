@@ -422,7 +422,7 @@ pub async fn media_play_pause(
     session_id: Option<String>,
     state: tauri::State<'_, MediaStateManager>,
 ) -> Result<(), String> {
-    println!("[MEDIA CONTROL] play_pause requested for session {:?}", session_id);
+    dlog!("[MEDIA CONTROL] play_pause requested for session {:?}", session_id);
     if let Some(sess) = resolve_target_session(session_id.as_deref(), &state).await {
         let _ = sess.TryTogglePlayPauseAsync().map_err(|e| e.to_string())?.await;
     }
@@ -435,7 +435,7 @@ pub async fn media_next(
     session_id: Option<String>,
     state: tauri::State<'_, MediaStateManager>,
 ) -> Result<(), String> {
-    println!("[MEDIA CONTROL] next requested for session {:?}", session_id);
+    dlog!("[MEDIA CONTROL] next requested for session {:?}", session_id);
     if let Some(sess) = resolve_target_session(session_id.as_deref(), &state).await {
         let _ = sess.TrySkipNextAsync().map_err(|e| e.to_string())?.await;
     }
@@ -448,7 +448,7 @@ pub async fn media_prev(
     session_id: Option<String>,
     state: tauri::State<'_, MediaStateManager>,
 ) -> Result<(), String> {
-    println!("[MEDIA CONTROL] prev requested for session {:?}", session_id);
+    dlog!("[MEDIA CONTROL] prev requested for session {:?}", session_id);
     if let Some(sess) = resolve_target_session(session_id.as_deref(), &state).await {
         let _ = sess.TrySkipPreviousAsync().map_err(|e| e.to_string())?.await;
     }
@@ -462,16 +462,16 @@ pub async fn media_seek(
     position: f64,
     state: tauri::State<'_, MediaStateManager>,
 ) -> Result<(), String> {
-    println!("[MEDIA SEEK] seek requested to {:.2}s for session {:?}", position, session_id);
+    dlog!("[MEDIA SEEK] seek requested to {:.2}s for session {:?}", position, session_id);
     if let Some(sess) = resolve_target_session(session_id.as_deref(), &state).await {
         let target_ticks = (position * 10000000.0) as i64;
         let res = sess.TryChangePlaybackPositionAsync(target_ticks);
         match res {
             Ok(op) => match op.await {
-                Ok(success) => println!("[MEDIA SEEK] TryChangePlaybackPositionAsync result = Ok({})", success),
-                Err(e) => println!("[MEDIA SEEK ERROR] TryChangePlaybackPositionAsync await error = {}", e),
+                Ok(success) => dlog!("[MEDIA SEEK] TryChangePlaybackPositionAsync result = Ok({})", success),
+                Err(e) => dlog!("[MEDIA SEEK ERROR] TryChangePlaybackPositionAsync await error = {}", e),
             },
-            Err(e) => println!("[MEDIA SEEK ERROR] TryChangePlaybackPositionAsync call error = {}", e),
+            Err(e) => dlog!("[MEDIA SEEK ERROR] TryChangePlaybackPositionAsync call error = {}", e),
         }
     }
     Ok(())

@@ -113,7 +113,7 @@ pub fn init(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 async fn setup_notification_listener(app: AppHandle) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    println!("[NOTIFICATIONS] Initializing Windows UserNotificationListener...");
+    dlog!("[NOTIFICATIONS] Initializing Windows UserNotificationListener...");
 
     let listener = match UserNotificationListener::Current() {
         Ok(l) => l,
@@ -125,10 +125,10 @@ async fn setup_notification_listener(app: AppHandle) -> Result<(), Box<dyn std::
 
     // Check access status
     let current_status = listener.GetAccessStatus().unwrap_or(UserNotificationListenerAccessStatus::Unspecified);
-    println!("[NOTIFICATIONS] Current access status: {:?}", current_status);
+    dlog!("[NOTIFICATIONS] Current access status: {:?}", current_status);
 
     let access_status = if current_status == UserNotificationListenerAccessStatus::Unspecified {
-        println!("[NOTIFICATIONS] Requesting access via RequestAccessAsync...");
+        dlog!("[NOTIFICATIONS] Requesting access via RequestAccessAsync...");
         match listener.RequestAccessAsync() {
             Ok(op) => match op.await {
                 Ok(status) => status,
@@ -146,10 +146,10 @@ async fn setup_notification_listener(app: AppHandle) -> Result<(), Box<dyn std::
         current_status
     };
 
-    println!("[NOTIFICATIONS] Resolved access status: {:?}", access_status);
+    dlog!("[NOTIFICATIONS] Resolved access status: {:?}", access_status);
 
     if access_status != UserNotificationListenerAccessStatus::Allowed {
-        println!("[NOTIFICATIONS] Notification access not allowed ({:?}). Listener will remain inactive.", access_status);
+        dlog!("[NOTIFICATIONS] Notification access not allowed ({:?}). Listener will remain inactive.", access_status);
         return Ok(());
     }
 
@@ -168,7 +168,7 @@ async fn setup_notification_listener(app: AppHandle) -> Result<(), Box<dyn std::
                         initial_items.push(item);
                     }
                 }
-                println!("[NOTIFICATIONS] Initial active toast count seeded: {}", ids.len());
+                dlog!("[NOTIFICATIONS] Initial active toast count seeded: {}", ids.len());
             }
 
             let has_notification = !initial_items.is_empty();
@@ -200,7 +200,7 @@ async fn setup_notification_listener(app: AppHandle) -> Result<(), Box<dyn std::
                     let id = event_args.UserNotificationId().unwrap_or(0);
                     match change_kind {
                         UserNotificationChangedKind::Added => {
-                            println!("[NOTIFICATIONS] Windows notification ADDED (id: {})", id);
+                            dlog!("[NOTIFICATIONS] Windows notification ADDED (id: {})", id);
                             if let Ok(mut ids) = active_ids_clone.lock() {
                                 ids.insert(id);
                             }
@@ -224,7 +224,7 @@ async fn setup_notification_listener(app: AppHandle) -> Result<(), Box<dyn std::
                             let _ = app_clone.emit("notification-presence", payload);
                         }
                         UserNotificationChangedKind::Removed => {
-                            println!("[NOTIFICATIONS] Windows notification REMOVED (id: {})", id);
+                            dlog!("[NOTIFICATIONS] Windows notification REMOVED (id: {})", id);
                             let remaining_count = if let Ok(mut ids) = active_ids_clone.lock() {
                                 ids.remove(&id);
                                 ids.len()
@@ -232,7 +232,7 @@ async fn setup_notification_listener(app: AppHandle) -> Result<(), Box<dyn std::
                                 0
                             };
                             let has_notification = remaining_count > 0;
-                            println!(
+                            dlog!(
                                 "[NOTIFICATIONS] Remaining active notifications: {} (has_notification: {})",
                                 remaining_count, has_notification
                             );
@@ -259,7 +259,7 @@ async fn setup_notification_listener(app: AppHandle) -> Result<(), Box<dyn std::
 
     match listener.NotificationChanged(&handler) {
         Ok(token) => {
-            println!("[NOTIFICATIONS] NotificationChanged event listener successfully registered (token: {:?})", token);
+            dlog!("[NOTIFICATIONS] NotificationChanged event listener successfully registered (token: {:?})", token);
         }
         Err(e) => {
             eprintln!("[NOTIFICATIONS] Failed to register NotificationChanged handler: {:?}", e);
@@ -271,7 +271,7 @@ async fn setup_notification_listener(app: AppHandle) -> Result<(), Box<dyn std::
 
 #[tauri::command]
 pub fn remove_notification(id: u32) -> Result<(), String> {
-    println!("[NOTIFICATIONS] remove_notification called for id: {}", id);
+    dlog!("[NOTIFICATIONS] remove_notification called for id: {}", id);
     if let Ok(listener) = UserNotificationListener::Current() {
         let _ = listener.RemoveNotification(id);
     }
@@ -280,7 +280,7 @@ pub fn remove_notification(id: u32) -> Result<(), String> {
 
 #[tauri::command]
 pub fn clear_all_notifications() -> Result<(), String> {
-    println!("[NOTIFICATIONS] clear_all_notifications called");
+    dlog!("[NOTIFICATIONS] clear_all_notifications called");
     if let Ok(listener) = UserNotificationListener::Current() {
         let _ = listener.ClearNotifications();
     }

@@ -1,3 +1,17 @@
+/// Debug-only logging. Compiles to nothing in release builds so the
+/// shipped app does not pay for formatting or stdout writes.
+macro_rules! dlog {
+    ($($arg:tt)*) => {
+        if cfg!(debug_assertions) {
+            println!($($arg)*);
+        }
+    };
+}
+
+mod focus;
+mod media;
+mod notifications;
+
 use tauri::{Manager, PhysicalPosition, LogicalSize, Size};
 
 /// Position the main window at the top-center of the primary monitor.
@@ -5,47 +19,47 @@ use tauri::{Manager, PhysicalPosition, LogicalSize, Size};
 /// This is isolated into its own function so that dedicated
 /// multi-monitor / positioning support can replace it later.
 fn position_window_top_center(app: &tauri::App) {
-    println!("[WINDOW DEBUG] FLOAT process started");
+    dlog!("[WINDOW DEBUG] FLOAT process started");
     let window = match app.get_webview_window("main") {
         Some(w) => w,
         None => {
-            println!("[WINDOW DEBUG ERROR] Main window not found during setup");
+            dlog!("[WINDOW DEBUG ERROR] Main window not found during setup");
             return;
         }
     };
 
-    println!("[WINDOW DEBUG] Initializing window position...");
-    println!("[WINDOW DEBUG] is_visible: {:?}", window.is_visible().unwrap_or(false));
-    println!("[WINDOW DEBUG] is_minimized: {:?}", window.is_minimized().unwrap_or(false));
+    dlog!("[WINDOW DEBUG] Initializing window position...");
+    dlog!("[WINDOW DEBUG] is_visible: {:?}", window.is_visible().unwrap_or(false));
+    dlog!("[WINDOW DEBUG] is_minimized: {:?}", window.is_minimized().unwrap_or(false));
 
     if let Ok(Some(monitor)) = window.current_monitor() {
         let monitor_size = monitor.size();
         let monitor_pos = monitor.position();
-        println!("[WINDOW DEBUG] Monitor position: {:?}", monitor_pos);
-        println!("[WINDOW DEBUG] Monitor size: {:?}", monitor_size);
+        dlog!("[WINDOW DEBUG] Monitor position: {:?}", monitor_pos);
+        dlog!("[WINDOW DEBUG] Monitor size: {:?}", monitor_size);
 
         let window_size = window.inner_size().unwrap_or_default();
-        println!("[WINDOW DEBUG] Window size: {:?}", window_size);
+        dlog!("[WINDOW DEBUG] Window size: {:?}", window_size);
 
         let x = monitor_pos.x + (monitor_size.width as i32 - window_size.width as i32) / 2;
         let y = monitor_pos.y + 8; // Small offset from the very top edge
-        println!("[WINDOW DEBUG] Calculated physical position: ({}, {})", x, y);
+        dlog!("[WINDOW DEBUG] Calculated physical position: ({}, {})", x, y);
 
         let _ = window.set_position(tauri::Position::Physical(PhysicalPosition { x, y }));
-        println!("[WINDOW DEBUG] Window position set to physical ({}, {})", x, y);
+        dlog!("[WINDOW DEBUG] Window position set to physical ({}, {})", x, y);
     } else {
-        println!("[WINDOW DEBUG WARNING] No monitor detected during setup");
+        dlog!("[WINDOW DEBUG WARNING] No monitor detected during setup");
     }
 
     // Force visibility and focus
     let _ = window.show();
     let _ = window.set_focus();
-    println!("[WINDOW DEBUG] Forced window show and focus");
+    dlog!("[WINDOW DEBUG] Forced window show and focus");
 }
 
 #[tauri::command]
 fn sync_window_size(app: tauri::AppHandle, width: f64, height: f64) {
-    println!("[WINDOW DEBUG] sync_window_size requested: {}x{}", width, height);
+    dlog!("[WINDOW DEBUG] sync_window_size requested: {}x{}", width, height);
     if let Some(window) = app.get_webview_window("main") {
         let current_pos = window.outer_position().unwrap_or_default();
         let current_size = window.outer_size().unwrap_or_default();
@@ -78,24 +92,20 @@ fn sync_window_size(app: tauri::AppHandle, width: f64, height: f64) {
             x: target_x,
             y: target_y,
         }));
-        println!(
+        dlog!(
             "[WINDOW DEBUG] Window center-preserved position: ({}, {}) for size {}x{}",
             target_x, target_y, width, height
         );
         let _ = window.show();
     } else {
-        println!("[WINDOW DEBUG ERROR] Main window not found during sync_window_size");
+        dlog!("[WINDOW DEBUG ERROR] Main window not found during sync_window_size");
     }
 }
 
 #[tauri::command]
 fn log_from_js(msg: String) {
-    println!("[JS LOG] {}", msg);
+    dlog!("[JS LOG] {}", msg);
 }
-
-mod media;
-mod notifications;
-mod focus;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {

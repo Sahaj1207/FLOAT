@@ -37,7 +37,7 @@ pub fn query_focus_state() -> FocusPresencePayload {
 /// Emit focus presence to frontend if changed or during startup.
 pub fn emit_focus_presence(app: &AppHandle) {
     let payload = query_focus_state();
-    println!("[FOCUS] Evaluated focus presence state: {:?}", payload.status);
+    dlog!("[FOCUS] Evaluated focus presence state: {:?}", payload.status);
     let _ = app.emit("focus-presence", payload);
 }
 
