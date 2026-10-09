@@ -2,7 +2,7 @@
 
 A Dynamic Island for Windows.
 
-FLOAT is a lightweight Windows desktop Dynamic Island that brings media controls, Windows notifications, ambient Orb mode, and quick settings into a single glass interface.
+FLOAT is a lightweight MacBook-style notch for Windows. It hangs from the top of your screen and brings media controls, a live audio visualizer, Windows notifications, a volume HUD and quick settings into one place.
 
 ## FLOAT v1.0.1
 
@@ -13,11 +13,12 @@ Public release.
 ## ✨ Features
 
 - **Dynamic Pill Interface**: An unobtrusive resting pill at the top-center of your screen that dynamically adapts to system activity.
-- **Ambient Orb Mode**: Compact 48×48 circular orb that preserves screen real estate while keeping vital indicators visible.
-- **Automatic Inactivity Transition**: Untouched compact pill automatically and smoothly morphs into the Orb after ~3 seconds of inactivity.
+- **MacBook-Style Notch**: Solid black, flush with the top edge, with concave corners that join it to the bezel. It grows downward to fit whatever is live: a quiet notch when idle, a slim strip for music, a taller drop-down for notifications.
+- **Optional Orb Mode**: Prefer a floating circle? Set Idle Behavior to Orb and the island shrinks to a 48×48 orb after ~3 seconds untouched.
 - **Interactive Awakening**: Hovering over or interacting with the Orb smoothly restores the active compact pill.
 - **Spotify & Windows GSMTC Media Integration**: Universal support for Spotify, Apple Music, YouTube, and browser playback via Windows Global System Media Transport Controls.
-- **Live Audio Equalizer**: Animated 3-bar equalizer reflecting real-time playback states.
+- **Live Audio Visualizer**: The equalizer bars follow the actual sound playing (WASAPI loopback, low/mid/high bands), falling back to a gentle animation when output is muted.
+- **Album-Art Accent**: The equalizer, progress bar and a soft glow under the notch take on the dominant color of the current album art.
 - **Continuous Title Marquee**: Long track titles smoothly scroll in a continuous loop without clipping.
 - **Album Artwork**: Embedded album art displayed with fluid cross-fades.
 - **Playback Controls**: Instant play/pause, next track, previous track, and interactive timeline scrubbing.
@@ -31,7 +32,10 @@ Public release.
 - **Live Activities & Split Island**: When two things are live at once (for example a notification arrives while music plays), the top one owns the pill and the other detaches into a bubble beside it, Dynamic Island style.
 - **Click-Through Window**: Only the island itself catches the mouse; the space around it passes clicks to the apps underneath, and morphs never resize the native window.
 - **Hide in Fullscreen**: The island gets out of the way of fullscreen games, videos and presentations.
-- **Glassmorphism Aesthetic**: Translucent acrylic/mica aesthetic with customizable transparency, border highlights, and blur depth.
+- **Visual Styles**: Solid Notch by default, or Glass, Minimal and Soft Glass translucent styles with adjustable transparency.
+- **Real App Icons**: Notifications show the sending app's icon.
+- **Gestures**: Scroll over the island to change volume (with an on-island volume HUD), scroll sideways to skip tracks, swipe a notification up to dismiss it.
+- **Spring Physics**: Morphs follow your Animation Intensity, from calm to bouncy, and the island squishes when pressed.
 - **Framer Motion Spring Physics**: Natural, physical layout animations and morph transitions.
 - **Expanded Surface**: 460×330 px interactive panel featuring three dedicated sections: Media, Notifications, and Settings.
 - **Persistent User Preferences**: Local persistence for transparency, pill length, orb size, idle behavior, and privacy toggles.
@@ -106,6 +110,9 @@ Pill / Orb ──( Click )──► Expanded Surface [ Media | Notifications | S
 | **Single Click** | Compact Pill | Opens Expanded Surface |
 | **Single Click** | Orb | Opens Quick Actions or Notification Preview |
 | **Double Click** | Compact Pill | Morphs to Orb |
+| **Scroll** | Island | Changes system volume and shows the volume HUD |
+| **Scroll sideways / Shift+Scroll** | Island | Previous / next track |
+| **Swipe up** | Notification | Dismisses it |
 | **Double Click** | Orb | Morphs to Compact Pill |
 | **Hover (200ms dwell)** | Compact Pill | Expands to Compact Preview |
 | **Hover** | Orb | Wakes up and morphs to Compact Pill |

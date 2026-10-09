@@ -62,26 +62,26 @@ FLOAT is an ambient desktop overlay that unifies media playback, real-time Windo
 ## 4. First Launch & Desktop Placement
 
 Upon launch:
-- FLOAT anchors itself in the top-center of your primary display.
-- If Spotify or any media source is playing, FLOAT immediately wakes in **Media Pill** mode.
-- If no media is playing, FLOAT displays the resting **Compact Pill**.
+- FLOAT hangs from the top-center of your primary display like a MacBook notch.
+- If Spotify or any media source is playing, the notch widens to show the track.
+- If nothing is playing, FLOAT rests as a small, quiet notch. Hover it to see the time and date.
 
 ---
 
 ## 5. Compact Pill Mode
 
-- **Dimensions**: 240 px width (customizable between 200 px and 280 px), 48 px height, 24 px corner radius.
-- **Visuals**: Translucent glass surface, subtle highlight borders, and living indicators.
-- **Hover Dwell**: Moving your mouse over the compact pill for 200ms expands it into **Compact Preview** to reveal quick controls. Moving the pointer away restores the compact pill after a 160ms transition delay.
+- **Shape**: Flush with the top of the screen, square top corners, rounded bottom corners, with small concave "ears" where it meets the bezel (Notch style).
+- **Size follows content**: 200 × 32 px when idle; the activity width (300 px by default, adjustable 220–340 px) × 36 px for music and the volume HUD; a 62 px drop-down for notifications.
+- **Hover Dwell**: Resting the pointer on the notch for 200ms grows it slightly to reveal more (playback progress for music, time and date when idle). Moving away restores it after 160ms.
+- **Accent**: While music plays, the equalizer, progress bar and a soft glow beneath the notch take on the album art's color.
 
 ---
 
 ## 6. Automatic Inactivity Transition (Pill → Orb)
 
-To minimize screen clutter:
-- When FLOAT rests in Compact Pill mode and remains untouched for **approximately 3 seconds**, it smoothly morphs into the **48 × 48 px Orb**.
-- The transition uses Framer Motion spring physics (`stiffness: 380, damping: 34`).
-- Any user interaction (hover, click, drag) resets the 3-second timer.
+By default (Idle Behavior **Island**) FLOAT stays as the notch. If you set Idle Behavior to **Orb** (or **Remember** after double-clicking into the orb):
+- When the notch is untouched for **approximately 3 seconds**, it morphs into the **48 × 48 px Orb**, floating just below the top edge.
+- Any interaction (hover, click, drag) or a live notification/HUD resets the 3-second timer.
 
 ---
 
@@ -89,7 +89,7 @@ To minimize screen clutter:
 
 - **Dimensions**: 48 × 48 px circular glass sphere (customizable between 44 px and 56 px).
 - **Status Indicators**:
-  - **Equalizer Bars**: Animated 3-bar equalizer when media is playing.
+  - **Equalizer Bars**: Live 3-bar visualizer when media is playing.
   - **Paused Indicator**: Subtle central dot when media is paused.
   - **Notification Dot**: Glowing blue dot on the upper-right corner when unread notifications exist.
   - **Focus Dot**: Indicator when Windows Focus Assist / Quiet Hours is active.
@@ -114,7 +114,12 @@ FLOAT communicates with the Windows Global System Media Transport Controls (GSMT
 
 ---
 
-## 10. Media Controls & Timeline Scrubbing
+## 10. Media Controls, Gestures & Timeline Scrubbing
+
+- **Scroll** over the island to change the system volume (2% per wheel notch). A volume HUD appears in the notch; click its speaker icon to mute.
+- **Scroll sideways** (or hold **Shift** and scroll) to skip to the previous or next track.
+- The equalizer follows the actual audio playing. When output is muted it falls back to a gentle animation.
+
 
 - **Compact Pill**: Click Play/Pause on hover preview.
 - **Orb Quick Actions**: Single-click the Orb to reveal Previous Track, Play/Pause, and Next Track buttons.
@@ -203,12 +208,12 @@ All settings are stored in `localStorage` (`float_settings_v1`) and take effect 
 
 | Setting | Range / Options | Default | Description |
 | :--- | :--- | :--- | :--- |
-| **Glass Transparency** | 60% – 100% | `85%` | Adjusts background acrylic translucency. |
-| **Compact Pill Length** | 200 px – 280 px | `240 px` | Sets resting horizontal width of the pill. |
+| **Glass Transparency** | 60% – 100% | `100%` | Background opacity (the Notch style is solid at 100%). |
+| **Activity Width** | 220 px – 340 px | `300 px` | Width of the notch while music, the volume HUD or a hover preview is shown. |
 | **Orb Size** | 44 px – 56 px | `48 px` | Sets diameter of the ambient circular orb. |
-| **Idle Behavior** | `Remember`, `Always Orb`, `Always Pill` | `Remember` | Controls resting state after inactivity. |
-| **Animation Intensity** | `Subtle`, `Balanced`, `Expressive` | `Balanced` | Adjusts Framer Motion spring stiffness and speed. |
-| **Visual Style** | `Default`, `Minimal`, `Soft Glass` | `Default` | Configures glass border highlights and blur depth. |
+| **Idle Behavior** | `Island`, `Remember`, `Orb` | `Island` | Island stays as the notch; Orb shrinks to a circle after ~3s idle; Remember uses whichever you last double-clicked into. |
+| **Animation Intensity** | `Subtle`, `Balanced`, `Expressive` | `Balanced` | Spring feel of every morph: Subtle never overshoots, Balanced has a slight bounce, Expressive is playful. Also scales the press squish. |
+| **Visual Style** | `Notch`, `Glass`, `Minimal`, `Soft Glass` | `Notch` | Notch is solid black like the MacBook notch; the others are translucent glass. |
 | **Notification Presence** | `On` / `Off` | `On` | Toggles the glowing notification dot on the Orb. |
 | **Notification Preview** | `On` / `Off` | `On` | Toggles automatic 3.5s toast banner expansion. |
 | **Notification Content** | `On` / `Off` | `On` | When `Off`, hides notification title/body for privacy. |
@@ -222,6 +227,9 @@ All settings are stored in `localStorage` (`float_settings_v1`) and take effect 
 - **Single Click**: Expands Pill to Surface; opens Orb Quick Actions / Preview.
 - **Double Click**: Toggles between Compact Pill and Orb.
 - **Hover**: Expands Compact Pill to Compact Preview; wakes Orb to Compact Pill.
+- **Scroll**: Changes system volume (shows the volume HUD).
+- **Scroll sideways / Shift+Scroll**: Previous / next track.
+- **Swipe up on a notification**: Dismisses it.
 - **Window Drag**: Drag the island to reposition it anywhere on screen. The position is remembered; dropping it within a short distance of top-center snaps it exactly back.
 - **Escape Key**: Closes the Expanded Surface or transient previews.
 - **Click Outside**: Collapses the Expanded Surface.

@@ -47,6 +47,7 @@ FLOAT/
 ├── src-tauri/               # Rust Backend (Tauri 2.0)
 │   ├── icons/              # Application and AppX visual assets
 │   ├── src/
+│   │   ├── appicon.rs      # App icons by AUMID via shell:AppsFolder, cached as PNG
 │   │   ├── autostart.rs    # Launch at startup (MSIX StartupTask / HKCU Run key)
 │   │   ├── focus.rs        # Focus Assist status command
 │   │   ├── lib.rs          # Plugin, command and module wiring
@@ -54,6 +55,8 @@ FLOAT/
 │   │   ├── media.rs        # Windows GSMTC media session monitoring
 │   │   ├── notifications.rs# Windows UserNotificationListener events (with polling fallback)
 │   │   ├── tray.rs         # Tray icon, global hotkey, island commands
+│   │   ├── visualizer.rs   # WASAPI loopback capture -> 3-band audio levels
+│   │   ├── volume.rs       # System volume via Core Audio
 │   │   └── window.rs       # Fixed click-through window, hit testing, fullscreen hide, position memory
 │   ├── Cargo.toml          # Rust dependencies & crate metadata
 │   └── tauri.conf.json     # Tauri window & bundle configuration
@@ -85,6 +88,11 @@ The island lives in a single fixed 500 × 400 transparent window anchored at the
 `FloatShell` reports the island's current shape (and split bubble, if any) to Rust via `set_hit_regions`. While a morph is running it reports the union of the old and new shapes, then the settled shape once the spring finishes. A monitor thread in `window.rs` hit-tests the cursor against those regions at ~60 Hz and toggles `set_ignore_cursor_events`, so the window is click-through everywhere outside the island. Because the webview stops receiving mouse events when click-through, hover is driven by the native `island-hover` event rather than DOM pointer events.
 
 Keep `WINDOW_WIDTH` / `ISLAND_TOP` in `FloatShell.tsx` in sync with `WINDOW_WIDTH` in `window.rs` and `#root`'s `padding-top` in `index.css`.
+
+### Notch Geometry
+The island is flush with the top edge (only the orb floats, `ORB_TOP`). `FloatShell` derives width, height and per-corner radii from the visual mode and the primary activity (`NOTCH_IDLE_*`, `ACTIVITY_HEIGHT`, `PREVIEW_HEIGHT`, `NOTIFICATION_*`). Morphs and the press squish use `transform-origin: 50% 0%` so the notch never detaches from the edge. The concave "ears" are two radial-gradient spans beside the shell, shown only in the solid Notch style.
+
+Morph springs come from `MORPH_SPRINGS[animationIntensity]`.
 
 ### Live Activities
 `useActivities` merges ongoing activities (media) with transient ones (notifications) pushed through `show(activity, lifetimeMs, onExpire)`, sorted by `ActivityPriority`. The first activity owns the pill; the second is rendered as a `SplitBubble` beside it in compact modes. New activity kinds (timers, HUDs, battery…) are added to `activities/types.ts` and given a pill and bubble rendering.
@@ -194,6 +202,9 @@ Controls resolve the target session by `SourceAppUserModelId` (win-gsmtc session
 - `get_focus_presence()`: Current Focus Assist status (`normal` / `active` / `unknown`).
 - `get_autostart()` / `set_autostart(enabled: bool)`: Launch at startup; `set_autostart` returns the resulting state.
 - `get_hotkey()`: The global hotkey that was registered, or `null`.
+- `get_app_icon(app_id: String)`: The app's icon as base64 PNG, or `null`. Rendered through `shell:AppsFolder`, so it works for Win32 and packaged apps.
+- `get_volume()`, `change_volume(delta: f32)`, `toggle_mute()`: System output volume (`{ level, muted }`).
+- `set_visualizer_active(active: bool)`: Starts/stops loopback capture. The frontend ref-counts mounted equalizers (`AudioBars`).
 
 ### Events (Rust → Frontend)
 - `multi-session-changed`, `session-position-changed`: Media state.
@@ -202,6 +213,7 @@ Controls resolve the target session by `SourceAppUserModelId` (win-gsmtc session
 - `island-hover`: `{ inside: bool }` when the cursor enters or leaves the hit regions.
 - `island-command`: `"open"` or `"toggle"`, from the tray, hotkey or a second launch.
 - `autostart-changed`: Launch-at-startup state changed (e.g. from the tray).
+- `audio-levels`: `{ levels: [low, mid, high], silent }` at ~30 Hz while the visualizer is active.
 
 ### Notification Delivery
 `NotificationChanged` requires package identity. When registering it fails (unpackaged and dev builds), `notifications.rs` diffs the active toast list every 1.5 s and emits the same events, so notifications work in `npm run tauri dev` too.

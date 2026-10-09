@@ -265,7 +265,7 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = () => {
           </div>
         </div>
 
-        {/* Compact Pill Length */}
+        {/* Activity Width */}
         <div className="float-setting-card">
           <div className="float-setting-label-row">
             <div className="float-setting-label-left">
@@ -282,7 +282,7 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = () => {
                 <line x1="8" y1="12" x2="16" y2="12" />
               </svg>
               <label htmlFor="compact-pill-length-slider" className="float-setting-name">
-                Compact Pill Length
+                Activity Width
               </label>
             </div>
             <span className="float-setting-value-badge">{pillLength} px</span>
@@ -298,7 +298,7 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = () => {
               value={pillLength}
               onChange={handlePillLengthChange}
               className="float-setting-slider"
-              aria-label="Compact Pill Length"
+              aria-label="Activity Width"
               aria-valuemin={PILL_LENGTH_MIN}
               aria-valuemax={PILL_LENGTH_MAX}
               aria-valuenow={pillLength}
