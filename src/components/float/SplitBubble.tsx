@@ -18,8 +18,8 @@ export const SplitBubble: React.FC<SplitBubbleProps> = ({ activity, size, gap, o
     <motion.button
       type="button"
       className="split-bubble"
-      style={{ width: size, height: size, left: `calc(100% + ${gap}px)` }}
-      initial={{ x: -(size + gap), scale: 0.4, opacity: 0 }}
+      style={{ width: size, height: size, left: `calc(100% + ${gap}px)`, borderRadius: `0 0 ${size / 2}px ${size / 2}px` }}
+      initial={{ x: -(size + gap), scale: 0.4, opacity: 0, originY: 0 }}
       animate={{ x: 0, scale: 1, opacity: 1 }}
       exit={{ x: -(size + gap), scale: 0.4, opacity: 0 }}
       transition={{ type: "spring", stiffness: 420, damping: 30, mass: 0.8 }}

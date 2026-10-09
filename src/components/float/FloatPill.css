@@ -147,3 +147,41 @@
   margin-left: 2px;
   flex-shrink: 0;
 }
+
+/* Idle notch */
+.idle-notch-unread {
+  width: 6px;
+  height: 6px;
+  margin-left: auto;
+  border-radius: 50%;
+  background: #3b82f6;
+  box-shadow: 0 0 6px rgba(59, 130, 246, 0.6);
+  flex-shrink: 0;
+}
+
+.idle-notch-unread.inline {
+  margin-left: 6px;
+}
+
+.idle-notch-preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  animation: notifPillEntrance 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.idle-notch-time {
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--float-text-primary);
+}
+
+.idle-notch-date {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--float-text-secondary);
+}

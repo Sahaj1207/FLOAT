@@ -3,11 +3,11 @@ import { setHideInFullscreen } from "../platform";
 export type AnimationIntensity = "subtle" | "balanced" | "expressive";
 export type IdleBehavior = "alwaysOrb" | "remember" | "alwaysPill";
 export type RestingMode = "orb" | "compact";
-export type VisualStyle = "default" | "minimal" | "softGlass";
+export type VisualStyle = "notch" | "default" | "minimal" | "softGlass";
 
 export interface FloatSettings {
   transparency: number; // 0.60 to 1.00, default 0.85
-  pillLength: number;   // 200 to 280, default 240
+  pillLength: number;   // activity width, 220 to 340, default 300
   orbSize: number;      // 44 to 56, default 48
   animationIntensity: AnimationIntensity; // "subtle" | "balanced" | "expressive", default "balanced"
   notificationPresence: boolean; // default true
@@ -15,25 +15,31 @@ export interface FloatSettings {
   notificationContent: boolean;  // default true
   idleBehavior: IdleBehavior;    // "alwaysOrb" | "remember" | "alwaysPill", default "remember"
   rememberedRestingMode: RestingMode; // "orb" | "compact", default "compact"
-  visualStyle: VisualStyle;      // "default" | "minimal" | "softGlass", default "default"
+  visualStyle: VisualStyle;      // "notch" (solid black) | glass styles, default "notch"
   hideInFullscreen: boolean;     // hide the island while a fullscreen app is focused, default true
 }
 
+export const PILL_LENGTH_MIN = 220;
+export const PILL_LENGTH_MAX = 340;
+
 export const DEFAULT_FLOAT_SETTINGS: FloatSettings = {
-  transparency: 0.85,
-  pillLength: 240,
+  transparency: 1.0,
+  pillLength: 300,
   orbSize: 48,
   animationIntensity: "balanced",
   notificationPresence: true,
   notificationPreview: true,
   notificationContent: true,
-  idleBehavior: "remember",
+  idleBehavior: "alwaysPill",
   rememberedRestingMode: "compact",
-  visualStyle: "default",
+  visualStyle: "notch",
   hideInFullscreen: true,
 };
 
 const SETTINGS_STORAGE_KEY = "float_settings_v1";
+// Bumped when defaults change in a way saved settings should adopt once.
+// v2: MacBook-notch design (solid notch style, island idle, wider activities).
+const SETTINGS_VERSION = 2;
 
 type SettingsListener = (settings: FloatSettings) => void;
 const listeners = new Set<SettingsListener>();
@@ -50,13 +56,23 @@ export function loadSettings(): FloatSettings {
     const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
     if (!raw) return DEFAULT_FLOAT_SETTINGS;
     const parsed = JSON.parse(raw);
+    if (parsed.settingsVersion !== SETTINGS_VERSION) {
+      Object.assign(parsed, {
+        settingsVersion: SETTINGS_VERSION,
+        visualStyle: DEFAULT_FLOAT_SETTINGS.visualStyle,
+        transparency: DEFAULT_FLOAT_SETTINGS.transparency,
+        idleBehavior: DEFAULT_FLOAT_SETTINGS.idleBehavior,
+        pillLength: DEFAULT_FLOAT_SETTINGS.pillLength,
+      });
+      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(parsed));
+    }
     const transparency =
       typeof parsed.transparency === "number" && !isNaN(parsed.transparency)
         ? Math.min(1.0, Math.max(0.6, parsed.transparency))
         : DEFAULT_FLOAT_SETTINGS.transparency;
     const pillLength =
       typeof parsed.pillLength === "number" && !isNaN(parsed.pillLength)
-        ? Math.min(280, Math.max(200, parsed.pillLength))
+        ? Math.min(PILL_LENGTH_MAX, Math.max(PILL_LENGTH_MIN, parsed.pillLength))
         : DEFAULT_FLOAT_SETTINGS.pillLength;
     const orbSize =
       typeof parsed.orbSize === "number" && !isNaN(parsed.orbSize)
@@ -89,7 +105,7 @@ export function loadSettings(): FloatSettings {
       ? (parsed.rememberedRestingMode as RestingMode)
       : DEFAULT_FLOAT_SETTINGS.rememberedRestingMode;
 
-    const validVisualStyles: VisualStyle[] = ["default", "minimal", "softGlass"];
+    const validVisualStyles: VisualStyle[] = ["notch", "default", "minimal", "softGlass"];
     const visualStyle = validVisualStyles.includes(parsed.visualStyle)
       ? (parsed.visualStyle as VisualStyle)
       : DEFAULT_FLOAT_SETTINGS.visualStyle;
@@ -119,7 +135,7 @@ export function loadSettings(): FloatSettings {
 
 export function saveSettings(settings: FloatSettings): void {
   try {
-    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ ...settings, settingsVersion: SETTINGS_VERSION }));
     applySettingsToDOM(settings);
     applySettingsToNative(settings);
     listeners.forEach((l) => l(settings));
@@ -136,8 +152,8 @@ export function applySettingsToNative(settings: FloatSettings): void {
 export function applySettingsToDOM(settings: FloatSettings): void {
   const clampedTransparency = Math.min(1.0, Math.max(0.6, settings.transparency));
   const clampedPillLength = Math.min(
-    280,
-    Math.max(200, settings.pillLength ?? DEFAULT_FLOAT_SETTINGS.pillLength)
+    PILL_LENGTH_MAX,
+    Math.max(PILL_LENGTH_MIN, settings.pillLength ?? DEFAULT_FLOAT_SETTINGS.pillLength)
   );
   const clampedOrbSize = Math.min(
     56,

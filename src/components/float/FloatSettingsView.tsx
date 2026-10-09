@@ -8,6 +8,8 @@ import {
   saveSettings,
   subscribeToSettings,
   DEFAULT_FLOAT_SETTINGS,
+  PILL_LENGTH_MIN,
+  PILL_LENGTH_MAX,
 } from "../../services/settings";
 import { getAutostart, getHotkey, setAutostart, subscribeToAutostart } from "../../platform";
 import "./FloatSettingsView.css";
@@ -37,7 +39,7 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = () => {
 
   const handlePillLengthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawVal = parseInt(e.target.value, 10);
-    const newLength = Math.min(280, Math.max(200, rawVal));
+    const newLength = Math.min(PILL_LENGTH_MAX, Math.max(PILL_LENGTH_MIN, rawVal));
     const nextSettings = { ...settings, pillLength: newLength };
     setSettings(nextSettings);
     saveSettings(nextSettings);
@@ -165,11 +167,22 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = () => {
               <span className="float-setting-name">Visual Style</span>
             </div>
             <span className="float-setting-value-badge" style={{ textTransform: "capitalize" }}>
-              {visualStyle === "softGlass" ? "Soft Glass" : visualStyle}
+              {visualStyle === "softGlass" ? "Soft Glass" : visualStyle === "default" ? "Glass" : visualStyle}
             </span>
           </div>
 
           <div className="float-setting-segmented-group" role="radiogroup" aria-label="Visual Style">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={visualStyle === "notch"}
+              className={`float-setting-segment-btn ${visualStyle === "notch" ? "active" : ""}`}
+              onClick={() => handleVisualStyleChange("notch")}
+              data-no-drag="true"
+            >
+              <span>Notch</span>
+              <span className="float-setting-segment-desc">Solid black</span>
+            </button>
             <button
               type="button"
               role="radio"
@@ -178,8 +191,8 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = () => {
               onClick={() => handleVisualStyleChange("default")}
               data-no-drag="true"
             >
-              <span>Default</span>
-              <span className="float-setting-segment-desc">Balanced glass</span>
+              <span>Glass</span>
+              <span className="float-setting-segment-desc">Frosted</span>
             </button>
             <button
               type="button"
@@ -279,15 +292,15 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = () => {
             <input
               id="compact-pill-length-slider"
               type="range"
-              min="200"
-              max="280"
+              min={PILL_LENGTH_MIN}
+              max={PILL_LENGTH_MAX}
               step="1"
               value={pillLength}
               onChange={handlePillLengthChange}
               className="float-setting-slider"
               aria-label="Compact Pill Length"
-              aria-valuemin={200}
-              aria-valuemax={280}
+              aria-valuemin={PILL_LENGTH_MIN}
+              aria-valuemax={PILL_LENGTH_MAX}
               aria-valuenow={pillLength}
               data-no-drag="true"
             />
@@ -363,7 +376,7 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = () => {
               <span className="float-setting-name">Idle Behavior</span>
             </div>
             <span className="float-setting-value-badge" style={{ textTransform: "capitalize" }}>
-              {idleBehavior === "alwaysOrb" ? "Always Orb" : idleBehavior === "alwaysPill" ? "Always Pill" : "Remember"}
+              {idleBehavior === "alwaysOrb" ? "Orb" : idleBehavior === "alwaysPill" ? "Island" : "Remember"}
             </span>
           </div>
 
@@ -376,8 +389,8 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = () => {
               onClick={() => handleIdleBehaviorChange("alwaysOrb")}
               data-no-drag="true"
             >
-              <span>Always Orb</span>
-              <span className="float-setting-segment-desc">Circular presence</span>
+              <span>Orb</span>
+              <span className="float-setting-segment-desc">Shrink to a circle</span>
             </button>
             <button
               type="button"
@@ -388,7 +401,7 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = () => {
               data-no-drag="true"
             >
               <span>Remember</span>
-              <span className="float-setting-segment-desc">Last mode (Default)</span>
+              <span className="float-setting-segment-desc">Last mode</span>
             </button>
             <button
               type="button"
@@ -398,8 +411,8 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = () => {
               onClick={() => handleIdleBehaviorChange("alwaysPill")}
               data-no-drag="true"
             >
-              <span>Always Pill</span>
-              <span className="float-setting-segment-desc">Compact player</span>
+              <span>Island</span>
+              <span className="float-setting-segment-desc">Stay as the notch</span>
             </button>
           </div>
         </div>

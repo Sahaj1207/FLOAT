@@ -40,7 +40,18 @@ import "./FloatShell.css";
 
 export type IslandVisualMode = "orb" | "compact" | "compactPreview" | "expanded";
 
-const PILL_HEIGHT = 48;
+// Notch geometry per state (logical px). The island hangs flush from the
+// top edge, so only its bottom corners are rounded.
+const NOTCH_IDLE_WIDTH = 200;
+const NOTCH_IDLE_HEIGHT = 32;
+const ACTIVITY_HEIGHT = 36;
+const PREVIEW_HEIGHT = 50;
+const PREVIEW_EXTRA_WIDTH = 30;
+const NOTIFICATION_HEIGHT = 62;
+const NOTIFICATION_MIN_WIDTH = 340;
+const BUBBLE_SIZE = 38;
+// The optional orb floats just below the edge instead.
+const ORB_TOP = 8;
 const SURFACE_WIDTH = 460;
 const SURFACE_HEIGHT = 330;
 const NOTIF_PREVIEW_WIDTH = 240;
@@ -50,7 +61,6 @@ const QUICK_ACTIONS_HEIGHT = 48;
 
 // Must match the native window width (window.rs) and #root's padding-top.
 const WINDOW_WIDTH = 500;
-const ISLAND_TOP = 8;
 const HIT_PADDING = 4;
 const BUBBLE_GAP = 8;
 // Long enough for the morph spring to settle before hit regions shrink.
@@ -184,6 +194,8 @@ const FloatShell: React.FC = () => {
   const resetIdleToOrbTimer = useCallback(() => {
     clearIdleToOrbTimer();
     if (
+      // Island mode (and "remember" after choosing the pill) never shrinks to the orb.
+      getRestingDestination(settingsRef.current) !== "orb" ||
       hasTransientRef.current ||
       visualModeRef.current !== "compact" ||
       isDraggingRef.current ||
@@ -739,19 +751,33 @@ const FloatShell: React.FC = () => {
   }, []);
 
   // --- Geometry & hit regions -------------------------------------------
-  const islandWidth = isExpanded
-    ? SURFACE_WIDTH
-    : visualMode === "orb"
-    ? (notificationPreviewOpen ? NOTIF_PREVIEW_WIDTH : quickActionsOpen ? QUICK_ACTIONS_WIDTH : orbSize)
-    : pillWidth;
-  const islandHeight = isExpanded
-    ? SURFACE_HEIGHT
-    : visualMode === "orb"
-    ? (notificationPreviewOpen ? NOTIF_PREVIEW_HEIGHT : quickActionsOpen ? QUICK_ACTIONS_HEIGHT : orbSize)
-    : PILL_HEIGHT;
-  const islandRadius = isExpanded
-    ? 28
-    : (visualMode === "orb" && !notificationPreviewOpen && !quickActionsOpen ? Math.round(orbSize / 2) : 24);
+  const isOrb = visualMode === "orb";
+  const orbOpen = isOrb && (notificationPreviewOpen || quickActionsOpen);
+  const isPreview = visualMode === "compactPreview";
+
+  let islandWidth: number;
+  let islandHeight: number;
+  let bottomRadius: number;
+  if (isExpanded) {
+    [islandWidth, islandHeight, bottomRadius] = [SURFACE_WIDTH, SURFACE_HEIGHT, 28];
+  } else if (isOrb) {
+    islandWidth = notificationPreviewOpen ? NOTIF_PREVIEW_WIDTH : quickActionsOpen ? QUICK_ACTIONS_WIDTH : orbSize;
+    islandHeight = notificationPreviewOpen ? NOTIF_PREVIEW_HEIGHT : quickActionsOpen ? QUICK_ACTIONS_HEIGHT : orbSize;
+    bottomRadius = orbOpen ? 24 : Math.round(orbSize / 2);
+  } else if (primary?.kind === "notification") {
+    [islandWidth, islandHeight, bottomRadius] = [Math.max(pillWidth, NOTIFICATION_MIN_WIDTH), NOTIFICATION_HEIGHT, 24];
+  } else if (primary) {
+    islandWidth = pillWidth + (isPreview ? PREVIEW_EXTRA_WIDTH : 0);
+    islandHeight = isPreview ? PREVIEW_HEIGHT : ACTIVITY_HEIGHT;
+    bottomRadius = isPreview ? 22 : 18;
+  } else {
+    // Nothing live: a quiet notch; hovering reveals the time.
+    islandWidth = isPreview ? pillWidth : NOTCH_IDLE_WIDTH;
+    islandHeight = isPreview ? ACTIVITY_HEIGHT : NOTCH_IDLE_HEIGHT;
+    bottomRadius = isPreview ? 18 : 12;
+  }
+  const topRadius = isOrb ? bottomRadius : 0;
+  const islandTop = isOrb ? ORB_TOP : 0;
 
   const bubbleActivity =
     secondary && (visualMode === "compact" || visualMode === "compactPreview") ? secondary : null;
@@ -763,16 +789,16 @@ const FloatShell: React.FC = () => {
       const left = (WINDOW_WIDTH - width) / 2;
       const regions: HitRect[] = [{
         x: left - HIT_PADDING,
-        y: ISLAND_TOP - HIT_PADDING,
+        y: islandTop - HIT_PADDING,
         width: width + HIT_PADDING * 2,
         height: height + HIT_PADDING * 2,
       }];
       if (hasBubble) {
         regions.push({
           x: left + width + BUBBLE_GAP - HIT_PADDING,
-          y: ISLAND_TOP - HIT_PADDING,
-          width: PILL_HEIGHT + HIT_PADDING * 2,
-          height: PILL_HEIGHT + HIT_PADDING * 2,
+          y: islandTop - HIT_PADDING,
+          width: BUBBLE_SIZE + HIT_PADDING * 2,
+          height: BUBBLE_SIZE + HIT_PADDING * 2,
         });
       }
       return regions;
@@ -789,7 +815,7 @@ const FloatShell: React.FC = () => {
 
     const settle = setTimeout(() => setHitRegions(regionsFor(islandWidth, islandHeight)), MORPH_SETTLE_MS);
     return () => clearTimeout(settle);
-  }, [islandWidth, islandHeight, hasBubble]);
+  }, [islandWidth, islandHeight, islandTop, hasBubble]);
 
   const handlePointerDown = (e: React.PointerEvent) => {
     if (e.button !== 0) return;
@@ -897,12 +923,16 @@ const FloatShell: React.FC = () => {
   return (
     <motion.div
       ref={shellRef}
-      className={`float-shell ${accentGlow ? "accent-glow" : ""}`}
+      className={`float-shell ${accentGlow ? "accent-glow" : ""} ${isOrb ? "" : "attached"} ${isExpanded ? "expanded" : ""}`}
       style={accent ? ({ "--float-accent": accent } as React.CSSProperties) : undefined}
       animate={{
         width: islandWidth,
         height: islandHeight,
-        borderRadius: islandRadius,
+        y: islandTop,
+        borderTopLeftRadius: topRadius,
+        borderTopRightRadius: topRadius,
+        borderBottomLeftRadius: bottomRadius,
+        borderBottomRightRadius: bottomRadius,
         scale: pressed && !isExpanded ? PRESS_SCALE[settings.animationIntensity] : 1,
       }}
       transition={{ ...MORPH_SPRINGS[settings.animationIntensity], scale: PRESS_SPRING }}
@@ -911,6 +941,8 @@ const FloatShell: React.FC = () => {
       onPointerUp={handlePointerUp}
       onWheel={handleWheel}
     >
+      <span className="notch-ear left" />
+      <span className="notch-ear right" />
       <LayoutGroup>
         {isExpanded ? (
           <FloatSurface
@@ -971,7 +1003,7 @@ const FloatShell: React.FC = () => {
           <SplitBubble
             key={bubbleActivity.kind}
             activity={bubbleActivity}
-            size={PILL_HEIGHT}
+            size={BUBBLE_SIZE}
             gap={BUBBLE_GAP}
             onClick={() => transitionTo("expanded", "bubble-click")}
           />

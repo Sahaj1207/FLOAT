@@ -1,5 +1,7 @@
 .float-shell {
   position: relative;
+  /* Squish and morph from the screen edge so the notch never detaches. */
+  transform-origin: 50% 0%;
   width: 240px;
   height: 48px;
   background: transparent;
@@ -29,6 +31,34 @@
   transition: border-color var(--float-transition);
 }
 
+/* Concave ears where the notch meets the bezel (solid notch style only). */
+.notch-ear {
+  position: absolute;
+  top: 0;
+  width: var(--float-ear);
+  height: var(--float-ear);
+  pointer-events: none;
+  display: none;
+}
+
+:root[data-style="notch"] .float-shell.attached .notch-ear {
+  display: block;
+}
+
+.notch-ear.left {
+  right: 100%;
+  background: radial-gradient(circle at 0 100%, transparent calc(var(--float-ear) - 0.5px), var(--float-bg) var(--float-ear));
+}
+
+.notch-ear.right {
+  left: 100%;
+  background: radial-gradient(circle at 100% 100%, transparent calc(var(--float-ear) - 0.5px), var(--float-bg) var(--float-ear));
+}
+
+.float-shell.expanded .island-glass {
+  box-shadow: var(--float-shadow), var(--float-drop-shadow);
+}
+
 .float-shell:hover .island-glass {
   border-color: var(--float-border-hover);
 }
@@ -41,4 +71,11 @@
 .float-shell.accent-glow .split-bubble {
   border-color: color-mix(in srgb, var(--float-accent) 28%, var(--float-border));
   box-shadow: var(--float-shadow), 0 0 22px -6px color-mix(in srgb, var(--float-accent) 55%, transparent);
+}
+
+/* The solid notch has no outline; keep only the soft glow beneath it. */
+:root[data-style="notch"] .float-shell.accent-glow .island-glass,
+:root[data-style="notch"] .float-shell.accent-glow .split-bubble {
+  border-color: transparent;
+  box-shadow: 0 6px 22px -8px color-mix(in srgb, var(--float-accent) 60%, transparent);
 }

@@ -46,8 +46,13 @@
   --float-anim-reveal-y: 4px;
 
   /* System font stack */
-  --float-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  --float-font: "Segoe UI Variable Text", "Segoe UI Variable", -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+
+  /* Notch "ears": concave fillets joining the island to the screen edge */
+  --float-ear: 9px;
+  /* Lift for the expanded panel over content */
+  --float-drop-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.55);
 }
 
 :root[data-intensity="subtle"] {
@@ -67,6 +72,15 @@
 }
 
 /* ---- Visual Style Presets ---- */
+
+/* Notch: solid black, borderless, like the MacBook notch */
+:root[data-style="notch"] {
+  --float-bg: rgba(0, 0, 0, var(--float-glass-opacity));
+  --float-blur: 0px;
+  --float-border: transparent;
+  --float-border-hover: transparent;
+  --float-shadow: none;
+}
 
 :root,
 :root[data-style="default"] {
@@ -125,6 +139,6 @@ body {
 #root {
   display: flex;
   justify-content: center;
-  /* Island hangs from the top edge; keep in sync with ISLAND_TOP in FloatShell */
-  padding-top: 8px;
+  /* The notch hangs flush from the top edge (FloatShell offsets the orb). */
+  padding-top: 0;
 }

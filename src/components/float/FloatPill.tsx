@@ -5,6 +5,7 @@ import { MediaWidgetPill } from "./MediaWidgetPill";
 import { OrbNotificationState } from "./FloatOrb";
 import { AppIcon } from "./AppIcon";
 import { VolumeHud } from "./VolumeHud";
+import { IdleNotch } from "./IdleNotch";
 import { VolumeActivity } from "../../activities/types";
 import "./FloatPill.css";
 
@@ -46,7 +47,7 @@ export const FloatPill: React.FC<FloatPillProps> = ({
           <div className="float-pill-notification-banner">
             <div className="pill-notif-app-indicator">
               {showContent ? (
-                <AppIcon appId={notification.appId} appName={notification.appName} size={26} />
+                <AppIcon appId={notification.appId} appName={notification.appName} size={32} />
               ) : (
                 <span className="pill-notif-dot" />
               )}
@@ -86,13 +87,7 @@ export const FloatPill: React.FC<FloatPillProps> = ({
         ) : media?.hasMedia ? (
           <MediaWidgetPill media={media} sessionCount={sessionCount} isPreview={isPreview} />
         ) : (
-          <>
-            <div className="float-pill-indicator" />
-            <span className="float-pill-label">FLOAT</span>
-            {notification?.hasNotification && (
-              <span className="float-pill-unread-dot" aria-label="Unread notification" />
-            )}
-          </>
+          <IdleNotch isPreview={isPreview} hasUnread={!!notification?.hasNotification} />
         )}
       </div>
     </motion.div>
