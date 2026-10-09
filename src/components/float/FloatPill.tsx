@@ -8,6 +8,7 @@ import { VolumeHud } from "./VolumeHud";
 import { IdleNotch } from "./IdleNotch";
 import { StatusActivity, TimerActivity, VolumeActivity } from "../../activities/types";
 import { TimerPill } from "./Timer";
+import { DropZone } from "./Shelf";
 import { StatusHud } from "./StatusHud";
 import "./FloatPill.css";
 
@@ -23,6 +24,8 @@ interface FloatPillProps {
   volume?: VolumeActivity | null;
   status?: StatusActivity | null;
   timer?: TimerActivity | null;
+  /** Files are being dragged over the notch (count), or null. */
+  dropCount?: number | null;
   onVolumeChange?: (state: { level: number; muted: boolean }) => void;
 }
 
@@ -38,6 +41,7 @@ export const FloatPill: React.FC<FloatPillProps> = ({
   volume = null,
   status = null,
   timer = null,
+  dropCount = null,
   onVolumeChange = () => {},
 }) => {
   return (
@@ -47,7 +51,9 @@ export const FloatPill: React.FC<FloatPillProps> = ({
       onClick={onClick}
     >
       <div className="float-pill-content">
-        {volume ? (
+        {dropCount ? (
+          <DropZone count={dropCount} />
+        ) : volume ? (
           <VolumeHud activity={volume} onChange={onVolumeChange} />
         ) : status ? (
           <StatusHud activity={status} />

@@ -1,6 +1,7 @@
 import React from "react";
 import { BatteryActivity, StatusActivity } from "../../activities/types";
 import { TimerIcon } from "./Timer";
+import { TrayIcon } from "./Shelf";
 import { formatTimer } from "../../activities/timerStore";
 import "./StatusHud.css";
 
@@ -25,6 +26,14 @@ export const StatusHud: React.FC<{ activity: StatusActivity }> = ({ activity }) 
           <TimerIcon />
           <span className="status-hud-label">Timer done</span>
           <span className="status-hud-detail">{formatTimer(activity.durationMs)}</span>
+        </div>
+      );
+    case "shelf":
+      return (
+        <div className="status-hud">
+          <TrayIcon className="status-hud-icon shelf" />
+          <span className="status-hud-label">Added to Shelf</span>
+          <span className="status-hud-detail">{activity.count === 1 ? "1 item" : `${activity.count} items`}</span>
         </div>
       );
     case "bluetooth":

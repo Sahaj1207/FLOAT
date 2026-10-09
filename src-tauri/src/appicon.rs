@@ -83,21 +83,32 @@ fn encode_png(w: u32, h: u32, rgba: &[u8]) -> Option<Vec<u8>> {
     Some(out)
 }
 
+/// Render a shell item's image (icon, or thumbnail unless `icon_only`) as PNG.
 /// Blocking: COM + GDI work, run on a blocking thread.
-fn render_icon(app_id: &str) -> Option<String> {
+pub fn render_shell_image(factory: &IShellItemImageFactory, size: i32, icon_only: bool) -> Option<Vec<u8>> {
     unsafe {
-        // Shell items want an STA; S_FALSE / RPC_E_CHANGED_MODE are fine here.
-        let _ = CoInitializeEx(None, COINIT_APARTMENTTHREADED);
-        let factory: IShellItemImageFactory =
-            SHCreateItemInKnownFolder(&FOLDERID_AppsFolder, KF_FLAG_DEFAULT.0 as u32, &HSTRING::from(app_id)).ok()?;
-        let hbmp = factory
-            .GetImage(SIZE { cx: ICON_SIZE, cy: ICON_SIZE }, SIIGBF_ICONONLY | SIIGBF_RESIZETOFIT)
-            .ok()?;
+        let flags = if icon_only { SIIGBF_ICONONLY | SIIGBF_RESIZETOFIT } else { SIIGBF_RESIZETOFIT };
+        let hbmp = factory.GetImage(SIZE { cx: size, cy: size }, flags).ok()?;
         let pixels = bitmap_rgba(hbmp);
         DeleteObject(hbmp);
         let (w, h, rgba) = pixels?;
-        Some(STANDARD.encode(encode_png(w, h, &rgba)?))
+        encode_png(w, h, &rgba)
     }
+}
+
+/// Shell items want an STA; S_FALSE / RPC_E_CHANGED_MODE are fine here.
+pub fn com_init_sta() {
+    unsafe {
+        let _ = CoInitializeEx(None, COINIT_APARTMENTTHREADED);
+    }
+}
+
+fn render_icon(app_id: &str) -> Option<String> {
+    com_init_sta();
+    let factory: IShellItemImageFactory = unsafe {
+        SHCreateItemInKnownFolder(&FOLDERID_AppsFolder, KF_FLAG_DEFAULT.0 as u32, &HSTRING::from(app_id)).ok()?
+    };
+    Some(STANDARD.encode(render_shell_image(&factory, ICON_SIZE, true)?))
 }
 
 /// The app's icon as base64 PNG, or None if the shell doesn't know it.

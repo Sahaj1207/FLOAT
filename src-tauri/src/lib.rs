@@ -14,6 +14,7 @@ mod connectivity;
 mod focus;
 mod media;
 mod notifications;
+mod shelf;
 mod sysmon;
 mod tray;
 mod visualizer;
@@ -34,6 +35,7 @@ pub fn run() {
         }))
         .plugin(tauri_plugin_opener::init())
         .plugin(tray::global_shortcut_plugin())
+        .plugin(tauri_plugin_drag::init())
         .invoke_handler(tauri::generate_handler![
             window::set_hit_regions,
             window::set_hide_in_fullscreen,
@@ -51,6 +53,13 @@ pub fn run() {
             connectivity::get_connectivity,
             connectivity::set_radio,
             connectivity::open_settings_page,
+            shelf::get_shelf,
+            shelf::add_to_shelf,
+            shelf::remove_from_shelf,
+            shelf::clear_shelf,
+            shelf::open_shelf_item,
+            shelf::get_shelf_thumbnail,
+            shelf::shelf_drag_icon,
             log_from_js,
             media::media_play_pause,
             media::media_next,
@@ -66,6 +75,7 @@ pub fn run() {
             appicon::get_app_icon
         ])
         .setup(|app| {
+            shelf::init(app);
             if let Err(e) = window::init(app) {
                 eprintln!("Failed to init window: {}", e);
             }

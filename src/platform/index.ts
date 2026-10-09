@@ -9,6 +9,8 @@
  */
 
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { getCurrentWebview } from "@tauri-apps/api/webview";
+import { startDrag } from "@crabnebula/tauri-plugin-drag";
 
 /* ------------------------------------------------------------------ */
 /*  Window management                                                  */
@@ -233,6 +235,75 @@ export async function openSettingsPage(page: SettingsPage): Promise<void> {
     await invoke("open_settings_page", { page });
   } catch (e) {
     console.error("openSettingsPage failed:", e);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  File shelf                                                          */
+/* ------------------------------------------------------------------ */
+
+export interface ShelfItem {
+  path: string;
+  name: string;
+  isDir: boolean;
+}
+
+async function shelfCall(cmd: string, args?: Record<string, unknown>): Promise<ShelfItem[]> {
+  try {
+    return await invoke<ShelfItem[]>(cmd, args);
+  } catch (e) {
+    console.error(`${cmd} failed:`, e);
+    return [];
+  }
+}
+
+export const getShelf = () => shelfCall("get_shelf");
+export const addToShelf = (paths: string[]) => shelfCall("add_to_shelf", { paths });
+export const removeFromShelf = (path: string) => shelfCall("remove_from_shelf", { path });
+export const clearShelf = () => shelfCall("clear_shelf");
+
+export async function openShelfItem(path: string, reveal = false): Promise<void> {
+  try {
+    await invoke("open_shelf_item", { path, reveal });
+  } catch (e) {
+    console.error("openShelfItem failed:", e);
+  }
+}
+
+export async function getShelfThumbnail(path: string): Promise<string | null> {
+  try {
+    return await invoke<string | null>("get_shelf_thumbnail", { path });
+  } catch {
+    return null;
+  }
+}
+
+/** Start a native drag of a shelf file out to other apps. */
+export async function dragShelfItemOut(path: string): Promise<void> {
+  try {
+    const icon = await invoke<string | null>("shelf_drag_icon", { path });
+    await startDrag({ item: [path], icon: icon ?? "" });
+  } catch (e) {
+    console.error("dragShelfItemOut failed:", e);
+  }
+}
+
+export type FileDragEvent =
+  | { type: "enter" | "over"; paths?: string[] }
+  | { type: "drop"; paths: string[] }
+  | { type: "leave" };
+
+/** OS file drags over the island window. */
+export async function subscribeToFileDrag(callback: (event: FileDragEvent) => void): Promise<UnlistenFn> {
+  try {
+    return await getCurrentWebview().onDragDropEvent((event) => {
+      const p = event.payload;
+      if (p.type === "drop") callback({ type: "drop", paths: p.paths });
+      else if (p.type === "leave") callback({ type: "leave" });
+      else callback({ type: p.type, paths: "paths" in p ? p.paths : undefined });
+    });
+  } catch {
+    return () => {};
   }
 }
 

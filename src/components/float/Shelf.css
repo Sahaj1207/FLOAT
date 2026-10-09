@@ -1,0 +1,183 @@
+.shelf-view {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+  padding: 4px 16px 14px;
+  box-sizing: border-box;
+}
+
+.shelf-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.shelf-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--float-text-primary);
+}
+
+.shelf-hint {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  color: var(--float-text-secondary);
+}
+
+.shelf-clear {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--float-text-secondary);
+  cursor: pointer;
+}
+
+.shelf-clear:hover {
+  color: var(--float-text-primary);
+}
+
+.shelf-empty {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1.5px dashed rgba(255, 255, 255, 0.14);
+  border-radius: 16px;
+  font-size: 12px;
+  color: var(--float-text-secondary);
+}
+
+.shelf-empty-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.shelf-row {
+  display: flex;
+  flex: 1;
+  gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 4px;
+}
+
+.shelf-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 92px;
+  flex-shrink: 0;
+  padding: 10px 6px 8px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  cursor: grab;
+  transition: background 0.15s ease;
+}
+
+.shelf-tile:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.shelf-thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+}
+
+.shelf-thumb img {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 6px;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.shelf-thumb-fallback {
+  font-size: 32px;
+}
+
+.shelf-name {
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--float-text-primary);
+}
+
+.shelf-actions {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: flex;
+  gap: 3px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.shelf-tile:hover .shelf-actions {
+  opacity: 1;
+}
+
+.shelf-actions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  color: var(--float-text-primary);
+  cursor: pointer;
+}
+
+.shelf-actions button:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.shelf-actions svg {
+  width: 11px;
+  height: 11px;
+}
+
+/* Notch while dragging files over it */
+.shelf-dropzone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: calc(100% - 16px);
+  margin: 8px 0;
+  border: 1.5px dashed color-mix(in srgb, #0a84ff 70%, transparent);
+  border-radius: 14px;
+  background: rgba(10, 132, 255, 0.1);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--float-text-primary);
+  animation: notifPillEntrance 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.shelf-dropzone-icon {
+  width: 22px;
+  height: 22px;
+  color: #0a84ff;
+}

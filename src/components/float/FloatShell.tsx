@@ -29,6 +29,7 @@ import {
   subscribeToPrivacy,
   getPrivacyState,
   subscribeToBluetoothDevice,
+  subscribeToFileDrag,
   PrivacyState,
   HitRect,
   getMultiSessionState,
@@ -44,6 +45,7 @@ import { useActivities } from "../../activities/useActivities";
 import { Activity, ActivityPriority, isStatusActivity } from "../../activities/types";
 import { timer, useTimerState } from "../../activities/timerStore";
 import { playChime } from "./Timer";
+import { shelf } from "./Shelf";
 import "./FloatShell.css";
 
 export type IslandVisualMode = "orb" | "compact" | "compactPreview" | "expanded";
@@ -57,6 +59,8 @@ const PREVIEW_HEIGHT = 50;
 const PREVIEW_EXTRA_WIDTH = 30;
 const NOTIFICATION_HEIGHT = 62;
 const NOTIFICATION_MIN_WIDTH = 340;
+const DROP_WIDTH = 360;
+const DROP_HEIGHT = 86;
 const BUBBLE_SIZE = 38;
 // The optional orb floats just below the edge instead.
 const ORB_TOP = 8;
@@ -775,8 +779,37 @@ const FloatShell: React.FC = () => {
     };
   }, []);
 
+  // --- File drops onto the notch (Shelf) --------------------------------
+  // Number of files being dragged over the window, or null.
+  const [fileDrag, setFileDrag] = useState<number | null>(null);
+  useEffect(() => {
+    let isMounted = true;
+    let unlisten: (() => void) | null = null;
+    subscribeToFileDrag((event) => {
+      if (event.type === "enter") {
+        setFileDrag(event.paths?.length || 1);
+      } else if (event.type === "leave") {
+        setFileDrag(null);
+      } else if (event.type === "drop") {
+        setFileDrag(null);
+        if (event.paths.length > 0) {
+          shelf.add(event.paths);
+          show({ kind: "shelf", id: "shelf", priority: ActivityPriority.shelf, count: event.paths.length }, STATUS_HUD_MS);
+        }
+      }
+    }).then((fn) => {
+      if (isMounted) unlisten = fn;
+      else fn();
+    });
+    return () => {
+      isMounted = false;
+      unlisten?.();
+    };
+  }, [show]);
+  const showDrop = fileDrag !== null && !isExpanded;
+
   // --- Geometry & hit regions -------------------------------------------
-  const isOrb = visualMode === "orb";
+  const isOrb = visualMode === "orb" && !showDrop;
   const orbOpen = isOrb && (notificationPreviewOpen || quickActionsOpen);
   const isPreview = visualMode === "compactPreview";
 
@@ -785,6 +818,8 @@ const FloatShell: React.FC = () => {
   let bottomRadius: number;
   if (isExpanded) {
     [islandWidth, islandHeight, bottomRadius] = [SURFACE_WIDTH, SURFACE_HEIGHT, 28];
+  } else if (showDrop) {
+    [islandWidth, islandHeight, bottomRadius] = [DROP_WIDTH, DROP_HEIGHT, 26];
   } else if (isOrb) {
     islandWidth = notificationPreviewOpen ? NOTIF_PREVIEW_WIDTH : quickActionsOpen ? QUICK_ACTIONS_WIDTH : orbSize;
     islandHeight = notificationPreviewOpen ? NOTIF_PREVIEW_HEIGHT : quickActionsOpen ? QUICK_ACTIONS_HEIGHT : orbSize;
@@ -1047,7 +1082,7 @@ const FloatShell: React.FC = () => {
             onClearAllNotifications={handleClearAllNotifications}
             focusActive={focusState?.status === "active"}
           />
-        ) : visualMode === "orb" ? (
+        ) : isOrb ? (
           <FloatOrb
             key="orb"
             media={activeMedia}
@@ -1088,6 +1123,7 @@ const FloatShell: React.FC = () => {
             volume={primary?.kind === "volume" ? primary : null}
             status={isStatusActivity(primary) ? primary : null}
             timer={primary?.kind === "timer" ? primary : null}
+            dropCount={showDrop ? fileDrag : null}
             onVolumeChange={showVolume}
           />
         )}
