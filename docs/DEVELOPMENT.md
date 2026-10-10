@@ -36,7 +36,8 @@ FLOAT/
 │   ├── platform/           # Tauri IPC bindings & types
 │   │   ├── index.ts        # Platform command exports
 │   │   └── media.ts        # Media session types & events
-│   ├── activities/         # Live-activity model and priority stack
+│   ├── activities/         # Live-activity model, timer and task stores
+│   ├── island/             # shape.ts: the island's vector outline
 │   │   ├── types.ts        # Activity kinds and priorities
 │   │   └── useActivities.ts# Ongoing + transient activity stack (primary / split bubble)
 │   ├── services/           # Settings persistence and CSS custom properties
@@ -104,10 +105,16 @@ The island is flush with the top edge (only the orb floats, `ORB_TOP`). `FloatSh
 
 Morph springs come from `MORPH_SPRINGS[animationIntensity]`.
 
-### Expanded Panel
-`FloatSurface` renders tabs from `LEFT_TABS` / `RIGHT_TABS` with icons and labels in `TAB_ICONS` / `TAB_LABELS`; add a tab by extending `SurfaceTab` and the `body` switch. Home (`HomeView`) composes the horizontal `MediaWidgetSurface` (with `CurrentLyric` as its `subline`) and the widget column (`ClockTile`, `TimerTile`, `QuickToggles`).
+### Design System
+`index.css` defines the scales every view uses: type (`--t-*`), spacing (`--s-*`), radii (`--r-tile`, `--r-control`), fills (`--fill-1..3`), text (`--text-1..3`) and semantic colors. `ui.css` holds the shared building blocks (`.view`, `.view-header`, `.segmented`, `.chip`, `.round-btn`). Typeface is Inter (bundled via `@fontsource-variable/inter`); icons come from `lucide-react`. New UI should use these rather than one-off values, and add color only when it carries meaning.
 
-Timer state lives in `activities/timerStore.ts` (wall-clock based, outside React); a running timer is passed to `useActivities` as an ongoing activity.
+### Island Outline
+The island is not a rounded rectangle. `island/shape.ts` builds one SVG path with Apple-style continuous corners (circular arcs eased by Bezier segments, Figma's corner smoothing at 60%) and, when docked, the concave ears. `FloatShell` animates `--island-top-r`, `--island-bottom-r` and `--island-ear` as numbers and redraws the path on every frame (`syncFrame` -> `drawFrame`): the fill, gloss and rim paths, the content `clip-path`, and the native blur backdrop.
+
+### Expanded Panel
+`FloatSurface` renders the bar from `LEFT_TABS` / `RIGHT_TABS` and `TABS`; add a tab by extending `SurfaceTab`, `TABS` and the `body` switch. `settings` has no bar icon and opens from Controls. Home (`HomeView`) is deliberately minimal: the horizontal `MediaWidgetSurface` (with `CurrentLyric` as its `subline`) or a clock, plus `HomeLine`. Keep new features in their own tab rather than adding to Home.
+
+Timer state lives in `activities/timerStore.ts` (wall-clock based, outside React); a running timer is passed to `useActivities` as an ongoing activity. Tasks live in `activities/tasksStore.ts` (localStorage).
 
 ### Background Threads
 Each native monitor owns its thread and only emits on change: `window.rs` (cursor hit testing, ~60 Hz), `sysmon.rs` (volume 10 Hz, battery 5 Hz, camera/mic 1 Hz), `connectivity.rs` (every 3 s), `clipboard.rs` (sequence number, 2 Hz), `brightness.rs` (2 Hz, owns the non-Send WMI connection), `visualizer.rs` (only while an equalizer is visible). Together they idle well under 1% CPU.

@@ -34,13 +34,15 @@ Public release.
 - **Real Liquid Glass**: A native compositor backdrop blurs whatever is actually behind the island, shaped to it and updated every frame, with lit edges and gloss drawn on top. No screen capture, so it costs no CPU and FLOAT still appears in screenshots.
 - **Notch or Floating Pill**: Docked at the top edge it is the black notch. Drag it off and it becomes a floating glass pill you can park anywhere; drop it back near the top to dock it again.
 - **Visual Styles**: Auto (black notch docked, glass when floating), Glass everywhere, or Black everywhere, with an adjustable glass tint.
-- **Continuous Corners & Blur Transitions**: Apple-style squircle corners, and content that blurs and scales as the notch changes what it shows.
+- **Apple-Style Shapes**: The island is drawn as one vector outline with true continuous corners (not rounded rectangles), including the notch's ears, and content blurs and scales as it changes.
+- **One Design System**: A single type scale (Inter), icon family, spacing grid and control set across every view, with color reserved for meaning.
 - **Hover to Open**: Rest the pointer on the notch and the panel opens; move away and it closes (click-to-open is one setting away).
 - **Real App Icons**: Notifications show the sending app's icon.
 - **Gestures**: Scroll over the island to change volume (with an on-island volume HUD), scroll sideways to skip tracks, swipe a notification up to dismiss it.
 - **Spring Physics**: Morphs follow your Animation Intensity, from calm to bouncy, and the island squishes when pressed.
-- **Home Panel**: A Mac-style panel: big album art beside the track, live lyrics and controls, plus widgets for the time, battery, weather, your next calendar event, a timer, Wi-Fi/Bluetooth toggles and live CPU / memory / network speed.
-- **Timer & Stopwatch**: Start one from Home; it counts down live in the notch and chimes when done.
+- **Focused Home**: Open the notch and you get just the player (or a large clock when nothing plays) and one calm line: the time, weather, and your next calendar event or task. Everything else is one tab away.
+- **Tasks**: A simple to-do list. Type, press Enter, tick it off. Stored only on this PC; the next open task shows on Home.
+- **Timer & Stopwatch**: Type any duration into the big readout or tap a preset; it counts down live in the notch and chimes when done.
 - **File Shelf**: Drag files onto the notch to park them, then drag them out into any app later.
 - **Clipboard History**: Recent copied text and images, one click to copy again. In memory only; content apps mark as private (passwords) is never kept.
 - **Control Center**: Wi-Fi and Bluetooth toggles, a list of nearby Wi-Fi networks to join (with an inline password prompt), paired Bluetooth devices, volume and brightness sliders, battery and Focus status.

@@ -184,7 +184,7 @@ To view stored notifications at any time:
 
 ## 17. Expanded Panel Overview
 
-- **Dimensions**: 660 × 232 px. Docked, it hangs from the top edge; floating, it is a rounded glass card.
+- **Dimensions**: 580 × 244 px. Docked, it hangs from the top edge; floating, it is a rounded glass card.
 - **How to Open**: Rest the pointer on the notch (Open on Hover), click it, use the global hotkey, or click the tray icon. A panel opened by hovering closes when the pointer leaves; one opened any other way stays until you close it.
 - **How to Close**:
   - Click the collapse chevron (`⌃`) in the top navigation bar.
@@ -195,13 +195,14 @@ To view stored notifications at any time:
 
 ## 18. Navigation Tabs
 
-Content tabs sit on the left of the top bar, system tabs on the right:
-1. **Home (house)**: The player (large album art, title, artist, the current lyric line when Synced Lyrics is on, progress scrubber, controls and session switcher) with widgets beside it: the time, battery, weather and Wi-Fi / Bluetooth toggles; today's date with your next calendar event; a Timer / Stopwatch; and a strip showing CPU, memory and network speed.
-2. **Shelf (tray)**: Files you've dropped on the notch. Drag a tile out into any app, double-click to open it, or hover for *Show in Explorer* and *Remove*. **Clear** empties the shelf. FLOAT keeps references, not copies.
-3. **Clipboard (clipboard)**: Recent copied text and images, newest first. Click a card to copy it again. Hover to remove one, or **Clear** them all.
-4. **Notifications (bell + count)**: Notification history with individual dismissal and Clear All.
-5. **Controls (sliders)**: Wi-Fi and Bluetooth switches, volume and brightness sliders, battery and Focus status. **Networks…** lists nearby Wi-Fi networks; click one to join (a password field appears if Windows doesn't already know it). **Devices…** lists paired Bluetooth devices; Windows only lets its own flyout connect a paired device, so **Connect…** opens that flyout. Windows doesn't allow apps to turn Focus on or off, so its tile opens Focus settings.
-6. **Settings (gear)**: Appearance, behavior, notifications and system options.
+Things you do are on the left of the top bar; system things are on the right.
+
+1. **Home (house)**: Just the player (album art, title, artist, the current lyric line when Synced Lyrics is on, progress scrubber and controls), or a large clock when nothing is playing. Beneath it is one line: the time, the weather (if enabled), and your next calendar event or, failing that, your next task.
+2. **Tray (inbox)**: Two sections. **Files** holds what you dropped on the notch: drag a tile out into any app, double-click to open it, hover for *Show in Explorer* and *Remove*. **Clipboard** holds recent copied text and images: click a card to copy it again.
+3. **Tasks (check)**: A to-do list. Type into *New task* and press Enter; click the circle to tick a task off; hover a task to delete it; **Clear done** removes finished tasks. Tasks are stored only on this PC.
+4. **Timer (stopwatch)**: The big readout is editable: click the minutes or seconds, type any duration, and press Enter (or the play button). Presets sit beneath it, and your last custom duration is remembered. Switch to **Stopwatch** with the control at the top.
+5. **Notifications (bell)**: Notification history, newest first. A dot on the bell means there are some. Hover a row to dismiss it, or **Clear all**.
+6. **Controls (sliders)**: Wi-Fi and Bluetooth switches, volume and brightness sliders, battery and Focus status, and a CPU / memory / network strip. **Networks…** lists nearby Wi-Fi networks; click one to join (a password field appears if Windows doesn't already know it). **Devices…** lists paired Bluetooth devices; Windows only lets its own flyout connect a paired device, so **Connect…** opens that flyout. **FLOAT Settings** opens appearance, behavior and widget options.
 
 ---
 

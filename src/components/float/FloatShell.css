@@ -72,7 +72,7 @@
 
 /* A soft album-art glow beneath the island while music plays. */
 .float-shell.accent-glow .island-outline {
-  filter: drop-shadow(0 6px 16px color-mix(in srgb, var(--float-accent) 45%, transparent));
+  filter: drop-shadow(0 3px 9px color-mix(in srgb, var(--float-accent) 32%, transparent));
 }
 
 /* The split bubble has no blur behind it, so it carries more tint. */
