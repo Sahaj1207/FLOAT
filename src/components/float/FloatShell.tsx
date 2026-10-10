@@ -782,7 +782,9 @@ const FloatShell: React.FC = () => {
     } else if (mode === "expanded") {
       if (openedByHoverRef.current) {
         leaveTimerRef.current = setTimeout(() => {
-          if (!hoveringRef.current && !isDraggingRef.current) collapse();
+          // Stay open while the user is typing (e.g. a Wi-Fi password).
+          const typing = document.activeElement instanceof HTMLInputElement && document.activeElement.type !== "range";
+          if (!hoveringRef.current && !isDraggingRef.current && !typing) collapse();
         }, HOVER_CLOSE_MS);
       }
     } else if (mode === "compactPreview") {

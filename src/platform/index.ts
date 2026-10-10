@@ -288,7 +288,49 @@ export async function subscribeToBluetoothDevice(
   return await listen<{ name: string; connected: boolean }>("bluetooth-device", (event) => callback(event.payload));
 }
 
-export type SettingsPage = "network-wifi" | "bluetooth" | "sound" | "quiethours" | "batterysaver";
+export interface WifiNetwork {
+  ssid: string;
+  /** 0..5 */
+  signal: number;
+  secured: boolean;
+  connected: boolean;
+}
+
+/** Nearby networks. Rejects with a message if Windows blocks Wi-Fi access. */
+export async function getWifiNetworks(rescan: boolean): Promise<WifiNetwork[]> {
+  return await invoke<WifiNetwork[]>("wifi_networks", { rescan });
+}
+
+/**
+ * Join a network. Rejects with "password-required" when the network needs a
+ * password Windows doesn't already have (or the one given was wrong).
+ */
+export async function wifiConnect(ssid: string, password?: string): Promise<ConnectivityState> {
+  return await invoke<ConnectivityState>("wifi_connect", { ssid, password });
+}
+
+export interface BluetoothDeviceInfo {
+  name: string;
+  connected: boolean;
+}
+
+/** Paired Bluetooth devices, connected first. */
+export async function getBluetoothDevices(): Promise<BluetoothDeviceInfo[]> {
+  try {
+    return await invoke<BluetoothDeviceInfo[]>("bluetooth_devices");
+  } catch {
+    return [];
+  }
+}
+
+export type SettingsPage =
+  | "network-wifi"
+  | "bluetooth"
+  | "sound"
+  | "quiethours"
+  | "batterysaver"
+  // Windows' connect flyout (Win+K), for connecting a paired device.
+  | "connect-devices";
 
 export async function openSettingsPage(page: SettingsPage): Promise<void> {
   try {

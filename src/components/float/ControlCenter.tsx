@@ -17,6 +17,7 @@ import {
 } from "../../platform";
 import { useConnectivity } from "./useConnectivity";
 import { SunIcon } from "./StatusHud";
+import { BluetoothList, WifiList } from "./NetworkLists";
 import "./ControlCenter.css";
 
 /* ---- Icons ---------------------------------------------------------------- */
@@ -157,12 +158,27 @@ const SettingsLink: React.FC<{ page: Parameters<typeof openSettingsPage>[0]; lab
   </button>
 );
 
+const ListLink: React.FC<{ label: string; onOpen: () => void }> = ({ label, onOpen }) => (
+  <button
+    type="button"
+    className="cc-link"
+    onClick={(e) => {
+      e.stopPropagation();
+      onOpen();
+    }}
+    data-no-drag="true"
+  >
+    {label}
+  </button>
+);
+
 export const ControlsView: React.FC<{ focusActive: boolean }> = ({ focusActive }) => {
   const [state, update] = useConnectivity();
   const { toggle, busy, error } = useRadioToggle(state, update);
   const [volume, setVolumeState] = useState<VolumeState | null>(null);
   const [power, setPower] = useState<PowerPayload | null>(null);
   const [brightness, setBrightnessState] = useState<number | null>(null);
+  const [list, setList] = useState<"wifi" | "bluetooth" | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -180,6 +196,13 @@ export const ControlsView: React.FC<{ focusActive: boolean }> = ({ focusActive }
     };
   }, []);
 
+  if (list === "wifi") {
+    return <WifiList onBack={() => setList(null)} onConnected={update} />;
+  }
+  if (list === "bluetooth") {
+    return <BluetoothList onBack={() => setList(null)} connected={state?.bluetooth.devices ?? []} />;
+  }
+
   return (
     <div className="cc-view">
       <div className="cc-column">
@@ -195,7 +218,7 @@ export const ControlsView: React.FC<{ focusActive: boolean }> = ({ focusActive }
               </div>
               <Switch on={state.wifi.on} onToggle={() => toggle("wifi")} label="Wi-Fi" disabled={busy === "wifi"} />
             </div>
-            <SettingsLink page="network-wifi" label="Networks…" />
+            <ListLink label="Networks…" onOpen={() => setList("wifi")} />
           </div>
         )}
         {state?.bluetooth.available && (
@@ -222,7 +245,7 @@ export const ControlsView: React.FC<{ focusActive: boolean }> = ({ focusActive }
                 ))}
               </ul>
             )}
-            <SettingsLink page="bluetooth" label="Devices…" />
+            <ListLink label="Devices…" onOpen={() => setList("bluetooth")} />
           </div>
         )}
         {error && <span className="cc-error">{error}</span>}
