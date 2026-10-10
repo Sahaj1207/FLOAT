@@ -31,21 +31,25 @@ Public release.
 - **Live Activities & Split Island**: When two things are live at once (for example a notification arrives while music plays), the top one owns the pill and the other detaches into a bubble beside it, Dynamic Island style.
 - **Click-Through Window**: Only the island itself catches the mouse; the space around it passes clicks to the apps underneath, and morphs never resize the native window.
 - **Hide in Fullscreen**: The island gets out of the way of fullscreen games, videos and presentations.
-- **Visual Styles**: Solid Notch by default, or Glass, Minimal and Soft Glass translucent styles with adjustable transparency.
+- **Real Liquid Glass**: A native compositor backdrop blurs whatever is actually behind the island, shaped to it and updated every frame, with lit edges and gloss drawn on top. No screen capture, so it costs no CPU and FLOAT still appears in screenshots.
+- **Notch or Floating Pill**: Docked at the top edge it is the black notch. Drag it off and it becomes a floating glass pill you can park anywhere; drop it back near the top to dock it again.
+- **Visual Styles**: Auto (black notch docked, glass when floating), Glass everywhere, or Black everywhere, with an adjustable glass tint.
+- **Continuous Corners & Blur Transitions**: Apple-style squircle corners, and content that blurs and scales as the notch changes what it shows.
+- **Hover to Open**: Rest the pointer on the notch and the panel opens; move away and it closes (click-to-open is one setting away).
 - **Real App Icons**: Notifications show the sending app's icon.
 - **Gestures**: Scroll over the island to change volume (with an on-island volume HUD), scroll sideways to skip tracks, swipe a notification up to dismiss it.
 - **Spring Physics**: Morphs follow your Animation Intensity, from calm to bouncy, and the island squishes when pressed.
-- **Home Panel**: Click the notch for a Mac-style panel: big album art beside the track, live lyrics and controls, plus widgets for the time, battery, a timer and Wi-Fi/Bluetooth toggles.
+- **Home Panel**: A Mac-style panel: big album art beside the track, live lyrics and controls, plus widgets for the time, battery, weather, your next calendar event, a timer, Wi-Fi/Bluetooth toggles and live CPU / memory / network speed.
 - **Timer & Stopwatch**: Start one from Home; it counts down live in the notch and chimes when done.
 - **File Shelf**: Drag files onto the notch to park them, then drag them out into any app later.
 - **Clipboard History**: Recent copied text and images, one click to copy again. In memory only; content apps mark as private (passwords) is never kept.
-- **Control Center**: Wi-Fi and Bluetooth toggles, volume and brightness sliders, battery and Focus status.
+- **Control Center**: Wi-Fi and Bluetooth toggles, a list of nearby Wi-Fi networks to join (with an inline password prompt), paired Bluetooth devices, volume and brightness sliders, battery and Focus status.
 - **System Live Activities**: Volume and brightness HUDs for the hardware keys, charging and low-battery alerts, Bluetooth devices connecting, Focus turning on or off, and Mac-style green/orange dots while the camera or microphone is in use.
 - **Synced Lyrics (opt-in)**: The current lyric line under the playing track, from LRCLIB.
 - **Persistent User Preferences**: Local persistence for transparency, pill length, orb size, idle behavior, and privacy toggles.
 - **Tray Icon & Global Hotkey**: Open the island from the tray or with `Ctrl+Alt+Space` (falls back to `Alt+Shift+Space` or `Ctrl+Alt+I` if another app owns it).
 - **Launch at Startup**: Optional, from Settings or the tray menu.
-- **Remembered Position**: Drag the island anywhere; it remembers where you left it and snaps back to top-center when dropped nearby.
+- **Remembered Position**: FLOAT remembers where you left it, docked or floating.
 - **Multi-Monitor & DPI Aware**: Crisp rendering across standard and high-DPI Windows display scaling.
 - **Packaged AppModel Identity**: MSIX package architecture with native Windows restricted capabilities.
 
@@ -183,7 +187,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\package-msix.ps1
 - **Local Processing**: All media and notification data is processed locally on your machine using standard Windows WinRT and GSMTC APIs.
 - **No Cloud Account**: FLOAT does not require external user accounts, cloud servers, or API keys for its core functionality.
 - **Privacy Mode**: You can disable notification content previews in the Settings tab to hide message titles and bodies while retaining presence dots.
-- **Network Use**: The only feature that talks to the internet is **Synced Lyrics**, which is off by default. When enabled it sends the playing track's title, artist, album and length to [lrclib.net](https://lrclib.net).
+- **Network Use**: Only three opt-in features talk to the internet, and all are off until you set them up: **Synced Lyrics** sends the playing track's title, artist, album and length to [lrclib.net](https://lrclib.net); **Weather** sends the city name you type to [open-meteo.com](https://open-meteo.com); **Calendar** downloads the private ICS link you paste.
+- **Wi-Fi passwords** you type to join a network go straight to Windows, which stores the profile; FLOAT keeps nothing.
 - **Clipboard History** stays in memory and is never written to disk. Content that apps flag as private (password managers) is skipped, and turning the feature off clears it.
 - **File Shelf** stores only file paths, in your app data folder; files are never copied or uploaded.
 

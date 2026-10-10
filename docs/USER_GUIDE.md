@@ -184,8 +184,8 @@ To view stored notifications at any time:
 
 ## 17. Expanded Panel Overview
 
-- **Dimensions**: 580 × 232 px, hanging from the top edge with 28 px bottom corners.
-- **How to Open**: Click the notch, use the global hotkey, or click the tray icon.
+- **Dimensions**: 660 × 232 px. Docked, it hangs from the top edge; floating, it is a rounded glass card.
+- **How to Open**: Rest the pointer on the notch (Open on Hover), click it, use the global hotkey, or click the tray icon. A panel opened by hovering closes when the pointer leaves; one opened any other way stays until you close it.
 - **How to Close**:
   - Click the collapse chevron (`⌃`) in the top navigation bar.
   - Press the `Escape` key.
@@ -196,11 +196,11 @@ To view stored notifications at any time:
 ## 18. Navigation Tabs
 
 Content tabs sit on the left of the top bar, system tabs on the right:
-1. **Home (house)**: The player (large album art, title, artist, the current lyric line when Synced Lyrics is on, progress scrubber, controls and session switcher) with a widget column: time, date and battery; a Timer / Stopwatch; and Wi-Fi / Bluetooth quick toggles.
+1. **Home (house)**: The player (large album art, title, artist, the current lyric line when Synced Lyrics is on, progress scrubber, controls and session switcher) with widgets beside it: the time, battery, weather and Wi-Fi / Bluetooth toggles; today's date with your next calendar event; a Timer / Stopwatch; and a strip showing CPU, memory and network speed.
 2. **Shelf (tray)**: Files you've dropped on the notch. Drag a tile out into any app, double-click to open it, or hover for *Show in Explorer* and *Remove*. **Clear** empties the shelf. FLOAT keeps references, not copies.
 3. **Clipboard (clipboard)**: Recent copied text and images, newest first. Click a card to copy it again. Hover to remove one, or **Clear** them all.
 4. **Notifications (bell + count)**: Notification history with individual dismissal and Clear All.
-5. **Controls (sliders)**: Wi-Fi and Bluetooth switches (with the current network and connected devices), volume and brightness sliders, battery and Focus status, and shortcuts to the matching Windows Settings pages. Windows doesn't allow apps to turn Focus on or off, so its tile opens Focus settings.
+5. **Controls (sliders)**: Wi-Fi and Bluetooth switches, volume and brightness sliders, battery and Focus status. **Networks…** lists nearby Wi-Fi networks; click one to join (a password field appears if Windows doesn't already know it). **Devices…** lists paired Bluetooth devices; Windows only lets its own flyout connect a paired device, so **Connect…** opens that flyout. Windows doesn't allow apps to turn Focus on or off, so its tile opens Focus settings.
 6. **Settings (gear)**: Appearance, behavior, notifications and system options.
 
 ---
@@ -224,15 +224,18 @@ All settings are stored in `localStorage` (`float_settings_v1`) and take effect 
 
 | Setting | Range / Options | Default | Description |
 | :--- | :--- | :--- | :--- |
-| **Glass Transparency** | 60% – 100% | `100%` | Background opacity (the Notch style is solid at 100%). |
+| **Glass Tint** | 10% – 90% | `45%` | How dark the glass is. Lower shows more of what is behind it. |
 | **Activity Width** | 220 px – 340 px | `300 px` | Width of the notch while music, the volume HUD or a hover preview is shown. |
 | **Orb Size** | 44 px – 56 px | `48 px` | Sets diameter of the ambient circular orb. |
 | **Idle Behavior** | `Island`, `Remember`, `Orb` | `Island` | Island stays as the notch; Orb shrinks to a circle after ~3s idle; Remember uses whichever you last double-clicked into. |
 | **Animation Intensity** | `Subtle`, `Balanced`, `Expressive` | `Balanced` | Spring feel of every morph: Subtle never overshoots, Balanced has a slight bounce, Expressive is playful. Also scales the press squish. |
-| **Visual Style** | `Notch`, `Glass`, `Minimal`, `Soft Glass` | `Notch` | Notch is solid black like the MacBook notch; the others are translucent glass. |
+| **Visual Style** | `Auto`, `Glass`, `Black` | `Auto` | Auto is the black notch when docked and liquid glass when floating. Glass and Black apply one look everywhere. |
 | **Notification Presence** | `On` / `Off` | `On` | Toggles the glowing notification dot on the Orb. |
 | **Notification Preview** | `On` / `Off` | `On` | Toggles automatic 3.5s toast banner expansion. |
 | **Notification Content** | `On` / `Off` | `On` | When `Off`, hides notification title/body for privacy. |
+| **Weather** | `On` / `Off`, city, °C/°F | `Off` | Shows current weather on Home. Sends your city name to open-meteo.com. |
+| **Calendar** | ICS link | empty | Paste your calendar's private ICS link to show your next event on Home. |
+| **Open on Hover** | `On` / `Off` | `On` | Hovering the notch opens the panel. Off: click to open, hover only previews. |
 | **Hide in Fullscreen** | `On` / `Off` | `On` | Hides the island while a fullscreen game, video or presentation is focused. |
 | **Synced Lyrics** | `On` / `Off` | `Off` | Shows the current lyric line on Home. Sends the track title and artist to lrclib.net. |
 | **Clipboard History** | `On` / `Off` | `On` | Keeps recent copies in memory only. Turning it off clears the history. |
@@ -248,7 +251,7 @@ All settings are stored in `localStorage` (`float_settings_v1`) and take effect 
 - **Scroll**: Changes system volume (shows the volume HUD).
 - **Scroll sideways / Shift+Scroll**: Previous / next track.
 - **Swipe up on a notification**: Dismisses it.
-- **Window Drag**: Drag the island to reposition it anywhere on screen. The position is remembered; dropping it within a short distance of top-center snaps it exactly back.
+- **Drag to Float / Dock**: Drag the notch away from the top edge and it becomes a floating pill immediately; park it anywhere. Drop it back within a short distance of the top edge to dock it as the notch again (it snaps to center when close). The position is remembered.
 - **Escape Key**: Closes the Expanded Surface or transient previews.
 - **Click Outside**: Collapses the Expanded Surface.
 - **Global Hotkey**: `Ctrl+Alt+Space` toggles the Expanded Surface from anywhere. If another app already owns it, FLOAT uses `Alt+Shift+Space` or `Ctrl+Alt+I` instead; Settings → System shows which one is active.

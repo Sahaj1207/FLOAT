@@ -49,6 +49,8 @@ FLOAT/
 │   ├── src/
 │   │   ├── appicon.rs      # App icons by AUMID via shell:AppsFolder, cached as PNG
 │   │   ├── autostart.rs    # Launch at startup (MSIX StartupTask / HKCU Run key)
+│   │   ├── backdrop.rs     # Native composition backdrop window for real glass
+│   │   ├── calendar.rs     # Next events from an ICS link (rrule expansion)
 │   │   ├── brightness.rs   # Built-in display brightness via WMI (poll + set)
 │   │   ├── clipboard.rs    # In-memory clipboard history (text + images)
 │   │   ├── connectivity.rs # Wi-Fi / Bluetooth radios, SSID, connected devices
@@ -60,9 +62,11 @@ FLOAT/
 │   │   ├── notifications.rs# Windows UserNotificationListener events (with polling fallback)
 │   │   ├── shelf.rs        # File shelf persistence, thumbnails, open/reveal
 │   │   ├── sysmon.rs       # Volume, battery and camera/mic polling
+│   │   ├── sysstats.rs     # CPU / memory / network speed, sampled on demand
 │   │   ├── tray.rs         # Tray icon, global hotkey, island commands
 │   │   ├── visualizer.rs   # WASAPI loopback capture -> 3-band audio levels
 │   │   ├── volume.rs       # System volume via Core Audio
+│   │   ├── weather.rs      # Open-Meteo current weather (opt-in network)
 │   │   └── window.rs       # Fixed click-through window, hit testing, fullscreen hide, position memory
 │   ├── Cargo.toml          # Rust dependencies & crate metadata
 │   └── tauri.conf.json     # Tauri window & bundle configuration
@@ -107,6 +111,14 @@ Timer state lives in `activities/timerStore.ts` (wall-clock based, outside React
 
 ### Background Threads
 Each native monitor owns its thread and only emits on change: `window.rs` (cursor hit testing, ~60 Hz), `sysmon.rs` (volume 10 Hz, battery 5 Hz, camera/mic 1 Hz), `connectivity.rs` (every 3 s), `clipboard.rs` (sequence number, 2 Hz), `brightness.rs` (2 Hz, owns the non-Send WMI connection), `visualizer.rs` (only while an equalizer is visible). Together they idle well under 1% CPU.
+
+### Docked vs Floating
+`window.rs` decides after each drag whether the island is docked (dropped within `ATTACH_DISTANCE` of the top edge; it snaps to center within `CENTER_SNAP`) or floating, and emits `island-attached`. A drag settles as soon as the mouse button is released. The frontend flips to the floating pill the moment a drag starts and calls `island_drag_started` so a drag that never moves still settles.
+
+### Glass
+A web view in a transparent window cannot blur what is behind the window. `backdrop.rs` owns a bare native window directly beneath the island hosting a `Windows.UI.Composition` sprite painted with the host backdrop brush (DWM's blurred view of what is behind), clipped by a rounded-rectangle geometry. `FloatShell` sends the island's in-flight shape on every animation frame (`onUpdate` -> `set_backdrop`), and the window follows moves and visibility natively. The web view draws tint, edge highlights and gloss (`.float-shell.glass`). The clip is circular, so squircle shapes send a tighter radius (`SQUIRCLE_CLIP_FACTOR`); a square docked top is made by extending the clip above the visual.
+
+Glass applies when the Visual Style is Glass, or Auto while floating; otherwise the backdrop is hidden (`set_backdrop(null)`).
 
 ### Live Activities
 `useActivities` merges ongoing activities (media) with transient ones (notifications) pushed through `show(activity, lifetimeMs, onExpire)`, sorted by `ActivityPriority`. The first activity owns the pill; the second is rendered as a `SplitBubble` beside it in compact modes. New activity kinds (timers, HUDs, battery…) are added to `activities/types.ts` and given a pill and bubble rendering.
@@ -220,6 +232,12 @@ Controls resolve the target session by `SourceAppUserModelId` (win-gsmtc session
 - `get_volume()`, `change_volume(delta: f32)`, `toggle_mute()`: System output volume (`{ level, muted }`).
 - `set_visualizer_active(active: bool)`: Starts/stops loopback capture. The frontend ref-counts mounted equalizers (`AudioBars`).
 - `set_volume(level: f32)`: Absolute volume (0..1).
+- `set_backdrop(shape | null)`: The glass backdrop's shape in logical px relative to the window.
+- `get_island_attached()`, `island_drag_started()`: Docked state and drag start.
+- `wifi_networks(rescan: bool)`, `wifi_connect(ssid, password?)`: Nearby networks and joining one; rejects with `"password-required"` when a password is needed.
+- `bluetooth_devices()`: Paired devices with their connected state.
+- `get_system_stats()`: `{ cpu, memoryUsed, memoryTotal, down, up }` since the previous call.
+- `get_weather(city, fahrenheit)`, `get_calendar_events(url)`: Opt-in network widgets; call only when configured.
 - `get_power_state()`: `{ percent, charging, low }`, or `null` without a battery.
 - `get_privacy_state()`: `{ microphone, camera }` app names currently using them.
 - `get_brightness()` / `set_brightness(level: u8)`: Built-in panel brightness (0-100), `null` if unsupported.
@@ -242,6 +260,7 @@ Controls resolve the target session by `SourceAppUserModelId` (win-gsmtc session
 - `privacy-changed`: Camera / microphone use started or stopped.
 - `connectivity-changed`, `bluetooth-device`: Radio / network / device changes.
 - `clipboard-changed`: The clipboard history list after a new copy.
+- `island-attached`: `bool`, after a drag ends or the position is reset.
 
 ### Notification Delivery
 `NotificationChanged` requires package identity. When registering it fails (unpackaged and dev builds), `notifications.rs` diffs the active toast list every 1.5 s and emits the same events, so notifications work in `npm run tauri dev` too.
