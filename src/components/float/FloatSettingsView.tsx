@@ -119,6 +119,12 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = () => {
     setAutostart(!autostart).then(setAutostartState);
   };
 
+  const handleToggleOpenOnHover = () => {
+    const nextSettings = { ...settings, openOnHover: !settings.openOnHover };
+    setSettings(nextSettings);
+    saveSettings(nextSettings);
+  };
+
   const handleToggleSyncedLyrics = () => {
     const nextSettings = { ...settings, syncedLyrics: !settings.syncedLyrics };
     setSettings(nextSettings);
@@ -561,6 +567,24 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = () => {
               </svg>
               <span className="float-setting-name">System</span>
             </div>
+          </div>
+
+          <div className="float-setting-toggle-row">
+            <div className="float-setting-toggle-left">
+              <span className="float-setting-toggle-title">Open on Hover</span>
+              <span className="float-setting-toggle-desc">Rest the pointer on the notch to open the panel; it closes when you move away. Off: click to open</span>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={settings.openOnHover}
+              className={`float-setting-switch ${settings.openOnHover ? "checked" : ""}`}
+              onClick={handleToggleOpenOnHover}
+              data-no-drag="true"
+              aria-label="Toggle Open on Hover"
+            >
+              <span className="float-setting-switch-handle" />
+            </button>
           </div>
 
           <div className="float-setting-toggle-row">

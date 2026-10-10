@@ -98,6 +98,8 @@ const SWIPE_DISMISS_PX = 12;
 
 const DOUBLE_TAP_WINDOW_MS = 250;
 const IDLE_TO_ORB_DELAY_MS = 3000;
+const HOVER_OPEN_MS = 280;
+const HOVER_CLOSE_MS = 320;
 
 // Morph spring per Animation Intensity. Damping ratios ~1.0 / 0.78 / 0.62:
 // subtle never overshoots, balanced settles with a slight Dynamic Island
@@ -141,7 +143,10 @@ const FloatShell: React.FC = () => {
   const isDraggingRef = useRef(false);
   const shellRef = useRef<HTMLDivElement>(null);
   const hoveringRef = useRef(false);
+  // The panel was opened by hovering, so leaving it closes it again.
+  const openedByHoverRef = useRef(false);
   const [pressed, setPressed] = useState(false);
+  const fileDragRef = useRef(false);
 
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
@@ -227,6 +232,9 @@ const FloatShell: React.FC = () => {
     lastClickTimeRef.current = 0;
     setNotificationPreviewOpen(false);
     setQuickActionsOpen(false);
+    if (nextMode !== "expanded" || reason !== "hover-open") {
+      openedByHoverRef.current = false;
+    }
     setVisualMode(nextMode);
   }, [clearHoverTimers, clearClickTimer, clearIdleToOrbTimer]);
 
@@ -752,16 +760,30 @@ const FloatShell: React.FC = () => {
     if (inside) {
       clearIdleToOrbTimer();
       if (isDraggingRef.current || mode === "expanded") return;
-      if (mode === "orb") {
-        if (!notificationPreviewOpen) {
-          transitionTo("compact", "orb-hover");
-        }
+      if (mode === "orb" && !notificationPreviewOpen) {
+        transitionTo("compact", "orb-hover");
+      }
+      if (settingsRef.current.openOnHover) {
+        // Rest on the notch briefly and the whole panel opens. A passing
+        // cursor, a drag, or a live banner/HUD never triggers it.
+        previewTimerRef.current = setTimeout(() => {
+          if (hoveringRef.current && !isDraggingRef.current && !hasTransientRef.current && !fileDragRef.current) {
+            openedByHoverRef.current = true;
+            transitionTo("expanded", "hover-open");
+          }
+        }, HOVER_OPEN_MS);
       } else if (mode === "compact") {
         previewTimerRef.current = setTimeout(() => {
           if (!isDraggingRef.current) {
             transitionTo("compactPreview", "hover-dwell");
           }
         }, 200);
+      }
+    } else if (mode === "expanded") {
+      if (openedByHoverRef.current) {
+        leaveTimerRef.current = setTimeout(() => {
+          if (!hoveringRef.current && !isDraggingRef.current) collapse();
+        }, HOVER_CLOSE_MS);
       }
     } else if (mode === "compactPreview") {
       leaveTimerRef.current = setTimeout(() => {
@@ -817,6 +839,7 @@ const FloatShell: React.FC = () => {
     };
   }, [show]);
   const showDrop = fileDrag !== null && !isExpanded;
+  fileDragRef.current = fileDrag !== null;
 
   // --- Docked notch vs floating pill ------------------------------------
   // Docked to the top edge the island is the notch; dragged away it becomes

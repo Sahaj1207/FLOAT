@@ -20,6 +20,7 @@ export interface FloatSettings {
   hideInFullscreen: boolean;     // hide the island while a fullscreen app is focused, default true
   clipboardHistory: boolean;     // keep an in-memory clipboard history, default true
   syncedLyrics: boolean;         // fetch lyrics from LRCLIB (network, opt-in), default false
+  openOnHover: boolean;          // hovering the notch opens the panel, default true
 }
 
 export const PILL_LENGTH_MIN = 220;
@@ -39,6 +40,7 @@ export const DEFAULT_FLOAT_SETTINGS: FloatSettings = {
   hideInFullscreen: true,
   clipboardHistory: true,
   syncedLyrics: false,
+  openOnHover: true,
 };
 
 const SETTINGS_STORAGE_KEY = "float_settings_v1";
@@ -137,6 +139,9 @@ export function loadSettings(): FloatSettings {
     const syncedLyrics =
       typeof parsed.syncedLyrics === "boolean" ? parsed.syncedLyrics : DEFAULT_FLOAT_SETTINGS.syncedLyrics;
 
+    const openOnHover =
+      typeof parsed.openOnHover === "boolean" ? parsed.openOnHover : DEFAULT_FLOAT_SETTINGS.openOnHover;
+
     return {
       transparency,
       pillLength,
@@ -151,6 +156,7 @@ export function loadSettings(): FloatSettings {
       hideInFullscreen,
       clipboardHistory,
       syncedLyrics,
+      openOnHover,
     };
   } catch {
     return DEFAULT_FLOAT_SETTINGS;
