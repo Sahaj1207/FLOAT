@@ -19,9 +19,43 @@
   /* Accent: album-art color while media is active (set on .float-shell) */
   --float-accent: var(--float-text-primary);
 
-  /* Text */
-  --float-text-primary: rgba(255, 255, 255, 0.95);
-  --float-text-secondary: rgba(255, 255, 255, 0.6);
+  /* ---- Design system ----
+     One scale each for type, spacing, corner radii, fills and text, so every
+     view reads as the same calm system. Color is reserved for meaning. */
+  --t-caption: 11px;
+  --t-footnote: 12px;
+  --t-body: 13px;
+  --t-headline: 15px;
+  --t-title: 20px;
+
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+
+  /* Concentric: panel corner minus padding gives the tile corner, and so on. */
+  --r-tile: 14px;
+  --r-control: 9px;
+
+  --text-1: rgba(255, 255, 255, 0.96);
+  --text-2: rgba(235, 235, 245, 0.6);
+  --text-3: rgba(235, 235, 245, 0.3);
+
+  --fill-1: rgba(255, 255, 255, 0.06);
+  --fill-2: rgba(255, 255, 255, 0.1);
+  --fill-3: rgba(255, 255, 255, 0.16);
+
+  --tint: #0a84ff;
+  --green: #30d158;
+  --orange: #ff9f0a;
+  --red: #ff453a;
+  --yellow: #ffd60a;
+
+  /* Older names, kept as aliases. */
+  --float-text-primary: var(--text-1);
+  --float-text-secondary: var(--text-2);
 
   --float-shadow: none;
 
@@ -40,8 +74,7 @@
   --float-anim-reveal-y: 4px;
 
   /* System font stack */
-  --float-font: "Segoe UI Variable Text", "Segoe UI Variable", -apple-system,
-    BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --float-font: "Inter Variable", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
 
   /* Notch "ears": concave fillets joining the island to the screen edge */
   --float-ear: 7px;
@@ -87,6 +120,9 @@ body,
 body {
   font-family: var(--float-font);
   color: var(--float-text-primary);
+  font-size: var(--t-body);
+  letter-spacing: -0.006em;
+  font-feature-settings: "cv11", "ss03";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   user-select: none;
@@ -138,7 +174,9 @@ body {
 .cc-quick,
 .shelf-tile,
 .clip-item,
-.float-notif-card,
+.notif-row,
+.task-add,
+.task-row,
 .float-setting-card,
 .media-art-container {
   corner-shape: superellipse(1.35);

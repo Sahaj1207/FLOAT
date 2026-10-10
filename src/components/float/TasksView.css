@@ -1,0 +1,121 @@
+.task-add,
+.task-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 30px;
+  padding: 0 var(--s-2);
+  border-radius: var(--r-control);
+}
+
+.task-add {
+  flex-shrink: 0;
+  background: var(--fill-1);
+}
+
+.task-add input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: none;
+  color: var(--text-1);
+  font: inherit;
+  font-size: var(--t-body);
+  user-select: text;
+}
+
+.task-add input::placeholder {
+  color: var(--text-3);
+}
+
+.task-list {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.task-row {
+  flex-shrink: 0;
+  transition: background 0.12s ease;
+}
+
+.task-row:hover {
+  background: var(--fill-1);
+}
+
+.task-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  padding: 0;
+  border: 1.5px solid var(--text-3);
+  border-radius: 50%;
+  background: none;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+
+.task-check:hover {
+  border-color: var(--tint);
+}
+
+.task-check:active {
+  transform: scale(0.88);
+}
+
+.task-check.checked {
+  border-color: var(--tint);
+  background: var(--tint);
+}
+
+.task-check.ghost {
+  border-style: dashed;
+  cursor: default;
+}
+
+.task-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--t-body);
+  color: var(--text-1);
+  transition: color 0.2s ease;
+}
+
+.task-row.done .task-title {
+  color: var(--text-3);
+  text-decoration: line-through;
+}
+
+.task-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--text-2);
+  opacity: 0;
+  cursor: pointer;
+}
+
+.task-row:hover .task-remove {
+  opacity: 1;
+}
+
+.task-remove:hover {
+  background: var(--fill-2);
+  color: var(--text-1);
+}

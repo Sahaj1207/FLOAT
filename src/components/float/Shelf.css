@@ -1,10 +1,5 @@
 .shelf-view {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  height: 100%;
-  padding: 4px 16px 14px;
-  box-sizing: border-box;
+  gap: var(--s-3);
 }
 
 .shelf-header {
@@ -80,8 +75,8 @@
   width: 92px;
   flex-shrink: 0;
   padding: 10px 6px 8px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--r-tile);
+  background: var(--fill-1);
   cursor: grab;
   transition: background 0.15s ease;
 }

@@ -14,6 +14,7 @@ import {
   GLASS_TINT_MAX,
 } from "../../services/settings";
 import { getAutostart, getHotkey, setAutostart, subscribeToAutostart } from "../../platform";
+import { ChevronLeft } from "lucide-react";
 import "./FloatSettingsView.css";
 
 interface FloatSettingsViewProps {
@@ -56,7 +57,7 @@ const CommitInput: React.FC<{
   );
 };
 
-export const FloatSettingsView: React.FC<FloatSettingsViewProps> = () => {
+export const FloatSettingsView: React.FC<FloatSettingsViewProps> = ({ onClose }) => {
   const [settings, setSettings] = useState<FloatSettings>(() => loadSettings());
 
   useEffect(() => {
@@ -204,10 +205,21 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = () => {
   return (
     <div className="float-settings-view">
       <div className="float-settings-header-row">
-        <div className="float-settings-title-group">
-          <span className="float-settings-main-title">Settings</span>
-          <span className="float-settings-subtitle">Appearance, Style, Dimensions & Idle</span>
-        </div>
+        {onClose && (
+          <button
+            type="button"
+            className="float-settings-back"
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
+            data-no-drag="true"
+            aria-label="Back to Controls"
+          >
+            <ChevronLeft size={15} strokeWidth={2.4} />
+          </button>
+        )}
+        <span className="view-title">Settings</span>
       </div>
 
       <div className="float-settings-body">
@@ -297,8 +309,8 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = () => {
               data-no-drag="true"
             />
             <div className="float-setting-hints">
-              <span>Translucent (60%)</span>
-              <span>Solid Dark (100%)</span>
+              <span>Clear</span>
+              <span>Dark</span>
             </div>
           </div>
         </div>
@@ -343,7 +355,7 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = () => {
               data-no-drag="true"
             />
             <div className="float-setting-hints">
-              <span>Compact (200px)</span>
+              <span>Narrow</span>
               <span>Spacious (280px)</span>
             </div>
           </div>

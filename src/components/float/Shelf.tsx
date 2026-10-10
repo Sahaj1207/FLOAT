@@ -160,17 +160,17 @@ export const TrayIcon: React.FC<{ className?: string }> = ({ className = "" }) =
   </svg>
 );
 
-export const ShelfView: React.FC = () => {
+export const ShelfView: React.FC<{ header?: React.ReactNode }> = ({ header }) => {
   const list = useShelf();
   return (
-    <div className="shelf-view">
-      <div className="shelf-header">
-        <span className="shelf-title">Shelf</span>
-        <span className="shelf-hint">Drop files on the notch · drag them out into any app · double-click to open</span>
+    <div className="view shelf-view">
+      <div className="view-header">
+        {header ?? <span className="view-title">Files</span>}
+        <span className="view-hint" />
         {list.length > 0 && (
           <button
             type="button"
-            className="shelf-clear"
+            className="view-action"
             onClick={(e) => {
               e.stopPropagation();
               shelf.clear();
@@ -184,7 +184,7 @@ export const ShelfView: React.FC = () => {
       {list.length === 0 ? (
         <div className="shelf-empty">
           <TrayIcon className="shelf-empty-icon" />
-          <span>Drag files onto the notch to keep them here</span>
+          <span>Drop files on the notch to keep them here</span>
         </div>
       ) : (
         <div className="shelf-row">

@@ -369,3 +369,130 @@
 .float-setting-unit-btn:hover {
   background: rgba(255, 255, 255, 0.18);
 }
+
+.float-settings-header-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.float-settings-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--fill-1);
+  color: var(--text-1);
+  cursor: pointer;
+}
+
+.float-settings-back:hover {
+  background: var(--fill-2);
+}
+
+/* ---- Design-system pass: flat cards, no outlines, iOS controls ---- */
+.float-settings-view {
+  padding: var(--s-1) var(--s-5) var(--s-4);
+  gap: var(--s-3);
+}
+
+.float-settings-header-row {
+  justify-content: flex-start;
+  min-height: 26px;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.float-settings-body {
+  gap: var(--s-2);
+}
+
+.float-setting-card,
+.float-setting-card:hover {
+  padding: var(--s-3) var(--s-4);
+  gap: var(--s-2);
+  border: none;
+  border-radius: var(--r-tile);
+  background: var(--fill-1);
+}
+
+.float-setting-icon {
+  display: none;
+}
+
+.float-setting-name {
+  font-size: var(--t-body);
+  font-weight: 600;
+}
+
+.float-setting-value-badge {
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: var(--t-footnote);
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+.float-setting-segmented-group {
+  gap: 0;
+  padding: 2px;
+  border-radius: 9px;
+  background: var(--fill-1);
+}
+
+.float-setting-segment-btn,
+.float-setting-segment-btn:hover {
+  padding: 5px 8px;
+  border: none;
+  border-radius: 7px;
+  background: none;
+  box-shadow: none;
+  font-size: var(--t-footnote);
+}
+
+.float-setting-segment-btn.active {
+  border: none;
+  background: var(--fill-3);
+  box-shadow: none;
+  font-weight: 500;
+}
+
+.float-setting-segment-desc {
+  display: none;
+}
+
+.float-setting-hints {
+  font-size: var(--t-caption);
+  color: var(--text-3);
+}
+
+.float-setting-toggle-title {
+  font-size: var(--t-body);
+  font-weight: 500;
+  color: var(--text-1);
+}
+
+.float-setting-toggle-desc {
+  font-size: var(--t-caption);
+  line-height: 1.35;
+  color: var(--text-2);
+}
+
+.float-setting-switch.checked {
+  background: var(--green);
+  border-color: transparent;
+}
+
+.float-settings-reset-btn {
+  border: none;
+  border-radius: 999px;
+  background: var(--fill-1);
+  color: var(--red);
+  font-size: var(--t-footnote);
+  font-weight: 500;
+}

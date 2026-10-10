@@ -1,0 +1,150 @@
+/* Shared building blocks for the panel's views. One spacing scale, one type
+   scale, one set of control shapes, so every tab reads as the same system. */
+
+.view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  height: 100%;
+  padding: var(--s-1) var(--s-5) var(--s-4);
+  box-sizing: border-box;
+}
+
+.view-header {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 26px;
+  flex-shrink: 0;
+}
+
+.view-title {
+  font-size: var(--t-headline);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-1);
+}
+
+.view-hint {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--t-footnote);
+  color: var(--text-2);
+}
+
+.view-action {
+  margin-left: auto;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: var(--t-footnote);
+  font-weight: 500;
+  color: var(--tint);
+  cursor: pointer;
+}
+
+.view-action:disabled {
+  color: var(--text-3);
+  cursor: default;
+}
+
+.view-empty {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  font-size: var(--t-footnote);
+  color: var(--text-3);
+}
+
+/* iOS-style segmented control */
+.segmented {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 9px;
+  background: var(--fill-1);
+}
+
+.segmented button {
+  padding: 4px 12px;
+  border: none;
+  border-radius: 7px;
+  background: none;
+  color: var(--text-2);
+  font: inherit;
+  font-size: var(--t-footnote);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.segmented button.active {
+  background: var(--fill-3);
+  color: var(--text-1);
+}
+
+.segmented button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.chip {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 999px;
+  background: var(--fill-1);
+  color: var(--text-1);
+  font: inherit;
+  font-size: var(--t-footnote);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.chip:hover {
+  background: var(--fill-2);
+}
+
+.chip:active {
+  transform: scale(0.95);
+}
+
+.round-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--fill-1);
+  color: var(--text-1);
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.round-btn:hover {
+  background: var(--fill-2);
+}
+
+.round-btn:active {
+  transform: scale(0.92);
+}
+
+.round-btn.primary {
+  width: 44px;
+  height: 44px;
+  background: var(--text-1);
+  color: #000;
+}
+
+.round-btn.primary:hover {
+  background: #fff;
+}

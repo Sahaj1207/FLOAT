@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { formatTimer, timer, timerValue, TimerState, useTimerState } from "../../activities/timerStore";
+import { formatTimer, timer, timerValue, TimerState } from "../../activities/timerStore";
 import "./Timer.css";
 
 /** Live readout; ticks only while running. */
@@ -48,78 +48,6 @@ export const TimerPill: React.FC<{ state: TimerState }> = ({ state }) => (
     <PauseResume state={state} size="sm" />
   </div>
 );
-
-const PRESETS = [1, 5, 10, 25];
-
-/** Home widget: start presets, or control the running timer / stopwatch. */
-export const TimerTile: React.FC = () => {
-  const state = useTimerState();
-
-  if (state.active) {
-    return (
-      <div className="home-tile timer-tile">
-        <div className="timer-tile-head">
-          <TimerIcon />
-          <span>{state.mode === "timer" ? "Timer" : "Stopwatch"}</span>
-        </div>
-        <div className="timer-tile-row">
-          <TimerReadout state={state} className="timer-tile-readout" />
-          <PauseResume state={state} />
-          <button
-            type="button"
-            className="timer-btn ghost"
-            onClick={(e) => {
-              e.stopPropagation();
-              timer.reset();
-            }}
-            data-no-drag="true"
-            aria-label="Reset"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
-              <path d="M6 6l12 12M18 6 6 18" />
-            </svg>
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="home-tile timer-tile">
-      <div className="timer-tile-head">
-        <TimerIcon />
-        <span>Timer</span>
-        <button
-          type="button"
-          className="timer-link"
-          onClick={(e) => {
-            e.stopPropagation();
-            timer.startStopwatch();
-          }}
-          data-no-drag="true"
-        >
-          Stopwatch
-        </button>
-      </div>
-      <div className="timer-presets">
-        {PRESETS.map((min) => (
-          <button
-            key={min}
-            type="button"
-            className="timer-preset"
-            onClick={(e) => {
-              e.stopPropagation();
-              timer.start(min * 60_000);
-            }}
-            data-no-drag="true"
-          >
-            {min}m
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-};
 
 /** A short, gentle three-note chime for a finished timer. */
 export function playChime() {

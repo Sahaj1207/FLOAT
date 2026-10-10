@@ -18,6 +18,8 @@ import {
 import { useConnectivity } from "./useConnectivity";
 import { SunIcon } from "./StatusHud";
 import { BluetoothList, WifiList } from "./NetworkLists";
+import { StatsStrip } from "./Widgets";
+import { Settings } from "lucide-react";
 import "./ControlCenter.css";
 
 /* ---- Icons ---------------------------------------------------------------- */
@@ -85,40 +87,6 @@ const bluetoothCaption = (s: ConnectivityState) =>
     ? `${s.bluetooth.devices.length} devices`
     : "On";
 
-/* ---- Home: compact quick toggles --------------------------------------------- */
-
-export const QuickToggles: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
-  const [state, update] = useConnectivity();
-  const { toggle, busy } = useRadioToggle(state, update);
-  if (!state || (!state.wifi.available && !state.bluetooth.available)) return null;
-
-  const button = (kind: "wifi" | "bluetooth", icon: React.ReactNode, caption: string) => (
-    <button
-      type="button"
-      className={`cc-quick ${state[kind].on ? "on" : ""} ${busy === kind ? "busy" : ""}`}
-      onClick={(e) => {
-        e.stopPropagation();
-        toggle(kind);
-      }}
-      disabled={!state[kind].available}
-      data-no-drag="true"
-      title={caption}
-      aria-pressed={state[kind].on}
-      aria-label={kind === "wifi" ? "Wi-Fi" : "Bluetooth"}
-    >
-      <span className="cc-quick-icon">{icon}</span>
-      {!compact && <span className="cc-quick-caption">{caption}</span>}
-    </button>
-  );
-
-  return (
-    <div className={`cc-quick-row ${compact ? "compact" : ""}`}>
-      {button("wifi", <WifiIcon bars={state.wifi.signal} off={!state.wifi.on} />, wifiCaption(state))}
-      {button("bluetooth", <BluetoothIcon />, bluetoothCaption(state))}
-    </div>
-  );
-};
-
 /* ---- Controls tab ------------------------------------------------------------- */
 
 const Switch: React.FC<{ on: boolean; onToggle: () => void; label: string; disabled?: boolean }> = ({
@@ -172,7 +140,10 @@ const ListLink: React.FC<{ label: string; onOpen: () => void }> = ({ label, onOp
   </button>
 );
 
-export const ControlsView: React.FC<{ focusActive: boolean }> = ({ focusActive }) => {
+export const ControlsView: React.FC<{ focusActive: boolean; onOpenSettings: () => void }> = ({
+  focusActive,
+  onOpenSettings,
+}) => {
   const [state, update] = useConnectivity();
   const { toggle, busy, error } = useRadioToggle(state, update);
   const [volume, setVolumeState] = useState<VolumeState | null>(null);
@@ -249,6 +220,7 @@ export const ControlsView: React.FC<{ focusActive: boolean }> = ({ focusActive }
           </div>
         )}
         {error && <span className="cc-error">{error}</span>}
+        <StatsStrip />
       </div>
 
       <div className="cc-column">
@@ -336,7 +308,21 @@ export const ControlsView: React.FC<{ focusActive: boolean }> = ({ focusActive }
             <span className="cc-card-caption">{focusActive ? "On" : "Off"}</span>
           </button>
         </div>
-        <SettingsLink page="sound" label="Sound settings…" />
+        <div className="cc-footer">
+          <SettingsLink page="sound" label="Sound settings…" />
+          <button
+            type="button"
+            className="chip cc-settings"
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenSettings();
+            }}
+            data-no-drag="true"
+          >
+            <Settings size={13} strokeWidth={2.2} />
+            FLOAT Settings
+          </button>
+        </div>
       </div>
     </div>
   );

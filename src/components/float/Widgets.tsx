@@ -111,29 +111,24 @@ export const WeatherChip: React.FC = () => {
 
 /* ---- Calendar -------------------------------------------------------------------- */
 
-const timeFmt: Intl.DateTimeFormatOptions = { hour: "numeric", minute: "2-digit" };
-
-function relative(event: CalendarEvent, now: number): string {
+/** "Now", "in 25 min", "in 3 h", "Tomorrow", or a short date. */
+export function upcomingLabel(event: CalendarEvent, now: number): string {
   if (event.start <= now) return "Now";
   const mins = Math.round((event.start - now) / 60_000);
   if (mins < 60) return `in ${mins} min`;
   const start = new Date(event.start);
   const today = new Date(now);
-  const days = Math.round(
-    (new Date(start.getFullYear(), start.getMonth(), start.getDate()).getTime() -
-      new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime()) /
-      86_400_000
-  );
+  const dayOf = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const days = Math.round((dayOf(start) - dayOf(today)) / 86_400_000);
   if (days === 0) return `in ${Math.round(mins / 60)} h`;
   if (days === 1) return "Tomorrow";
   return start.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
 }
 
-/** Next event from the ICS link, or today's date when no calendar is linked. */
-export const CalendarTile: React.FC = () => {
+/** The next event from the linked ICS calendar, or null (none, or no link). */
+export function useNextEvent(): CalendarEvent | null {
   const { calendarUrl } = useSettings();
-  const [events, setEvents] = useState<CalendarEvent[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -142,14 +137,13 @@ export const CalendarTile: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    setEvents(null);
-    setError(null);
+    setEvents([]);
     if (!calendarUrl.trim()) return;
     let cancelled = false;
     const load = () =>
       getCalendarEvents(calendarUrl)
-        .then((list) => !cancelled && (setEvents(list), setError(null)))
-        .catch((e) => !cancelled && setError(String(e)));
+        .then((list) => !cancelled && setEvents(list))
+        .catch(() => !cancelled && setEvents([]));
     load();
     const timer = setInterval(load, 5 * 60_000);
     return () => {
@@ -158,42 +152,8 @@ export const CalendarTile: React.FC = () => {
     };
   }, [calendarUrl]);
 
-  const today = new Date(now);
-  const next = events?.find((e) => e.end > now);
-
-  return (
-    <div className="home-tile cal-tile" title={error ?? next?.location ?? undefined}>
-      <div className="cal-head">
-        <span className="cal-day">{today.getDate()}</span>
-        <span className="cal-month">
-          {today.toLocaleDateString(undefined, { month: "short" })}
-          <span>{today.toLocaleDateString(undefined, { weekday: "short" })}</span>
-        </span>
-        {next && <span className={`cal-when ${next.start <= now ? "now" : ""}`}>{relative(next, now)}</span>}
-      </div>
-      {next ? (
-        <>
-          <span className="cal-title">{next.title}</span>
-          <span className="cal-time">
-            {next.allDay
-              ? "All day"
-              : `${new Date(next.start).toLocaleTimeString(undefined, timeFmt)} – ${new Date(next.end).toLocaleTimeString(undefined, timeFmt)}`}
-          </span>
-        </>
-      ) : (
-        <span className="cal-empty">
-          {error
-            ? "Calendar unavailable"
-            : !calendarUrl.trim()
-            ? "Link a calendar in Settings"
-            : events === null
-            ? "Loading…"
-            : "Nothing coming up"}
-        </span>
-      )}
-    </div>
-  );
-};
+  return events.find((e) => e.end > now) ?? null;
+}
 
 /* ---- System stats ------------------------------------------------------------------ */
 
@@ -226,9 +186,9 @@ export const StatsStrip: React.FC = () => {
       clearInterval(timer);
     };
   }, []);
-  if (!stats) return <div className="home-tile stats-strip" />;
+  if (!stats) return <div className="cc-card stats-strip" />;
   return (
-    <div className="home-tile stats-strip">
+    <div className="cc-card stats-strip">
       <Meter label="CPU" percent={stats.cpu} />
       <Meter label="RAM" percent={(stats.memoryUsed / stats.memoryTotal) * 100} />
       <span className="stat net" title="Download / upload">

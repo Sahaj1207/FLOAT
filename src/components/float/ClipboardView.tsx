@@ -21,7 +21,7 @@ function timeAgo(at: number): string {
 }
 
 /** Recent copies; click one to copy it again. */
-export const ClipboardView: React.FC = () => {
+export const ClipboardView: React.FC<{ header?: React.ReactNode }> = ({ header }) => {
   const [entries, setEntries] = useState<ClipboardEntry[]>([]);
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [enabled, setEnabled] = useState(() => loadSettings().clipboardHistory);
@@ -48,14 +48,14 @@ export const ClipboardView: React.FC = () => {
   }, [copiedId]);
 
   return (
-    <div className="clip-view">
-      <div className="clip-header">
-        <span className="clip-title">Clipboard</span>
-        <span className="clip-hint">{enabled ? "Click to copy again · kept in memory only" : "Turned off in Settings › System"}</span>
+    <div className="view clip-view">
+      <div className="view-header">
+        {header ?? <span className="view-title">Clipboard</span>}
+        <span className="view-hint" />
         {entries.length > 0 && (
           <button
             type="button"
-            className="clip-clear"
+            className="view-action"
             onClick={(e) => {
               e.stopPropagation();
               clearClipboardHistory();
@@ -69,7 +69,7 @@ export const ClipboardView: React.FC = () => {
       </div>
 
       {entries.length === 0 ? (
-        <div className="clip-empty">{enabled ? "Things you copy will appear here" : "Clipboard history is off"}</div>
+        <div className="clip-empty">{enabled ? "Things you copy appear here" : "Clipboard history is off in Settings"}</div>
       ) : (
         <div className="clip-list">
           <AnimatePresence initial={false}>

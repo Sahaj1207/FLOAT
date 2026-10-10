@@ -4,84 +4,13 @@
   flex-shrink: 0;
 }
 
-/* ---- Home quick toggles ---- */
-.cc-quick-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-}
-
-.cc-quick {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  padding: 5px 7px 5px 5px;
-  border: none;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--float-text-secondary);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: background 0.15s ease, transform 0.1s ease;
-}
-
-.cc-quick:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.11);
-}
-
-.cc-quick:active:not(:disabled) {
-  transform: scale(0.96);
-}
-
-.cc-quick.busy {
-  opacity: 0.6;
-}
-
-.cc-quick-icon .cc-icon {
-  width: 13px;
-  height: 13px;
-}
-
-.cc-quick-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--float-text-primary);
-}
-
-.cc-quick.on .cc-quick-icon,
-.cc-badge.on {
-  background: #0a84ff;
-  color: #fff;
-}
-
-.cc-quick-caption {
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 10.5px;
-  font-weight: 500;
-}
-
-.cc-quick.on .cc-quick-caption {
-  color: var(--float-text-primary);
-}
-
 /* ---- Controls tab ---- */
 .cc-view {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
   height: 100%;
-  padding: 4px 16px 14px;
+  padding: var(--s-1) var(--s-5) var(--s-4);
   box-sizing: border-box;
   overflow-y: auto;
 }
@@ -98,8 +27,8 @@
   flex-direction: column;
   gap: 4px;
   padding: 9px 11px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.06);
+  border-radius: var(--r-tile);
+  background: var(--fill-1);
 }
 
 .cc-card-head {
@@ -246,19 +175,22 @@ button.cc-badge {
   color: #ffd60a;
 }
 
-/* Icon-only toggles (Home's clock tile) */
-.cc-quick-row.compact {
+.cc-quick-icon,
+.cc-badge.on {
+  background: var(--tint);
+  color: #fff;
+}
+
+.cc-footer {
   display: flex;
-  gap: 5px;
-  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
 }
 
-.cc-quick-row.compact .cc-quick {
-  padding: 0;
-  background: none;
-}
-
-.cc-quick-row.compact .cc-quick-icon {
-  width: 26px;
-  height: 26px;
+.cc-settings {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
 }

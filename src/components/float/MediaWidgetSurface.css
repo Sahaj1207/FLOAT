@@ -485,3 +485,56 @@
 .media-widget-surface.horizontal .session-switcher-bottom {
   justify-content: flex-start;
 }
+
+/* ---- Design-system pass ---- */
+.media-widget-surface.horizontal .media-art-container {
+  width: 136px;
+  height: 136px;
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 10px 24px -8px rgba(0, 0, 0, 0.6);
+}
+
+.media-widget-surface.horizontal .media-info-layout {
+  gap: var(--s-5);
+}
+
+.media-title {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.media-artist {
+  font-size: var(--t-body);
+  color: var(--text-2);
+}
+
+.media-time-labels {
+  font-size: var(--t-caption);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-3);
+}
+
+.media-btn.play-pause,
+.media-btn.play-pause:hover:not(:disabled) {
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: none;
+  box-shadow: none;
+}
+
+.media-btn.play-pause .icon {
+  width: 34px;
+  height: 34px;
+}
+
+.media-btn:hover:not(:disabled) {
+  background: var(--fill-1);
+}
+
+.media-btn.play-pause:hover:not(:disabled) {
+  background: var(--fill-1);
+  transform: none;
+}

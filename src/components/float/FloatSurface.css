@@ -13,7 +13,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px 2px;
+  padding: 10px var(--s-4) 4px;
   position: relative;
   flex-shrink: 0;
   z-index: 10;
@@ -63,62 +63,47 @@
   background: rgba(255, 255, 255, 0.35);
 }
 
-.float-surface-nav-left {
+.float-surface-nav {
   display: flex;
   align-items: center;
-  gap: 6px;
-  z-index: 2;
-}
-
-.float-surface-nav-right {
-  display: flex;
-  align-items: center;
+  gap: 2px;
   z-index: 2;
 }
 
 .float-surface-nav-btn {
-  background: transparent;
-  border: none;
-  color: var(--float-text-secondary);
-  font-size: 13px;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
+  width: 30px;
+  height: 28px;
   padding: 0;
-  transition: all 0.15s ease;
-  position: relative;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .float-surface-nav-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--float-text-primary);
+  color: var(--text-1);
 }
 
 .float-surface-nav-btn.active {
-  background: rgba(255, 255, 255, 0.16);
-  color: var(--float-text-primary);
+  background: var(--fill-2);
+  color: var(--text-1);
 }
 
+/* A quiet dot, not a count: the list itself shows how many. */
 .float-nav-badge {
   position: absolute;
-  top: -2px;
-  right: -2px;
-  background: #3b82f6;
-  color: #fff;
-  font-size: 9px;
-  font-weight: 800;
-  min-width: 14px;
-  height: 14px;
-  border-radius: 7px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 3px;
-  box-shadow: 0 0 6px rgba(59, 130, 246, 0.8);
+  top: 5px;
+  right: 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--tint);
 }
 
 /* ---- Body ---- */

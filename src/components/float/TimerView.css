@@ -1,0 +1,76 @@
+.timer-stage {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-4);
+}
+
+.timer-big,
+.timer-big.timer-readout {
+  font-size: 52px;
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-1);
+}
+
+.timer-big.idle {
+  color: var(--text-3);
+}
+
+/* The readout doubles as the custom-duration editor. */
+.timer-edit {
+  display: flex;
+  align-items: center;
+  cursor: text;
+}
+
+.timer-edit input.timer-big {
+  box-sizing: content-box;
+  padding: 2px 4px;
+  border: none;
+  border-radius: var(--r-control);
+  outline: none;
+  background: none;
+  font-family: inherit;
+  text-align: center;
+  caret-color: var(--orange);
+  user-select: text;
+  transition: background 0.15s ease;
+}
+
+.timer-edit input.timer-big:hover {
+  background: var(--fill-1);
+}
+
+.timer-edit input.timer-big:focus {
+  background: var(--fill-2);
+}
+
+.timer-big.colon {
+  padding-bottom: 6px;
+  color: var(--text-2);
+}
+
+.timer-start {
+  margin-left: var(--s-4);
+}
+
+.timer-start:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.timer-chips {
+  display: flex;
+  gap: var(--s-2);
+}
+
+.timer-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
