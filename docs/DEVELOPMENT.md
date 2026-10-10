@@ -106,7 +106,7 @@ Morph springs come from `MORPH_SPRINGS[animationIntensity]`.
 Timer state lives in `activities/timerStore.ts` (wall-clock based, outside React); a running timer is passed to `useActivities` as an ongoing activity.
 
 ### Background Threads
-Each native monitor owns its thread and only emits on change: `window.rs` (cursor hit testing, ~60 Hz), `sysmon.rs` (volume 10 Hz, battery 0.5 Hz, camera/mic 1 Hz), `connectivity.rs` (every 3 s), `clipboard.rs` (sequence number, 2 Hz), `brightness.rs` (2 Hz, owns the non-Send WMI connection), `visualizer.rs` (only while an equalizer is visible). Together they idle well under 1% CPU.
+Each native monitor owns its thread and only emits on change: `window.rs` (cursor hit testing, ~60 Hz), `sysmon.rs` (volume 10 Hz, battery 5 Hz, camera/mic 1 Hz), `connectivity.rs` (every 3 s), `clipboard.rs` (sequence number, 2 Hz), `brightness.rs` (2 Hz, owns the non-Send WMI connection), `visualizer.rs` (only while an equalizer is visible). Together they idle well under 1% CPU.
 
 ### Live Activities
 `useActivities` merges ongoing activities (media) with transient ones (notifications) pushed through `show(activity, lifetimeMs, onExpire)`, sorted by `ActivityPriority`. The first activity owns the pill; the second is rendered as a `SplitBubble` beside it in compact modes. New activity kinds (timers, HUDs, battery…) are added to `activities/types.ts` and given a pill and bubble rendering.

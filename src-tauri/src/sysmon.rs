@@ -22,7 +22,8 @@ use windows::Win32::System::Registry::{
 
 const TICK: Duration = Duration::from_millis(100);
 const ENDPOINT_REFRESH: Duration = Duration::from_secs(2);
-const POWER_EVERY: Duration = Duration::from_secs(2);
+// GetSystemPowerStatus is nearly free; poll fast so plugging in feels instant.
+const POWER_EVERY: Duration = Duration::from_millis(200);
 const PRIVACY_EVERY: Duration = Duration::from_secs(1);
 const LOW_BATTERY_LEVELS: [u8; 2] = [20, 10];
 
