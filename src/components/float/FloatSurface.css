@@ -17,7 +17,6 @@
   position: relative;
   flex-shrink: 0;
   z-index: 10;
-  animation: float-surface-header-reveal 0.2s cubic-bezier(0.16, 1, 0.3, 1) 0.06s backwards;
 }
 
 @keyframes float-surface-header-reveal {

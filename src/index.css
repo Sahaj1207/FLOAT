@@ -44,7 +44,7 @@
     BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
 
   /* Notch "ears": concave fillets joining the island to the screen edge */
-  --float-ear: 9px;
+  --float-ear: 7px;
   /* Lift for the expanded panel over content */
   --float-drop-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.55);
 }
@@ -125,4 +125,29 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.26);
+}
+
+/* ---- Continuous corners ----
+   Apple's shapes use continuous-curvature corners (squircles), not circular
+   arcs. corner-shape gives the same curve; engines without it keep round. */
+.float-shell,
+.island-glass,
+.split-bubble,
+.home-tile,
+.home-media-empty,
+.cc-card,
+.cc-quick,
+.shelf-tile,
+.clip-item,
+.float-notif-card,
+.float-setting-card,
+.media-art-container {
+  corner-shape: squircle;
+}
+
+/* Floating pills and the orb stay true capsules / circles. */
+.float-shell.capsule,
+.float-shell.capsule .island-glass,
+.float-shell.capsule .split-bubble {
+  corner-shape: round;
 }

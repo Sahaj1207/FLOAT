@@ -40,7 +40,6 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
-  animation: notifPillEntrance 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes notifPillEntrance {
@@ -159,4 +158,16 @@
   font-size: 12px;
   font-weight: 500;
   color: var(--float-text-secondary);
+}
+
+/* Wrapper that crossfades (blur + scale) when the notch content changes. */
+.float-pill-swap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  transform-origin: 50% 0%;
+  will-change: opacity, transform, filter;
 }

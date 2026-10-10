@@ -110,7 +110,12 @@ export const FloatSurface: React.FC<FloatSurfaceProps> = ({
 
   return (
     <motion.div layoutId="island-glass" className="float-surface-content island-glass">
-      <div className="float-surface-top-bar">
+      <motion.div
+        className="float-surface-top-bar"
+        initial={{ opacity: 0, filter: "blur(10px)" }}
+        animate={{ opacity: 1, filter: "blur(0px)" }}
+        transition={{ duration: 0.3, delay: 0.05, ease: [0.2, 0.8, 0.2, 1] }}
+      >
         <div className="float-surface-nav-left">{LEFT_TABS.map(tabButton)}</div>
 
         <button
@@ -123,22 +128,28 @@ export const FloatSurface: React.FC<FloatSurfaceProps> = ({
         </button>
 
         <div className="float-surface-nav-right">{RIGHT_TABS.map(tabButton)}</div>
-      </div>
+      </motion.div>
 
-      <div className="float-surface-body">
+      <motion.div
+        className="float-surface-body"
+        initial={{ opacity: 0, scale: 0.94, filter: "blur(12px)" }}
+        animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+        transition={{ duration: 0.36, delay: 0.08, ease: [0.2, 0.8, 0.2, 1] }}
+        style={{ transformOrigin: "50% 0%" }}
+      >
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={activeTab}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 6 }}
+            initial={{ opacity: 0, scale: 0.98, filter: "blur(6px)" }}
+            animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+            exit={{ opacity: 0, scale: 0.98, filter: "blur(6px)" }}
             transition={tabTransition}
             style={{ width: "100%", height: "100%" }}
           >
             {body}
           </motion.div>
         </AnimatePresence>
-      </div>
+      </motion.div>
     </motion.div>
   );
 };

@@ -1,5 +1,5 @@
 import React from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { MediaSession } from "../../platform/media";
 import { MediaWidgetPill } from "./MediaWidgetPill";
 import { OrbNotificationState } from "./FloatOrb";
@@ -44,6 +44,23 @@ export const FloatPill: React.FC<FloatPillProps> = ({
   dropCount = null,
   onVolumeChange = () => {},
 }) => {
+  // What the notch is showing; a change crossfades with a blur, Apple-style.
+  const contentKey = dropCount
+    ? "drop"
+    : volume
+    ? "volume"
+    : status
+    ? `status-${status.kind}`
+    : timer
+    ? "timer"
+    : isNotificationActive && notification?.hasNotification
+    ? "notification"
+    : media?.hasMedia
+    ? "media"
+    : isPreview
+    ? "idle-preview"
+    : "idle";
+
   return (
     <motion.div 
       layoutId="island-glass"
@@ -51,6 +68,15 @@ export const FloatPill: React.FC<FloatPillProps> = ({
       onClick={onClick}
     >
       <div className="float-pill-content">
+        <AnimatePresence mode="popLayout" initial={false}>
+          <motion.div
+            key={contentKey}
+            className="float-pill-swap"
+            initial={{ opacity: 0, scale: 0.9, filter: "blur(8px)" }}
+            animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+            exit={{ opacity: 0, scale: 0.9, filter: "blur(8px)" }}
+            transition={{ duration: 0.26, ease: [0.2, 0.8, 0.2, 1] }}
+          >
         {dropCount ? (
           <DropZone count={dropCount} />
         ) : volume ? (
@@ -105,6 +131,8 @@ export const FloatPill: React.FC<FloatPillProps> = ({
         ) : (
           <IdleNotch isPreview={isPreview} hasUnread={!!notification?.hasNotification} />
         )}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </motion.div>
   );

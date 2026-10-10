@@ -57,7 +57,8 @@ export type IslandVisualMode = "orb" | "compact" | "compactPreview" | "expanded"
 
 // Notch geometry per state (logical px). The island hangs flush from the
 // top edge, so only its bottom corners are rounded.
-const NOTCH_IDLE_WIDTH = 200;
+// MacBook Pro notch proportions (~6:1).
+const NOTCH_IDLE_WIDTH = 196;
 const NOTCH_IDLE_HEIGHT = 32;
 const ACTIVITY_HEIGHT = 36;
 const PREVIEW_HEIGHT = 50;
@@ -70,6 +71,7 @@ const BUBBLE_SIZE = 38;
 // Floating shapes (the orb, and the pill once dragged off the edge) sit
 // just below the top of the window.
 const FLOAT_TOP = 8;
+const SQUIRCLE_CLIP_FACTOR = 0.6;
 const FLOATING_IDLE_WIDTH = 150;
 const FLOATING_IDLE_HEIGHT = 36;
 const SURFACE_WIDTH = 580;
@@ -843,24 +845,24 @@ const FloatShell: React.FC = () => {
   let islandHeight: number;
   let bottomRadius: number;
   if (isExpanded) {
-    [islandWidth, islandHeight, bottomRadius] = [SURFACE_WIDTH, SURFACE_HEIGHT, 28];
+    [islandWidth, islandHeight, bottomRadius] = [SURFACE_WIDTH, SURFACE_HEIGHT, 36];
   } else if (showDrop) {
-    [islandWidth, islandHeight, bottomRadius] = [DROP_WIDTH, DROP_HEIGHT, 26];
+    [islandWidth, islandHeight, bottomRadius] = [DROP_WIDTH, DROP_HEIGHT, 30];
   } else if (isOrb) {
     islandWidth = notificationPreviewOpen ? NOTIF_PREVIEW_WIDTH : quickActionsOpen ? QUICK_ACTIONS_WIDTH : orbSize;
     islandHeight = notificationPreviewOpen ? NOTIF_PREVIEW_HEIGHT : quickActionsOpen ? QUICK_ACTIONS_HEIGHT : orbSize;
     bottomRadius = orbOpen ? 24 : Math.round(orbSize / 2);
   } else if (primary?.kind === "notification") {
-    [islandWidth, islandHeight, bottomRadius] = [Math.max(pillWidth, NOTIFICATION_MIN_WIDTH), NOTIFICATION_HEIGHT, 24];
+    [islandWidth, islandHeight, bottomRadius] = [Math.max(pillWidth, NOTIFICATION_MIN_WIDTH), NOTIFICATION_HEIGHT, 28];
   } else if (primary) {
     islandWidth = pillWidth + (isPreview ? PREVIEW_EXTRA_WIDTH : 0);
     islandHeight = isPreview ? PREVIEW_HEIGHT : ACTIVITY_HEIGHT;
-    bottomRadius = isPreview ? 22 : 18;
+    bottomRadius = isPreview ? 24 : 17;
   } else if (attached) {
     // Nothing live: a quiet notch; hovering reveals the time.
     islandWidth = isPreview ? pillWidth : NOTCH_IDLE_WIDTH;
     islandHeight = isPreview ? ACTIVITY_HEIGHT : NOTCH_IDLE_HEIGHT;
-    bottomRadius = isPreview ? 18 : 12;
+    bottomRadius = isPreview ? 17 : 13;
   } else {
     islandWidth = isPreview ? pillWidth : FLOATING_IDLE_WIDTH;
     islandHeight = isPreview ? ACTIVITY_HEIGHT : FLOATING_IDLE_HEIGHT;
@@ -884,6 +886,12 @@ const FloatShell: React.FC = () => {
   const glass = settings.visualStyle === "glass" || (settings.visualStyle === "auto" && !docked);
   const glassRef = useRef(glass);
   glassRef.current = glass;
+  // The blur clip is a circular rounded rect. Capsules (floating pill, orb)
+  // are circular too; squircle shapes curve further out than a circle of
+  // the same radius, so their clip uses a tighter radius to fill the corners.
+  const isCapsule = !docked && !isExpanded;
+  const clipRadiusFactorRef = useRef(1);
+  clipRadiusFactorRef.current = isCapsule ? 1 : SQUIRCLE_CLIP_FACTOR;
   // Keep the native blur backdrop glued to the island on every animation
   // frame of a morph (framer reports the in-flight values).
   const syncBackdrop = (latest: Record<string, unknown>) => {
@@ -897,8 +905,8 @@ const FloatShell: React.FC = () => {
       y: num("y", islandTop),
       width,
       height,
-      topRadius: num("borderTopLeftRadius", topRadius) * scale,
-      bottomRadius: num("borderBottomLeftRadius", bottomRadius) * scale,
+      topRadius: num("borderTopLeftRadius", topRadius) * scale * clipRadiusFactorRef.current,
+      bottomRadius: num("borderBottomLeftRadius", bottomRadius) * scale * clipRadiusFactorRef.current,
     });
   };
   // Glass switching on or off outside a morph (e.g. from Settings). During
@@ -906,7 +914,14 @@ const FloatShell: React.FC = () => {
   useEffect(() => {
     setBackdrop(
       glass
-        ? { x: (WINDOW_WIDTH - islandWidth) / 2, y: islandTop, width: islandWidth, height: islandHeight, topRadius, bottomRadius }
+        ? {
+            x: (WINDOW_WIDTH - islandWidth) / 2,
+            y: islandTop,
+            width: islandWidth,
+            height: islandHeight,
+            topRadius: topRadius * clipRadiusFactorRef.current,
+            bottomRadius: bottomRadius * clipRadiusFactorRef.current,
+          }
         : null
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1120,7 +1135,7 @@ const FloatShell: React.FC = () => {
   return (
     <motion.div
       ref={shellRef}
-      className={`float-shell ${accentGlow ? "accent-glow" : ""} ${docked ? "attached" : "floating"} ${glass ? "glass" : "solid"} ${isExpanded ? "expanded" : ""}`}
+      className={`float-shell ${accentGlow ? "accent-glow" : ""} ${docked ? "attached" : "floating"} ${glass ? "glass" : "solid"} ${isExpanded ? "expanded" : ""} ${isCapsule ? "capsule" : ""}`}
       onUpdate={syncBackdrop}
       style={accent ? ({ "--float-accent": accent } as React.CSSProperties) : undefined}
       animate={{
