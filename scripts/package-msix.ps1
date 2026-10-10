@@ -1,6 +1,11 @@
 # FLOAT MSIX Packaging Script
 # Uses Windows 10/11 SDK tools to generate and sign a packaged MSIX with userNotificationListener capability
 
+param(
+    # Build and sign the package but don't uninstall/install anything.
+    [switch]$NoInstall
+)
+
 $ErrorActionPreference = "Stop"
 
 function Find-WindowsSdkTool {
@@ -53,6 +58,9 @@ $makepri  = Find-WindowsSdkTool "makepri.exe"
 $signtool = Find-WindowsSdkTool "signtool.exe"
 
 $rootDir = Split-Path -Parent $PSScriptRoot
+# The package version follows package.json (MSIX needs four parts).
+$appVersion = (Get-Content (Join-Path $rootDir "package.json") -Raw | ConvertFrom-Json).version
+$msixVersion = "$appVersion.0"
 $stagingDir = Join-Path $rootDir "target\msix_staging"
 $msixPath = Join-Path $rootDir "target\FLOAT.msix"
 
@@ -90,7 +98,7 @@ $manifestContent = @"
   <Identity
     Name="FLOAT.Island"
     Publisher="CN=FLOATDev"
-    Version="1.0.1.0"
+    Version="$msixVersion"
     ProcessorArchitecture="x64" />
 
   <Properties>
@@ -171,15 +179,19 @@ if (-not $trustedCert) {
 Write-Host "Signing MSIX package..."
 & $signtool sign /fd SHA256 /sha1 $cert.Thumbprint "$msixPath"
 
-Write-Host "[7/7] Installing packaged application..." -ForegroundColor Cyan
-$existing = Get-AppxPackage | Where-Object { $_.Name -like "*FLOAT*" }
-if ($existing) {
-    Write-Host "Removing previously installed package..."
-    $existing | Remove-AppxPackage
+if ($NoInstall) {
+    Write-Host "[7/7] Skipping install (-NoInstall)." -ForegroundColor Cyan
+} else {
+    Write-Host "[7/7] Installing packaged application..." -ForegroundColor Cyan
+    $existing = Get-AppxPackage | Where-Object { $_.Name -like "*FLOAT*" }
+    if ($existing) {
+        Write-Host "Removing previously installed package..."
+        $existing | Remove-AppxPackage
+    }
+    Add-AppxPackage -Path "$msixPath" -ForceApplicationShutdown
 }
-Add-AppxPackage -Path "$msixPath" -ForceApplicationShutdown
 
 Write-Host "=============================================" -ForegroundColor Green
-Write-Host "FLOAT MSIX Package successfully built and installed!" -ForegroundColor Green
+Write-Host "FLOAT $appVersion MSIX package built$(if (-not $NoInstall) { ' and installed' })!" -ForegroundColor Green
 Write-Host "Package Path: $msixPath" -ForegroundColor Green
 Write-Host "=============================================" -ForegroundColor Green

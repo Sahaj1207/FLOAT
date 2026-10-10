@@ -52,6 +52,7 @@ import { timer, useTimerState } from "../../activities/timerStore";
 import { playChime } from "./Timer";
 import { shelf } from "./Shelf";
 import { islandPath } from "../../island/shape";
+import { shouldShowWelcome } from "./Welcome";
 import "./FloatShell.css";
 
 export type IslandVisualMode = "orb" | "compact" | "compactPreview" | "expanded";
@@ -124,7 +125,10 @@ const getRestingDestination = (cfg: FloatSettings): "orb" | "compact" => {
 };
 
 const FloatShell: React.FC = () => {
-  const [visualMode, setVisualMode] = useState<IslandVisualMode>(() => getRestingDestination(loadSettings()));
+  // First run (or first launch after upgrading to 2.0) opens on the welcome.
+  const [visualMode, setVisualMode] = useState<IslandVisualMode>(() =>
+    shouldShowWelcome() ? "expanded" : getRestingDestination(loadSettings())
+  );
   const [multiState, setMultiState] = useState<MultiSessionState | null>(null);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [notificationState, setNotificationState] = useState<OrbNotificationState | null>(null);
@@ -299,6 +303,13 @@ const FloatShell: React.FC = () => {
   const handlePillClick = useCallback(() => {
     if (isDraggingRef.current) return;
     clearIdleToOrbTimer();
+    // The double-click (pill -> orb) gesture only exists in the orb modes.
+    // In Island mode a click opens at once instead of waiting it out.
+    if (settingsRef.current.idleBehavior === "alwaysPill") {
+      clearClickTimer();
+      transitionTo("expanded", "user-click");
+      return;
+    }
     const now = Date.now();
     const timeSinceLastClick = now - lastClickTimeRef.current;
 
@@ -1088,6 +1099,8 @@ const FloatShell: React.FC = () => {
 
   const handleWheel = (e: React.WheelEvent) => {
     if (visualModeRef.current === "expanded") return;
+    // Scrolling means "adjust", not "open": cancel a pending hover-open.
+    clearHoverTimers();
     const wheel = wheelRef.current;
     const horizontal = e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY);
 

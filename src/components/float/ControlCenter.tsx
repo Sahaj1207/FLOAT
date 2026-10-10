@@ -19,7 +19,7 @@ import { useConnectivity } from "./useConnectivity";
 import { SunIcon } from "./StatusHud";
 import { BluetoothList, WifiList } from "./NetworkLists";
 import { StatsStrip } from "./Widgets";
-import { Settings } from "lucide-react";
+import { Bluetooth, Moon, Settings, Volume2, VolumeX } from "lucide-react";
 import "./ControlCenter.css";
 
 /* ---- Icons ---------------------------------------------------------------- */
@@ -39,24 +39,12 @@ const WifiIcon: React.FC<{ bars?: number | null; off?: boolean }> = ({ bars = 5,
   );
 };
 
-const BluetoothIcon: React.FC = () => (
-  <svg className="cc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="m7 7 10 10-5 5V2l5 5L7 17" />
-  </svg>
-);
+const BluetoothIcon: React.FC = () => <Bluetooth className="cc-icon" strokeWidth={2.2} />;
 
-const SpeakerIcon: React.FC<{ muted: boolean }> = ({ muted }) => (
-  <svg className="cc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M11 5 6 9H2v6h4l5 4V5z" fill="currentColor" stroke="none" />
-    {muted ? <path d="m23 9-6 6M17 9l6 6" /> : <path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14" />}
-  </svg>
-);
+const SpeakerIcon: React.FC<{ muted: boolean }> = ({ muted }) =>
+  muted ? <VolumeX className="cc-icon" strokeWidth={2.2} /> : <Volume2 className="cc-icon" strokeWidth={2.2} />;
 
-const MoonIcon: React.FC = () => (
-  <svg className="cc-icon" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-  </svg>
-);
+const MoonIcon: React.FC = () => <Moon className="cc-icon" fill="currentColor" strokeWidth={0} />;
 
 /* ---- Radio toggling --------------------------------------------------------- */
 

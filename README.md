@@ -4,9 +4,9 @@ A Dynamic Island for Windows.
 
 FLOAT is a lightweight MacBook-style notch for Windows. It hangs from the top of your screen and brings media controls, a live audio visualizer, Windows notifications, a volume HUD and quick settings into one place.
 
-## FLOAT v1.0.1
+## FLOAT v2.0.0
 
-Public release.
+A ground-up redesign: a MacBook-style notch with real liquid glass, a calm focused panel, and a set of everyday tools. See [CHANGELOG.md](CHANGELOG.md) for everything that changed.
 
 ---
 
@@ -87,29 +87,27 @@ Pill / Orb ──( Click )──► Expanded Surface [ Media | Notifications | S
 
 ## 🖼️ Screenshots
 
-### Compact Pill
+### The notch
 
-![FLOAT Compact Pill](assets/screenshots/float-pill.png)
+![The notch while music plays](assets/screenshots/notch-media.png)
 
-### Ambient Orb Mode
+![A notification, with music moved to the side](assets/screenshots/notch-notification.png)
 
-![FLOAT Ambient Orb](assets/screenshots/float-orb.png)
+### Home
 
-### Media Player & Equalizer
+![Home: the player and one calm line](assets/screenshots/panel-home.png)
 
-![FLOAT Media Player](assets/screenshots/float-media.png)
+### Tasks and Timer
 
-### Notification Preview
+![Tasks](assets/screenshots/panel-tasks.png)
 
-![FLOAT Notification Preview](assets/screenshots/float-notification.png)
+![Timer](assets/screenshots/panel-timer.png)
 
-### Notification Center
+### Floating glass
 
-![FLOAT Notification Center](assets/screenshots/float-notifications.png)
+![Dragged off the edge, FLOAT becomes a glass pill](assets/screenshots/glass-pill.png)
 
-### Expanded Surface & Settings
-
-![FLOAT Settings](assets/screenshots/float-settings.png)
+![The panel in glass](assets/screenshots/glass-panel.png)
 
 ---
 
@@ -255,11 +253,9 @@ FLOAT/
 
 ## 📦 Project Status
 
-**FLOAT v1.0.1** is the latest public release.
+**FLOAT v2.0.0** is the latest release. It replaces the 1.x pill and orb with the notch design and adds the panel tools (Tray, Tasks, Timer, Controls). Install the MSIX for the full experience: launch at startup, instant notifications and Wi-Fi/Bluetooth toggles need the packaged app.
 
-The v1.0.1 release focuses on stabilizing the interaction model while preserving the core media, notification, Orb, and glass interface experience.
-
-Future enhancements and bug fixes will be tracked through GitHub Issues and Pull Requests.
+Glass needs Windows 11; on Windows 10 the island falls back to a solid tint.
 
 ---
 

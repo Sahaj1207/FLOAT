@@ -3,6 +3,7 @@ import { BatteryActivity, StatusActivity } from "../../activities/types";
 import { TimerIcon } from "./Timer";
 import { TrayIcon } from "./Shelf";
 import { formatTimer } from "../../activities/timerStore";
+import { Bluetooth, Moon, Sun, Zap } from "lucide-react";
 import "./StatusHud.css";
 
 /** Brief system-status live activities: charging, low battery, camera/mic, Focus. */
@@ -49,9 +50,7 @@ export const StatusHud: React.FC<{ activity: StatusActivity }> = ({ activity }) 
     case "bluetooth":
       return (
         <div className="status-hud">
-          <svg className="status-hud-icon bluetooth" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="m7 7 10 10-5 5V2l5 5L7 17" />
-          </svg>
+          <Bluetooth className="status-hud-icon bluetooth" strokeWidth={2.2} />
           <span className="status-hud-label">{activity.connected ? "Connected" : "Disconnected"}</span>
           <span className="status-hud-detail">{activity.device}</span>
         </div>
@@ -59,9 +58,7 @@ export const StatusHud: React.FC<{ activity: StatusActivity }> = ({ activity }) 
     case "focus":
       return (
         <div className="status-hud">
-          <svg className="status-hud-icon focus" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-          </svg>
+          <Moon className="status-hud-icon focus" fill="currentColor" strokeWidth={0} />
           <span className="status-hud-label">Focus</span>
           <span className="status-hud-detail">{activity.active ? "On" : "Off"}</span>
         </div>
@@ -70,10 +67,7 @@ export const StatusHud: React.FC<{ activity: StatusActivity }> = ({ activity }) 
 };
 
 export const SunIcon: React.FC<{ className?: string }> = ({ className = "" }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-    <circle cx="12" cy="12" r="4" fill="currentColor" />
-    <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
-  </svg>
+  <Sun className={className} strokeWidth={2.2} />
 );
 
 const BatteryHud: React.FC<{ activity: BatteryActivity }> = ({ activity }) => {
@@ -82,9 +76,7 @@ const BatteryHud: React.FC<{ activity: BatteryActivity }> = ({ activity }) => {
   return (
     <div className="status-hud">
       {charging ? (
-        <svg className="status-hud-icon charging" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z" />
-        </svg>
+        <Zap className="status-hud-icon charging" fill="currentColor" strokeWidth={0} />
       ) : (
         <span className={`status-hud-dot ${tone}`} />
       )}

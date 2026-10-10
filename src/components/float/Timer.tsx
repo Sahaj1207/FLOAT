@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { formatTimer, timer, timerValue, TimerState } from "../../activities/timerStore";
+import { Pause, Play, Timer as TimerGlyph } from "lucide-react";
 import "./Timer.css";
 
 /** Live readout; ticks only while running. */
@@ -15,10 +16,7 @@ export const TimerReadout: React.FC<{ state: TimerState; className?: string }> =
 };
 
 export const TimerIcon: React.FC<{ className?: string }> = ({ className = "" }) => (
-  <svg className={`timer-icon ${className}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-    <circle cx="12" cy="13" r="8" />
-    <path d="M12 9v4l2.5 2.5M9.5 2.5h5" />
-  </svg>
+  <TimerGlyph className={`timer-icon ${className}`} strokeWidth={2.2} />
 );
 
 const PauseResume: React.FC<{ state: TimerState; size?: "sm" | "md" }> = ({ state, size = "md" }) => (
@@ -33,9 +31,7 @@ const PauseResume: React.FC<{ state: TimerState; size?: "sm" | "md" }> = ({ stat
     data-no-drag="true"
     aria-label={state.running ? "Pause" : "Resume"}
   >
-    <svg viewBox="0 0 24 24" fill="currentColor">
-      {state.running ? <path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" /> : <path d="M8 5v14l11-7z" />}
-    </svg>
+    {state.running ? <Pause fill="currentColor" strokeWidth={0} /> : <Play fill="currentColor" strokeWidth={0} />}
   </button>
 );
 

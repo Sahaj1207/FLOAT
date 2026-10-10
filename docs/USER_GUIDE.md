@@ -1,4 +1,4 @@
-# FLOAT v1.0.1 User Guide
+# FLOAT v2.0.0 User Guide
 
 Welcome to the comprehensive user guide for **FLOAT**, a Dynamic Island desktop experience for Windows 10 and 11.
 

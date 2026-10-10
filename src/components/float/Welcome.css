@@ -1,0 +1,50 @@
+.welcome-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-2);
+  flex: 1;
+  min-height: 0;
+}
+
+.welcome-tip {
+  display: flex;
+  gap: var(--s-3);
+  padding: var(--s-3);
+  border-radius: var(--r-tile);
+  background: var(--fill-1);
+  color: var(--text-1);
+  corner-shape: superellipse(1.35);
+}
+
+.welcome-tip svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--text-2);
+}
+
+.welcome-tip-title,
+.welcome-tip-text {
+  display: block;
+}
+
+.welcome-tip-title {
+  font-size: var(--t-body);
+  font-weight: 600;
+}
+
+.welcome-tip-text {
+  font-size: var(--t-caption);
+  line-height: 1.35;
+  color: var(--text-2);
+}
+
+.welcome-done {
+  flex-shrink: 0;
+  background: var(--text-1);
+  color: #000;
+  font-weight: 600;
+}
+
+.welcome-done:hover {
+  background: #fff;
+}

@@ -10,6 +10,7 @@ import {
   removeFromShelf,
   ShelfItem,
 } from "../../platform";
+import { Inbox, Search, X } from "lucide-react";
 import "./Shelf.css";
 
 /* ---- Shared shelf store (the notch adds; the Shelf tab shows) ---------------- */
@@ -128,10 +129,7 @@ const ShelfTile: React.FC<{ item: ShelfItem }> = ({ item }) => {
           }}
           data-no-drag="true"
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="6" />
-            <path d="m20 20-4.5-4.5" />
-          </svg>
+          <Search strokeWidth={2.4} />
         </button>
         <button
           type="button"
@@ -144,9 +142,7 @@ const ShelfTile: React.FC<{ item: ShelfItem }> = ({ item }) => {
           }}
           data-no-drag="true"
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round">
-            <path d="M6 6l12 12M18 6 6 18" />
-          </svg>
+          <X strokeWidth={2.6} />
         </button>
       </div>
     </motion.div>
@@ -154,10 +150,7 @@ const ShelfTile: React.FC<{ item: ShelfItem }> = ({ item }) => {
 };
 
 export const TrayIcon: React.FC<{ className?: string }> = ({ className = "" }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M22 12h-6l-2 3h-4l-2-3H2" />
-    <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
-  </svg>
+  <Inbox className={className} strokeWidth={2} />
 );
 
 export const ShelfView: React.FC<{ header?: React.ReactNode }> = ({ header }) => {

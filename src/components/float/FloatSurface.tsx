@@ -10,6 +10,7 @@ import { TimerView } from "./TimerView";
 import { FloatNotificationsView } from "./FloatNotificationsView";
 import { FloatSettingsView } from "./FloatSettingsView";
 import { ControlsView } from "./ControlCenter";
+import { shouldShowWelcome, Welcome } from "./Welcome";
 import "./ui.css";
 import "./FloatSurface.css";
 
@@ -55,6 +56,7 @@ export const FloatSurface: React.FC<FloatSurfaceProps> = ({
   focusActive = false,
 }) => {
   const [activeTab, setActiveTab] = useState<SurfaceTab>("home");
+  const [welcome, setWelcome] = useState(shouldShowWelcome);
 
   const tabButton = (tab: BarTab) => {
     const { label, Icon } = TABS[tab];
@@ -80,6 +82,7 @@ export const FloatSurface: React.FC<FloatSurfaceProps> = ({
   };
 
   const body = (() => {
+    if (welcome) return <Welcome onDone={() => setWelcome(false)} />;
     switch (activeTab) {
       case "home":
         return (
@@ -142,7 +145,7 @@ export const FloatSurface: React.FC<FloatSurfaceProps> = ({
       >
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
-            key={activeTab}
+            key={welcome ? "welcome" : activeTab}
             initial={{ opacity: 0, scale: 0.98, filter: "blur(6px)" }}
             animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
             exit={{ opacity: 0, scale: 0.98, filter: "blur(6px)" }}

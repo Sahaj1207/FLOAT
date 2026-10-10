@@ -2,6 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { VolumeActivity } from "../../activities/types";
 import { toggleMute } from "../../platform";
+import { Volume1, Volume2, VolumeX } from "lucide-react";
 import "./VolumeHud.css";
 
 interface VolumeHudProps {
@@ -27,17 +28,7 @@ export const VolumeHud: React.FC<VolumeHudProps> = ({ activity, onChange }) => {
         data-no-drag="true"
         aria-label={muted ? "Unmute" : "Mute"}
       >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M11 5 6 9H2v6h4l5 4V5z" fill="currentColor" stroke="none" />
-          {muted || shown === 0 ? (
-            <path d="m23 9-6 6M17 9l6 6" />
-          ) : (
-            <>
-              <path d="M15.5 8.5a5 5 0 0 1 0 7" />
-              {shown > 50 && <path d="M19 5a10 10 0 0 1 0 14" />}
-            </>
-          )}
-        </svg>
+        {muted || shown === 0 ? <VolumeX strokeWidth={2.2} /> : shown > 50 ? <Volume2 strokeWidth={2.2} /> : <Volume1 strokeWidth={2.2} />}
       </button>
       <div className="volume-hud-track">
         <motion.div
