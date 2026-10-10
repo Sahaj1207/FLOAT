@@ -128,10 +128,9 @@ body {
 }
 
 /* ---- Continuous corners ----
-   Apple's shapes use continuous-curvature corners (squircles), not circular
-   arcs. corner-shape gives the same curve; engines without it keep round. */
-.float-shell,
-.island-glass,
+   The island outline is an exact vector path (island/shape.ts). Elements
+   inside it use a superellipse close to the same Apple-style curve; the
+   built-in "squircle" keyword is noticeably squarer. */
 .split-bubble,
 .home-tile,
 .home-media-empty,
@@ -142,12 +141,9 @@ body {
 .float-notif-card,
 .float-setting-card,
 .media-art-container {
-  corner-shape: squircle;
+  corner-shape: superellipse(1.35);
 }
 
-/* Floating pills and the orb stay true capsules / circles. */
-.float-shell.capsule,
-.float-shell.capsule .island-glass,
 .float-shell.capsule .split-bubble {
   corner-shape: round;
 }

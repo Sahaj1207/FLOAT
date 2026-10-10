@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { motion, LayoutGroup, AnimatePresence } from "framer-motion";
 import { FloatPill } from "./FloatPill";
 import { FloatSurface } from "./FloatSurface";
@@ -51,6 +51,7 @@ import { Activity, ActivityPriority, isStatusActivity } from "../../activities/t
 import { timer, useTimerState } from "../../activities/timerStore";
 import { playChime } from "./Timer";
 import { shelf } from "./Shelf";
+import { islandPath } from "../../island/shape";
 import "./FloatShell.css";
 
 export type IslandVisualMode = "orb" | "compact" | "compactPreview" | "expanded";
@@ -71,7 +72,10 @@ const BUBBLE_SIZE = 38;
 // Floating shapes (the orb, and the pill once dragged off the edge) sit
 // just below the top of the window.
 const FLOAT_TOP = 8;
-const SQUIRCLE_CLIP_FACTOR = 0.6;
+// Apple-style continuous corners (see island/shape.ts); capsules stay circular.
+const CORNER_SMOOTHING = 0.6;
+// Concave ears joining the docked notch to the screen edge.
+const EAR_SIZE = 7;
 const FLOATING_IDLE_WIDTH = 150;
 const FLOATING_IDLE_HEIGHT = 36;
 const SURFACE_WIDTH = 660;
@@ -870,24 +874,24 @@ const FloatShell: React.FC = () => {
   let islandHeight: number;
   let bottomRadius: number;
   if (isExpanded) {
-    [islandWidth, islandHeight, bottomRadius] = [SURFACE_WIDTH, SURFACE_HEIGHT, 36];
+    [islandWidth, islandHeight, bottomRadius] = [SURFACE_WIDTH, SURFACE_HEIGHT, 30];
   } else if (showDrop) {
-    [islandWidth, islandHeight, bottomRadius] = [DROP_WIDTH, DROP_HEIGHT, 30];
+    [islandWidth, islandHeight, bottomRadius] = [DROP_WIDTH, DROP_HEIGHT, 26];
   } else if (isOrb) {
     islandWidth = notificationPreviewOpen ? NOTIF_PREVIEW_WIDTH : quickActionsOpen ? QUICK_ACTIONS_WIDTH : orbSize;
     islandHeight = notificationPreviewOpen ? NOTIF_PREVIEW_HEIGHT : quickActionsOpen ? QUICK_ACTIONS_HEIGHT : orbSize;
     bottomRadius = orbOpen ? 24 : Math.round(orbSize / 2);
   } else if (primary?.kind === "notification") {
-    [islandWidth, islandHeight, bottomRadius] = [Math.max(pillWidth, NOTIFICATION_MIN_WIDTH), NOTIFICATION_HEIGHT, 28];
+    [islandWidth, islandHeight, bottomRadius] = [Math.max(pillWidth, NOTIFICATION_MIN_WIDTH), NOTIFICATION_HEIGHT, 24];
   } else if (primary) {
     islandWidth = pillWidth + (isPreview ? PREVIEW_EXTRA_WIDTH : 0);
     islandHeight = isPreview ? PREVIEW_HEIGHT : ACTIVITY_HEIGHT;
-    bottomRadius = isPreview ? 24 : 17;
+    bottomRadius = isPreview ? 20 : 15;
   } else if (attached) {
     // Nothing live: a quiet notch; hovering reveals the time.
     islandWidth = isPreview ? pillWidth : NOTCH_IDLE_WIDTH;
     islandHeight = isPreview ? ACTIVITY_HEIGHT : NOTCH_IDLE_HEIGHT;
-    bottomRadius = isPreview ? 17 : 13;
+    bottomRadius = isPreview ? 15 : 11;
   } else {
     islandWidth = isPreview ? pillWidth : FLOATING_IDLE_WIDTH;
     islandHeight = isPreview ? ACTIVITY_HEIGHT : FLOATING_IDLE_HEIGHT;
@@ -911,46 +915,70 @@ const FloatShell: React.FC = () => {
   const glass = settings.visualStyle === "glass" || (settings.visualStyle === "auto" && !docked);
   const glassRef = useRef(glass);
   glassRef.current = glass;
-  // The blur clip is a circular rounded rect. Capsules (floating pill, orb)
-  // are circular too; squircle shapes curve further out than a circle of
-  // the same radius, so their clip uses a tighter radius to fill the corners.
+  // Floating pills and the orb are true capsules; everything else uses
+  // continuous corners.
   const isCapsule = !docked && !isExpanded;
-  const clipRadiusFactorRef = useRef(1);
-  clipRadiusFactorRef.current = isCapsule ? 1 : SQUIRCLE_CLIP_FACTOR;
-  // Keep the native blur backdrop glued to the island on every animation
-  // frame of a morph (framer reports the in-flight values).
-  const syncBackdrop = (latest: Record<string, unknown>) => {
-    if (!glassRef.current) return;
-    const num = (key: string, fallback: number) => (typeof latest[key] === "number" ? (latest[key] as number) : fallback);
-    const scale = num("scale", 1);
-    const width = num("width", islandWidth) * scale;
-    const height = num("height", islandHeight) * scale;
-    setBackdrop({
-      x: (WINDOW_WIDTH - width) / 2,
-      y: num("y", islandTop),
-      width,
-      height,
-      topRadius: num("borderTopLeftRadius", topRadius) * scale * clipRadiusFactorRef.current,
-      bottomRadius: num("borderBottomLeftRadius", bottomRadius) * scale * clipRadiusFactorRef.current,
+  const ear = docked ? EAR_SIZE : 0;
+
+  // --- Outline ----------------------------------------------------------
+  // The island's shape is one vector path (fill, rim and content clip). It
+  // is redrawn imperatively on every animation frame of a morph, together
+  // with the native blur backdrop, so nothing re-renders.
+  const outlineRef = useRef<SVGGElement>(null);
+  const clipRef = useRef<HTMLDivElement>(null);
+  const frameRef = useRef({ width: islandWidth, height: islandHeight, y: islandTop, top: topRadius, bottom: bottomRadius, ear, scale: 1 });
+  const smoothingRef = useRef(CORNER_SMOOTHING);
+  smoothingRef.current = isCapsule ? 0 : CORNER_SMOOTHING;
+
+  const drawFrame = useCallback(() => {
+    const f = frameRef.current;
+    const d = islandPath({
+      width: f.width,
+      height: f.height,
+      topRadius: f.top,
+      bottomRadius: f.bottom,
+      ear: f.ear,
+      smoothing: smoothingRef.current,
     });
+    outlineRef.current?.querySelectorAll("path").forEach((path) => path.setAttribute("d", d));
+    if (clipRef.current) clipRef.current.style.clipPath = `path("${d}")`;
+    if (glassRef.current) {
+      const width = f.width * f.scale;
+      setBackdrop({
+        x: (WINDOW_WIDTH - width) / 2,
+        y: f.y,
+        width,
+        height: f.height * f.scale,
+        topRadius: f.top * f.scale,
+        bottomRadius: f.bottom * f.scale,
+      });
+    }
+  }, []);
+
+  const syncFrame = (latest: Record<string, unknown>) => {
+    const f = frameRef.current;
+    const read = (key: string, current: number) => {
+      const v = latest[key];
+      return typeof v === "number" ? v : typeof v === "string" && v !== "" && !isNaN(parseFloat(v)) ? parseFloat(v) : current;
+    };
+    f.width = read("width", f.width);
+    f.height = read("height", f.height);
+    f.y = read("y", f.y);
+    f.top = read("--island-top-r", f.top);
+    f.bottom = read("--island-bottom-r", f.bottom);
+    f.ear = read("--island-ear", f.ear);
+    f.scale = read("scale", f.scale);
+    drawFrame();
   };
-  // Glass switching on or off outside a morph (e.g. from Settings). During
-  // morphs the per-frame sync above takes over, so this only depends on glass.
+
+  // First paint, and whenever the corner style flips without a morph.
+  useLayoutEffect(drawFrame, [drawFrame, isCapsule]);
+
+  // Glass switching on or off outside a morph (e.g. from Settings).
   useEffect(() => {
-    setBackdrop(
-      glass
-        ? {
-            x: (WINDOW_WIDTH - islandWidth) / 2,
-            y: islandTop,
-            width: islandWidth,
-            height: islandHeight,
-            topRadius: topRadius * clipRadiusFactorRef.current,
-            bottomRadius: bottomRadius * clipRadiusFactorRef.current,
-          }
-        : null
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [glass]);
+    if (glass) drawFrame();
+    else setBackdrop(null);
+  }, [glass, drawFrame]);
 
   const prevGeometryRef = useRef({ width: islandWidth, height: islandHeight });
   useEffect(() => {
@@ -1161,16 +1189,15 @@ const FloatShell: React.FC = () => {
     <motion.div
       ref={shellRef}
       className={`float-shell ${accentGlow ? "accent-glow" : ""} ${docked ? "attached" : "floating"} ${glass ? "glass" : "solid"} ${isExpanded ? "expanded" : ""} ${isCapsule ? "capsule" : ""}`}
-      onUpdate={syncBackdrop}
+      onUpdate={syncFrame}
       style={accent ? ({ "--float-accent": accent } as React.CSSProperties) : undefined}
       animate={{
         width: islandWidth,
         height: islandHeight,
         y: islandTop,
-        borderTopLeftRadius: topRadius,
-        borderTopRightRadius: topRadius,
-        borderBottomLeftRadius: bottomRadius,
-        borderBottomRightRadius: bottomRadius,
+        "--island-top-r": topRadius,
+        "--island-bottom-r": bottomRadius,
+        "--island-ear": ear,
         scale: pressed && !isExpanded ? PRESS_SCALE[settings.animationIntensity] : 1,
       }}
       transition={{ ...MORPH_SPRINGS[settings.animationIntensity], scale: PRESS_SPRING }}
@@ -1179,14 +1206,32 @@ const FloatShell: React.FC = () => {
       onPointerUp={handlePointerUp}
       onWheel={handleWheel}
     >
-      <span className="notch-ear left" />
-      <span className="notch-ear right" />
+      <svg className="island-outline" aria-hidden="true">
+        <defs>
+          <linearGradient id="island-rim" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#fff" stopOpacity="0.5" />
+            <stop offset="0.5" stopColor="#fff" stopOpacity="0.12" />
+            <stop offset="1" stopColor="#fff" stopOpacity="0.2" />
+          </linearGradient>
+          <linearGradient id="island-gloss" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#fff" stopOpacity="0.13" />
+            <stop offset="0.45" stopColor="#fff" stopOpacity="0.02" />
+            <stop offset="1" stopColor="#000" stopOpacity="0.06" />
+          </linearGradient>
+        </defs>
+        <g ref={outlineRef}>
+          <path className="island-fill" />
+          <path className="island-gloss" />
+          <path className="island-rim" />
+        </g>
+      </svg>
       {(privacy.camera || privacy.microphone) && (
         <span className="privacy-dots" aria-label="Camera or microphone in use">
           {privacy.camera && <span className="privacy-dot camera" title={`Camera: ${privacy.camera}`} />}
           {privacy.microphone && <span className="privacy-dot microphone" title={`Microphone: ${privacy.microphone}`} />}
         </span>
       )}
+      <div className="island-clip" ref={clipRef}>
       <LayoutGroup>
         {isExpanded ? (
           <FloatSurface
@@ -1246,6 +1291,7 @@ const FloatShell: React.FC = () => {
           />
         )}
       </LayoutGroup>
+      </div>
       <AnimatePresence>
         {bubbleActivity && (
           <SplitBubble

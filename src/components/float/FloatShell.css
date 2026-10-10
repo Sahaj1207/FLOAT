@@ -11,90 +11,76 @@
   will-change: width, height, border-radius;
 }
 
+/* The island's shape: one vector path drawn by FloatShell (fill, gloss, rim)
+   plus a matching clip for the content. See island/shape.ts. */
+.island-outline {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  transition: filter 500ms ease;
+}
+
+.island-fill {
+  fill: var(--island-fill, #000);
+  transition: fill 300ms ease;
+}
+
+.island-gloss,
+.island-rim {
+  fill: none;
+  stroke: none;
+}
+
+.island-clip {
+  position: absolute;
+  inset: 0;
+}
+
 .island-glass {
   position: absolute;
   inset: 0;
-  border-radius: inherit;
-  background: var(--float-bg);
-  border: 1px solid var(--float-border);
-  box-shadow: var(--float-shadow);
-  /* Prevent content overflow during morph */
   overflow: hidden;
-  transition: border-color var(--float-transition), box-shadow 600ms ease, background 300ms ease;
 }
 
 /* ---- Liquid glass ----
-   The blur itself comes from a native backdrop window beneath the island
-   (see backdrop.rs). Here we add what makes it read as glass: a dark tint
-   for legibility, a lit top edge, a faint inner glow and a soft gloss. */
+   The blur comes from a native backdrop window beneath the island
+   (backdrop.rs). Here: a dark tint for legibility, a soft gloss, a lit rim
+   and a drop shadow. */
 .float-shell.glass {
-  --float-bg:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.02) 38%, rgba(0, 0, 0, 0.08) 100%),
-    rgba(18, 18, 22, var(--float-glass-tint));
-  --float-border: rgba(255, 255, 255, 0.2);
-  --float-border-hover: rgba(255, 255, 255, 0.3);
-  --float-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.38),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 0 14px rgba(255, 255, 255, 0.05),
-    0 12px 32px -10px rgba(0, 0, 0, 0.55);
+  --island-fill: rgba(18, 18, 22, var(--float-glass-tint));
 }
 
-.float-shell.glass .island-glass::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background: radial-gradient(120% 90% at 18% -20%, rgba(255, 255, 255, 0.16), transparent 55%);
+.float-shell.glass .island-gloss {
+  fill: url(#island-gloss);
+}
+
+.float-shell.glass .island-rim {
+  stroke: url(#island-rim);
+  stroke-width: 1;
+}
+
+.float-shell.glass .island-outline {
+  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.4));
+}
+
+.float-shell.solid.expanded .island-outline {
+  filter: drop-shadow(0 16px 28px rgba(0, 0, 0, 0.5));
+}
+
+/* A soft album-art glow beneath the island while music plays. */
+.float-shell.accent-glow .island-outline {
+  filter: drop-shadow(0 6px 16px color-mix(in srgb, var(--float-accent) 45%, transparent));
 }
 
 /* The split bubble has no blur behind it, so it carries more tint. */
 .float-shell.glass .split-bubble {
   background: rgba(18, 18, 22, calc(var(--float-glass-tint) + 0.35));
+  border-color: rgba(255, 255, 255, 0.18);
 }
 
-/* Concave ears where the notch meets the bezel (solid notch style only). */
-.notch-ear {
-  position: absolute;
-  top: 0;
-  width: var(--float-ear);
-  height: var(--float-ear);
-  pointer-events: none;
-  display: none;
-}
-
-.float-shell.solid.attached .notch-ear {
-  display: block;
-}
-
-.notch-ear.left {
-  right: 100%;
-  background: radial-gradient(circle at 0 100%, transparent calc(var(--float-ear) - 0.5px), var(--float-bg) var(--float-ear));
-}
-
-.notch-ear.right {
-  left: 100%;
-  background: radial-gradient(circle at 100% 100%, transparent calc(var(--float-ear) - 0.5px), var(--float-bg) var(--float-ear));
-}
-
-.float-shell.expanded .island-glass {
-  box-shadow: var(--float-shadow), var(--float-drop-shadow);
-}
-
-.float-shell:hover .island-glass {
-  border-color: var(--float-border-hover);
-}
-
-.float-shell.accent-glow .island-glass,
 .float-shell.accent-glow .split-bubble {
-  border-color: color-mix(in srgb, var(--float-accent) 28%, var(--float-border));
-  box-shadow: var(--float-shadow), 0 0 26px -6px color-mix(in srgb, var(--float-accent) 60%, transparent);
-}
-
-/* The solid notch has no outline; keep only the soft glow beneath it. */
-.float-shell.solid.accent-glow .island-glass,
-.float-shell.solid.accent-glow .split-bubble {
-  border-color: transparent;
-  box-shadow: 0 6px 22px -8px color-mix(in srgb, var(--float-accent) 60%, transparent);
+  box-shadow: 0 6px 18px -6px color-mix(in srgb, var(--float-accent) 60%, transparent);
 }
