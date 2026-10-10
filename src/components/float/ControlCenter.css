@@ -245,3 +245,20 @@ button.cc-badge {
 .cc-badge.sun {
   color: #ffd60a;
 }
+
+/* Icon-only toggles (Home's clock tile) */
+.cc-quick-row.compact {
+  display: flex;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.cc-quick-row.compact .cc-quick {
+  padding: 0;
+  background: none;
+}
+
+.cc-quick-row.compact .cc-quick-icon {
+  width: 26px;
+  height: 26px;
+}

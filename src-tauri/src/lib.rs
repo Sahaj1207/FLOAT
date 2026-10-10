@@ -12,6 +12,7 @@ mod appicon;
 mod autostart;
 mod backdrop;
 mod brightness;
+mod calendar;
 mod clipboard;
 mod connectivity;
 mod focus;
@@ -20,9 +21,11 @@ mod media;
 mod notifications;
 mod shelf;
 mod sysmon;
+mod sysstats;
 mod tray;
 mod visualizer;
 mod volume;
+mod weather;
 mod window;
 
 #[tauri::command]
@@ -57,6 +60,9 @@ pub fn run() {
             volume::toggle_mute,
             sysmon::get_privacy_state,
             sysmon::get_power_state,
+            sysstats::get_system_stats,
+            weather::get_weather,
+            calendar::get_calendar_events,
             connectivity::get_connectivity,
             connectivity::set_radio,
             connectivity::open_settings_page,

@@ -30,9 +30,35 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  width: 168px;
+  width: 284px;
   flex-shrink: 0;
-  overflow-y: auto;
+  overflow: hidden;
+}
+
+.home-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  flex: 1;
+  min-height: 0;
+}
+
+.home-row > .home-tile {
+  justify-content: center;
+}
+
+.home-tile.now-tile {
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
+.now-clock {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
 .home-tile {

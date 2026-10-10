@@ -20,6 +20,42 @@ interface FloatSettingsViewProps {
   onClose?: () => void;
 }
 
+/** A text field that saves on Enter or when focus leaves, not on every key. */
+const CommitInput: React.FC<{
+  value: string;
+  placeholder: string;
+  ariaLabel: string;
+  onCommit: (value: string) => void;
+}> = ({ value, placeholder, ariaLabel, onCommit }) => {
+  const [draft, setDraft] = useState(value);
+  useEffect(() => setDraft(value), [value]);
+  const commit = () => {
+    const next = draft.trim();
+    if (next !== value) onCommit(next);
+  };
+  return (
+    <input
+      className="float-setting-input"
+      type="text"
+      spellCheck={false}
+      value={draft}
+      placeholder={placeholder}
+      aria-label={ariaLabel}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          commit();
+          e.currentTarget.blur();
+        }
+        e.stopPropagation();
+      }}
+      onClick={(e) => e.stopPropagation()}
+      data-no-drag="true"
+    />
+  );
+};
+
 export const FloatSettingsView: React.FC<FloatSettingsViewProps> = () => {
   const [settings, setSettings] = useState<FloatSettings>(() => loadSettings());
 
@@ -117,6 +153,12 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = () => {
 
   const handleToggleAutostart = () => {
     setAutostart(!autostart).then(setAutostartState);
+  };
+
+  const update = (patch: Partial<FloatSettings>) => {
+    const nextSettings = { ...settings, ...patch };
+    setSettings(nextSettings);
+    saveSettings(nextSettings);
   };
 
   const handleToggleOpenOnHover = () => {
@@ -546,6 +588,75 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = () => {
             >
               <span className="float-setting-switch-handle" />
             </button>
+          </div>
+        </div>
+
+        {/* Widgets */}
+        <div className="float-setting-card">
+          <div className="float-setting-label-row">
+            <div className="float-setting-label-left">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="float-setting-icon">
+                <rect x="3" y="3" width="8" height="8" rx="2" />
+                <rect x="13" y="3" width="8" height="8" rx="2" />
+                <rect x="3" y="13" width="8" height="8" rx="2" />
+                <rect x="13" y="13" width="8" height="8" rx="2" />
+              </svg>
+              <span className="float-setting-name">Widgets</span>
+            </div>
+          </div>
+
+          <div className="float-setting-toggle-row">
+            <div className="float-setting-toggle-left">
+              <span className="float-setting-toggle-title">Weather</span>
+              <span className="float-setting-toggle-desc">Show current weather on Home. Sends your city name to open-meteo.com</span>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={settings.weatherEnabled}
+              className={`float-setting-switch ${settings.weatherEnabled ? "checked" : ""}`}
+              onClick={() => update({ weatherEnabled: !settings.weatherEnabled })}
+              data-no-drag="true"
+              aria-label="Toggle Weather"
+            >
+              <span className="float-setting-switch-handle" />
+            </button>
+          </div>
+          {settings.weatherEnabled && (
+            <div className="float-setting-field-row">
+              <CommitInput
+                value={settings.weatherCity}
+                placeholder="City, e.g. Bengaluru"
+                ariaLabel="Weather city"
+                onCommit={(weatherCity) => update({ weatherCity })}
+              />
+              <button
+                type="button"
+                className="float-setting-unit-btn"
+                onClick={() => update({ weatherFahrenheit: !settings.weatherFahrenheit })}
+                data-no-drag="true"
+                aria-label="Toggle temperature unit"
+              >
+                {settings.weatherFahrenheit ? "°F" : "°C"}
+              </button>
+            </div>
+          )}
+
+          <div className="float-setting-toggle-row">
+            <div className="float-setting-toggle-left">
+              <span className="float-setting-toggle-title">Calendar</span>
+              <span className="float-setting-toggle-desc">
+                Paste your calendar's private ICS link (Google: Settings › your calendar › Secret address in iCal format). FLOAT downloads it to show your next event
+              </span>
+            </div>
+          </div>
+          <div className="float-setting-field-row">
+            <CommitInput
+              value={settings.calendarUrl}
+              placeholder="https://… .ics"
+              ariaLabel="Calendar ICS link"
+              onCommit={(calendarUrl) => update({ calendarUrl })}
+            />
           </div>
         </div>
 

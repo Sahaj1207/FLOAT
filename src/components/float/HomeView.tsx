@@ -5,6 +5,7 @@ import { MediaWidgetSurface } from "./MediaWidgetSurface";
 import { TimerTile } from "./Timer";
 import { QuickToggles } from "./ControlCenter";
 import { CurrentLyric } from "./Lyrics";
+import { CalendarTile, StatsStrip, WeatherChip } from "./Widgets";
 import "./HomeView.css";
 
 interface HomeViewProps {
@@ -35,15 +36,18 @@ export const HomeView: React.FC<HomeViewProps> = ({ media, multiState, onSelectS
       )}
     </div>
     <div className="home-widgets">
-      <ClockTile />
-      <TimerTile />
-      <QuickToggles />
+      <NowTile />
+      <div className="home-row">
+        <CalendarTile />
+        <TimerTile />
+      </div>
+      <StatsStrip />
     </div>
   </div>
 );
 
-/** Time and date, with the battery level alongside on laptops. */
-const ClockTile: React.FC = () => {
+/** Time, date and battery, with weather and quick toggles alongside. */
+const NowTile: React.FC = () => {
   const [now, setNow] = useState(() => new Date());
   const power = usePower();
   useEffect(() => {
@@ -51,21 +55,20 @@ const ClockTile: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
   return (
-    <div className="home-tile">
-      <span className="home-tile-big">{now.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}</span>
-      <div className="home-tile-line">
-        <span className="home-tile-caption">
-          {now.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}
-        </span>
+    <div className="home-tile now-tile">
+      <div className="now-clock">
+        <span className="home-tile-big">{now.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}</span>
         {power && (
           <span className="home-battery" title={power.charging ? "Charging" : "On battery"}>
-            <span className="home-tile-caption">{power.percent}%</span>
             <span className={`home-battery-cell ${power.charging ? "charging" : power.percent <= 20 ? "low" : ""}`}>
               <span style={{ width: `${power.percent}%` }} />
             </span>
+            <span className="home-tile-caption">{power.percent}%</span>
           </span>
         )}
       </div>
+      <WeatherChip />
+      <QuickToggles compact />
     </div>
   );
 };

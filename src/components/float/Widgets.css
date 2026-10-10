@@ -1,0 +1,175 @@
+/* ---- Weather chip ---- */
+.wx-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.wx-chip.muted {
+  font-size: 10.5px;
+  color: var(--float-text-secondary);
+}
+
+.wx-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.wx-sun {
+  color: #ffd60a;
+}
+
+.wx-moon {
+  color: #d9dcff;
+  stroke: none;
+}
+
+.wx-cloud {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.wx-drops {
+  color: #64b5ff;
+}
+
+.wx-bolt {
+  color: #ffd60a;
+}
+
+.wx-temp {
+  font-size: 17px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--float-text-primary);
+}
+
+/* ---- Calendar tile ---- */
+.home-tile.cal-tile {
+  gap: 3px;
+  min-width: 0;
+}
+
+.cal-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cal-day {
+  font-size: 20px;
+  font-weight: 650;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: #ff453a;
+}
+
+.cal-month {
+  display: flex;
+  flex-direction: column;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.15;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--float-text-primary);
+}
+
+.cal-month span {
+  color: var(--float-text-secondary);
+}
+
+.cal-when {
+  margin-left: auto;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--float-text-secondary);
+  white-space: nowrap;
+}
+
+.cal-when.now {
+  color: #34c759;
+}
+
+.cal-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--float-text-primary);
+}
+
+.cal-time,
+.cal-empty {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--float-text-secondary);
+}
+
+.cal-empty {
+  white-space: normal;
+  line-height: 1.3;
+}
+
+/* ---- Stats strip ---- */
+.home-tile.stats-strip {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  min-height: 30px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--float-text-secondary);
+}
+
+.stat-label {
+  letter-spacing: 0.3px;
+}
+
+.stat-bar {
+  width: 26px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.14);
+  overflow: hidden;
+}
+
+.stat-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: #34c759;
+  transition: width 0.6s ease;
+}
+
+.stat-bar > span.hot {
+  background: #ff453a;
+}
+
+.stat-value {
+  min-width: 26px;
+  color: var(--float-text-primary);
+}
+
+.stat.net {
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0;
+  margin-left: auto;
+  font-size: 9.5px;
+  line-height: 1.25;
+  white-space: nowrap;
+}

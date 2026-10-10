@@ -21,6 +21,10 @@ export interface FloatSettings {
   clipboardHistory: boolean;     // keep an in-memory clipboard history, default true
   syncedLyrics: boolean;         // fetch lyrics from LRCLIB (network, opt-in), default false
   openOnHover: boolean;          // hovering the notch opens the panel, default true
+  weatherEnabled: boolean;       // show weather from Open-Meteo (network, opt-in), default false
+  weatherCity: string;           // city name looked up for weather
+  weatherFahrenheit: boolean;    // default false (Celsius)
+  calendarUrl: string;           // private ICS link for the calendar widget ("" = off)
 }
 
 export const PILL_LENGTH_MIN = 220;
@@ -41,6 +45,10 @@ export const DEFAULT_FLOAT_SETTINGS: FloatSettings = {
   clipboardHistory: true,
   syncedLyrics: false,
   openOnHover: true,
+  weatherEnabled: false,
+  weatherCity: "",
+  weatherFahrenheit: false,
+  calendarUrl: "",
 };
 
 const SETTINGS_STORAGE_KEY = "float_settings_v1";
@@ -142,7 +150,14 @@ export function loadSettings(): FloatSettings {
     const openOnHover =
       typeof parsed.openOnHover === "boolean" ? parsed.openOnHover : DEFAULT_FLOAT_SETTINGS.openOnHover;
 
+    const bool = (value: unknown, fallback: boolean) => (typeof value === "boolean" ? value : fallback);
+    const text = (value: unknown, max: number) => (typeof value === "string" ? value.slice(0, max) : "");
+
     return {
+      weatherEnabled: bool(parsed.weatherEnabled, DEFAULT_FLOAT_SETTINGS.weatherEnabled),
+      weatherCity: text(parsed.weatherCity, 80),
+      weatherFahrenheit: bool(parsed.weatherFahrenheit, DEFAULT_FLOAT_SETTINGS.weatherFahrenheit),
+      calendarUrl: text(parsed.calendarUrl, 2000),
       transparency,
       pillLength,
       orbSize,

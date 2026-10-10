@@ -74,7 +74,7 @@ const FLOAT_TOP = 8;
 const SQUIRCLE_CLIP_FACTOR = 0.6;
 const FLOATING_IDLE_WIDTH = 150;
 const FLOATING_IDLE_HEIGHT = 36;
-const SURFACE_WIDTH = 580;
+const SURFACE_WIDTH = 660;
 const SURFACE_HEIGHT = 232;
 const NOTIF_PREVIEW_WIDTH = 240;
 const NOTIF_PREVIEW_HEIGHT = 56;
@@ -82,7 +82,7 @@ const QUICK_ACTIONS_WIDTH = 176;
 const QUICK_ACTIONS_HEIGHT = 48;
 
 // Must match the native window width (window.rs) and #root's padding-top.
-const WINDOW_WIDTH = 640;
+const WINDOW_WIDTH = 720;
 const HIT_PADDING = 4;
 const BUBBLE_GAP = 8;
 // Long enough for the morph spring to settle before hit regions shrink.

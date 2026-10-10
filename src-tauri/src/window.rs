@@ -23,7 +23,7 @@ use windows::Win32::UI::WindowsAndMessaging::{
 /// Logical size of the island window. Large enough for the expanded panel
 /// plus a split bubble beside the widest notch. Keep WINDOW_WIDTH in sync
 /// with FloatShell.tsx.
-pub const WINDOW_WIDTH: f64 = 640.0;
+pub const WINDOW_WIDTH: f64 = 720.0;
 pub const WINDOW_HEIGHT: f64 = 400.0;
 
 const TICK: Duration = Duration::from_millis(16);

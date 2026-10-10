@@ -340,6 +340,53 @@ export async function openSettingsPage(page: SettingsPage): Promise<void> {
   }
 }
 
+export interface SystemStats {
+  /** 0..100 across all cores. */
+  cpu: number;
+  memoryUsed: number;
+  memoryTotal: number;
+  /** Bytes per second since the previous call. */
+  down: number;
+  up: number;
+}
+
+export async function getSystemStats(): Promise<SystemStats | null> {
+  try {
+    return await invoke<SystemStats>("get_system_stats");
+  } catch {
+    return null;
+  }
+}
+
+export interface Weather {
+  city: string;
+  temperature: number;
+  high: number | null;
+  low: number | null;
+  /** WMO weather code. */
+  code: number;
+  isDay: boolean;
+}
+
+/** Current weather from Open-Meteo (network). Only call when the user opted in. */
+export async function getWeather(city: string, fahrenheit: boolean): Promise<Weather> {
+  return await invoke<Weather>("get_weather", { city, fahrenheit });
+}
+
+export interface CalendarEvent {
+  title: string;
+  /** Unix ms. */
+  start: number;
+  end: number;
+  allDay: boolean;
+  location: string | null;
+}
+
+/** Upcoming events from the user's private ICS link (network). */
+export async function getCalendarEvents(url: string): Promise<CalendarEvent[]> {
+  return await invoke<CalendarEvent[]>("get_calendar_events", { url });
+}
+
 export interface LyricLine {
   /** Seconds from the start of the track. */
   time: number;

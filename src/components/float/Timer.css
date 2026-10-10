@@ -80,7 +80,7 @@
 }
 
 /* Home tile */
-.timer-tile {
+.home-tile.timer-tile {
   gap: 6px;
 }
 

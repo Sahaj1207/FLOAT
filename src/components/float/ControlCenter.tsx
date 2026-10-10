@@ -87,7 +87,7 @@ const bluetoothCaption = (s: ConnectivityState) =>
 
 /* ---- Home: compact quick toggles --------------------------------------------- */
 
-export const QuickToggles: React.FC = () => {
+export const QuickToggles: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
   const [state, update] = useConnectivity();
   const { toggle, busy } = useRadioToggle(state, update);
   if (!state || (!state.wifi.available && !state.bluetooth.available)) return null;
@@ -107,12 +107,12 @@ export const QuickToggles: React.FC = () => {
       aria-label={kind === "wifi" ? "Wi-Fi" : "Bluetooth"}
     >
       <span className="cc-quick-icon">{icon}</span>
-      <span className="cc-quick-caption">{caption}</span>
+      {!compact && <span className="cc-quick-caption">{caption}</span>}
     </button>
   );
 
   return (
-    <div className="cc-quick-row">
+    <div className={`cc-quick-row ${compact ? "compact" : ""}`}>
       {button("wifi", <WifiIcon bars={state.wifi.signal} off={!state.wifi.on} />, wifiCaption(state))}
       {button("bluetooth", <BluetoothIcon />, bluetoothCaption(state))}
     </div>

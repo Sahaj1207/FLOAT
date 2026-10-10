@@ -35,6 +35,9 @@ base64 = "0.23.1"
 png = "0.17"
 cpal = "0.15"
 wmi = "0.18"
+rrule = "0.14"
+chrono = "0.4"
+sysinfo = { version = "0.39", default-features = false, features = ["system", "network"] }
 ureq = { version = "3", features = ["json"] }
 windows = { version = "0.48", features = ["Media_Control", "Foundation", "UI_Notifications", "UI_Notifications_Management", "ApplicationModel", "Devices_Radios", "Devices_WiFi", "Security_Credentials", "Devices_Bluetooth", "Devices_Enumeration", "Networking_Connectivity", "Foundation_Collections", "Win32_Foundation", "Win32_Graphics_Gdi", "Win32_Graphics_Dwm", "Win32_System_WinRT", "Win32_System_WinRT_Composition", "UI_Composition", "UI_Composition_Desktop", "System", "Foundation_Numerics", "Win32_System_Com", "Win32_System_Com_StructuredStorage", "Win32_Media_Audio", "Win32_Media_Audio_Endpoints", "Win32_System_Registry", "Win32_System_LibraryLoader", "Win32_System_DataExchange", "Win32_System_Memory", "Win32_System_Ole", "Win32_System_Power", "Win32_UI_Shell", "Win32_UI_HiDpi", "Win32_UI_Input_KeyboardAndMouse", "Win32_UI_WindowsAndMessaging"] }
 

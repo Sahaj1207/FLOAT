@@ -328,3 +328,44 @@
   opacity: 0.35;
   cursor: not-allowed;
 }
+
+/* Text fields (weather city, calendar link) */
+.float-setting-field-row {
+  display: flex;
+  gap: 6px;
+  margin: 2px 0 6px;
+}
+
+.float-setting-input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 9px;
+  outline: none;
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--float-text-primary);
+  font: inherit;
+  font-size: 12px;
+  user-select: text;
+}
+
+.float-setting-input:focus {
+  border-color: #0a84ff;
+}
+
+.float-setting-unit-btn {
+  width: 38px;
+  border: none;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--float-text-primary);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.float-setting-unit-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
