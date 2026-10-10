@@ -138,8 +138,12 @@ Pill / Orb ──( Click )──► Expanded Surface [ Media | Notifications | S
 
 ### For Users
 
-- **Packaged MSIX**: Download `FLOAT.msix` from the [Releases](https://github.com/Sahaj1207/FLOAT/releases) page and install it using Windows App Installer.
-- **Microsoft Store**: Microsoft Store distribution is planned for a future release.
+Download from the [Releases](https://github.com/Sahaj1207/FLOAT/releases/latest) page:
+
+- **Setup program (recommended)**: run `FLOAT_2.0.0_x64-setup.exe`. If Windows SmartScreen appears, choose **More info**, then **Run anyway**.
+- **MSIX package**: `FLOAT.msix` needs FLOAT's certificate trusted once before it will install on a new PC.
+
+Step-by-step instructions for both are in [docs/INSTALL.md](docs/INSTALL.md).
 
 ### For Developers
 
