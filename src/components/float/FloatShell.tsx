@@ -31,6 +31,9 @@ import {
   subscribeToBluetoothDevice,
   subscribeToFileDrag,
   subscribeToBrightness,
+  getIslandAttached,
+  subscribeToIslandAttached,
+  islandDragStarted,
   PrivacyState,
   HitRect,
   getMultiSessionState,
@@ -63,8 +66,11 @@ const NOTIFICATION_MIN_WIDTH = 340;
 const DROP_WIDTH = 360;
 const DROP_HEIGHT = 86;
 const BUBBLE_SIZE = 38;
-// The optional orb floats just below the edge instead.
-const ORB_TOP = 8;
+// Floating shapes (the orb, and the pill once dragged off the edge) sit
+// just below the top of the window.
+const FLOAT_TOP = 8;
+const FLOATING_IDLE_WIDTH = 150;
+const FLOATING_IDLE_HEIGHT = 36;
 const SURFACE_WIDTH = 580;
 const SURFACE_HEIGHT = 232;
 const NOTIF_PREVIEW_WIDTH = 240;
@@ -809,6 +815,24 @@ const FloatShell: React.FC = () => {
   }, [show]);
   const showDrop = fileDrag !== null && !isExpanded;
 
+  // --- Docked notch vs floating pill ------------------------------------
+  // Docked to the top edge the island is the notch; dragged away it becomes
+  // a floating pill until it's dropped back near the edge.
+  const [attached, setAttached] = useState(true);
+  useEffect(() => {
+    let isMounted = true;
+    let unlisten: (() => void) | null = null;
+    getIslandAttached().then((value) => isMounted && setAttached(value));
+    subscribeToIslandAttached((value) => isMounted && setAttached(value)).then((fn) => {
+      if (isMounted) unlisten = fn;
+      else fn();
+    });
+    return () => {
+      isMounted = false;
+      unlisten?.();
+    };
+  }, []);
+
   // --- Geometry & hit regions -------------------------------------------
   const isOrb = visualMode === "orb" && !showDrop;
   const orbOpen = isOrb && (notificationPreviewOpen || quickActionsOpen);
@@ -831,14 +855,24 @@ const FloatShell: React.FC = () => {
     islandWidth = pillWidth + (isPreview ? PREVIEW_EXTRA_WIDTH : 0);
     islandHeight = isPreview ? PREVIEW_HEIGHT : ACTIVITY_HEIGHT;
     bottomRadius = isPreview ? 22 : 18;
-  } else {
+  } else if (attached) {
     // Nothing live: a quiet notch; hovering reveals the time.
     islandWidth = isPreview ? pillWidth : NOTCH_IDLE_WIDTH;
     islandHeight = isPreview ? ACTIVITY_HEIGHT : NOTCH_IDLE_HEIGHT;
     bottomRadius = isPreview ? 18 : 12;
+  } else {
+    islandWidth = isPreview ? pillWidth : FLOATING_IDLE_WIDTH;
+    islandHeight = isPreview ? ACTIVITY_HEIGHT : FLOATING_IDLE_HEIGHT;
+    bottomRadius = 18;
   }
-  const topRadius = isOrb ? bottomRadius : 0;
-  const islandTop = isOrb ? ORB_TOP : 0;
+  // Docked: square top, flush with the edge. Floating: a full pill (or a
+  // rounded card when expanded), hanging just below the window top.
+  const docked = attached && !isOrb;
+  if (!docked && !isExpanded && !isOrb) {
+    bottomRadius = Math.round(islandHeight / 2);
+  }
+  const topRadius = docked ? 0 : bottomRadius;
+  const islandTop = docked ? 0 : FLOAT_TOP;
 
   const bubbleActivity =
     secondary && (visualMode === "compact" || visualMode === "compactPreview") ? secondary : null;
@@ -914,6 +948,10 @@ const FloatShell: React.FC = () => {
       isDraggingRef.current = true;
       // The native drag loop swallows pointerup, so release the squish now.
       setPressed(false);
+      // Pulling the notch off the edge turns it into a floating pill right
+      // away; the native side reports where it lands when the drag ends.
+      setAttached(false);
+      islandDragStarted();
 
       if (visualModeRef.current === "compactPreview") {
         setVisualMode("compact");
@@ -1048,7 +1086,7 @@ const FloatShell: React.FC = () => {
   return (
     <motion.div
       ref={shellRef}
-      className={`float-shell ${accentGlow ? "accent-glow" : ""} ${isOrb ? "" : "attached"} ${isExpanded ? "expanded" : ""}`}
+      className={`float-shell ${accentGlow ? "accent-glow" : ""} ${docked ? "attached" : "floating"} ${isExpanded ? "expanded" : ""}`}
       style={accent ? ({ "--float-accent": accent } as React.CSSProperties) : undefined}
       animate={{
         width: islandWidth,
@@ -1139,6 +1177,7 @@ const FloatShell: React.FC = () => {
             key={bubbleActivity.kind}
             activity={bubbleActivity}
             size={BUBBLE_SIZE}
+            docked={docked}
             gap={BUBBLE_GAP}
             onClick={() => transitionTo("expanded", "bubble-click")}
           />

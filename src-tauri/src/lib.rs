@@ -43,6 +43,8 @@ pub fn run() {
             window::set_hit_regions,
             window::set_hide_in_fullscreen,
             window::reset_window_position,
+            window::get_island_attached,
+            window::island_drag_started,
             autostart::get_autostart,
             autostart::set_autostart,
             tray::get_hotkey,

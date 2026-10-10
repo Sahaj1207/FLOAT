@@ -45,6 +45,29 @@ export async function setHitRegions(regions: HitRect[]): Promise<void> {
   }
 }
 
+/** Whether the island is docked to the top edge (notch) or floating (pill). */
+export async function getIslandAttached(): Promise<boolean> {
+  try {
+    return await invoke<boolean>("get_island_attached");
+  } catch {
+    return true;
+  }
+}
+
+/** Fires after a drag ends, with whether the island docked to the top edge. */
+export async function subscribeToIslandAttached(callback: (attached: boolean) => void): Promise<UnlistenFn> {
+  return await listen<boolean>("island-attached", (event) => callback(event.payload));
+}
+
+/** Tell the native side a drag began, so it settles even if nothing moves. */
+export async function islandDragStarted(): Promise<void> {
+  try {
+    await invoke("island_drag_started");
+  } catch {
+    // Not in a Tauri context
+  }
+}
+
 /** Fires when the cursor enters or leaves the island's hit regions. */
 export async function subscribeToIslandHover(
   callback: (inside: boolean) => void

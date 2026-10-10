@@ -15,6 +15,7 @@ use std::time::{Duration, Instant};
 use tauri::{AppHandle, Emitter, Manager, PhysicalPosition};
 use windows::Win32::Foundation::{HWND, POINT, RECT};
 use windows::Win32::UI::HiDpi::GetDpiForWindow;
+use windows::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VK_LBUTTON};
 use windows::Win32::UI::WindowsAndMessaging::{
     GetClassNameW, GetCursorPos, GetForegroundWindow, GetWindowRect,
 };
@@ -27,9 +28,13 @@ pub const WINDOW_HEIGHT: f64 = 400.0;
 
 const TICK: Duration = Duration::from_millis(16);
 const SYSTEM_POLL_EVERY: u32 = 30; // ticks (~500ms)
-const SAVE_AFTER_MOVE: Duration = Duration::from_millis(400);
-/// Drops within this many logical px of top-center snap exactly onto it.
-const SNAP_DISTANCE: f64 = 64.0;
+/// How long after the last move (with the mouse button up) a drag counts as over.
+const SETTLE_AFTER_MOVE: Duration = Duration::from_millis(60);
+/// Dropping the island's top within this many logical px of the screen's top
+/// edge attaches it there as the notch.
+const ATTACH_DISTANCE: f64 = 28.0;
+/// Attached drops within this many logical px of center snap onto it.
+const CENTER_SNAP: f64 = 72.0;
 
 /// A rectangle in logical px, relative to the window's top-left corner.
 #[derive(Clone, Copy, Debug, Deserialize)]
@@ -47,6 +52,8 @@ pub struct WindowState {
     /// Hidden from the tray menu; overrides fullscreen-based visibility.
     user_hidden: AtomicBool,
     moved_at: Mutex<Option<Instant>>,
+    /// The island is flush with the top edge (notch) rather than floating.
+    attached: AtomicBool,
 }
 
 #[derive(Clone, Serialize, Debug, PartialEq)]
@@ -154,29 +161,72 @@ fn top_center(window: &tauri::WebviewWindow) -> Option<PhysicalPosition<i32>> {
     ))
 }
 
+fn set_attached(app: &AppHandle, attached: bool) {
+    app.state::<WindowState>().attached.store(attached, Ordering::Relaxed);
+    let _ = app.emit("island-attached", attached);
+}
+
 pub fn reset_position(app: &AppHandle) {
     if let Some(window) = app.get_webview_window("main") {
         if let Some(pos) = top_center(&window) {
             let _ = window.set_position(pos);
             save_position(app, pos);
+            set_attached(app, true);
         }
     }
 }
 
-/// After a drag settles: snap onto top-center if close, then persist.
+/// Whether a window at `pos` sits flush with the top edge of its monitor.
+fn is_at_top(window: &tauri::WebviewWindow, pos: PhysicalPosition<i32>) -> bool {
+    window
+        .current_monitor()
+        .ok()
+        .flatten()
+        .is_some_and(|m| pos.y == m.position().y)
+}
+
+/// After a drag ends: attach to the top edge if dropped near it (snapping to
+/// center when close), otherwise float where dropped, kept fully on screen.
 fn settle_after_move(app: &AppHandle, window: &tauri::WebviewWindow) {
-    let (Ok(pos), Some(center)) = (window.outer_position(), top_center(window)) else {
+    let (Ok(mut pos), Ok(size), Ok(Some(monitor))) =
+        (window.outer_position(), window.outer_size(), window.current_monitor())
+    else {
         return;
     };
     let scale = window.scale_factor().unwrap_or(1.0);
-    let snap = SNAP_DISTANCE * scale;
-    let near = ((pos.x - center.x) as f64).abs() < snap && ((pos.y - center.y) as f64).abs() < snap;
-    if near && pos != center {
-        let _ = window.set_position(center);
-        save_position(app, center);
-    } else {
-        save_position(app, pos);
+    let (mp, ms) = (monitor.position(), monitor.size());
+    let center_x = mp.x + (ms.width as i32 - size.width as i32) / 2;
+
+    let attached = ((pos.y - mp.y) as f64) < ATTACH_DISTANCE * scale;
+    if attached {
+        pos.y = mp.y;
+        if ((pos.x - center_x) as f64).abs() < CENTER_SNAP * scale {
+            pos.x = center_x;
+        }
     }
+    // The island is centered in a wider transparent window; let that margin
+    // hang off the sides, but keep the island itself and the panel on screen.
+    let margin = size.width as i32 / 3;
+    pos.x = pos.x.clamp(mp.x - margin, mp.x + ms.width as i32 - size.width as i32 + margin);
+    pos.y = pos.y.clamp(mp.y, (mp.y + ms.height as i32 - size.height as i32).max(mp.y));
+
+    if window.outer_position().ok() != Some(pos) {
+        let _ = window.set_position(pos);
+    }
+    save_position(app, pos);
+    set_attached(app, attached);
+}
+
+#[tauri::command]
+pub fn get_island_attached(state: tauri::State<'_, WindowState>) -> bool {
+    state.attached.load(Ordering::Relaxed)
+}
+
+/// The frontend calls this when a drag starts, so a drag that never moves
+/// the window still settles (and re-reports the attached state).
+#[tauri::command]
+pub fn island_drag_started(state: tauri::State<'_, WindowState>) {
+    *state.moved_at.lock().unwrap() = Some(Instant::now());
 }
 
 pub fn init(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
@@ -193,6 +243,10 @@ pub fn init(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let pos = load_position(&handle).or_else(|| top_center(&window));
     if let Some(pos) = pos {
         let _ = window.set_position(pos);
+    }
+    if let Ok(pos) = window.outer_position() {
+        let attached = is_at_top(&window, pos);
+        handle.state::<WindowState>().attached.store(attached, Ordering::Relaxed);
     }
     let _ = window.set_ignore_cursor_events(true);
     let _ = window.show();
@@ -245,11 +299,12 @@ fn monitor_loop(app: AppHandle, hwnd: isize) {
             let _ = app.emit("island-hover", HoverPayload { inside });
         }
 
-        // --- Persist position once a drag has settled ---------------------
+        // --- Settle once a drag has ended (button up, no recent movement) ----
+        let button_down = unsafe { GetAsyncKeyState(VK_LBUTTON.0 as i32) } < 0;
         let settled = {
             let mut moved = state.moved_at.lock().unwrap();
             match *moved {
-                Some(t) if t.elapsed() >= SAVE_AFTER_MOVE => {
+                Some(t) if !button_down && t.elapsed() >= SETTLE_AFTER_MOVE => {
                     *moved = None;
                     true
                 }

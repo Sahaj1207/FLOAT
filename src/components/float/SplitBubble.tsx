@@ -10,16 +10,18 @@ interface SplitBubbleProps {
   activity: Activity;
   size: number;
   gap: number;
+  /** Hanging from the top edge (square top) rather than floating (round). */
+  docked: boolean;
   onClick: () => void;
 }
 
 /** Minimal view of the secondary activity, detached beside the pill. */
-export const SplitBubble: React.FC<SplitBubbleProps> = ({ activity, size, gap, onClick }) => {
+export const SplitBubble: React.FC<SplitBubbleProps> = ({ activity, size, gap, docked, onClick }) => {
   return (
     <motion.button
       type="button"
       className="split-bubble"
-      style={{ width: size, height: size, left: `calc(100% + ${gap}px)`, borderRadius: `0 0 ${size / 2}px ${size / 2}px` }}
+      style={{ width: size, height: size, left: `calc(100% + ${gap}px)`, borderRadius: docked ? `0 0 ${size / 2}px ${size / 2}px` : "50%" }}
       initial={{ x: -(size + gap), scale: 0.4, opacity: 0, originY: 0 }}
       animate={{ x: 0, scale: 1, opacity: 1 }}
       exit={{ x: -(size + gap), scale: 0.4, opacity: 0 }}
