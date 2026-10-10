@@ -256,11 +256,13 @@ pub fn init(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
         if let tauri::WindowEvent::Moved(_) = event {
             let state = moved_handle.state::<WindowState>();
             *state.moved_at.lock().unwrap() = Some(Instant::now());
+            crate::backdrop::on_island_moved();
         }
     });
 
     // HWND as a plain integer so the monitor thread can own it.
     let hwnd = window.hwnd()?.0 as isize;
+    crate::backdrop::init(hwnd);
     std::thread::Builder::new()
         .name("island-monitor".into())
         .spawn(move || monitor_loop(handle, hwnd))?;
@@ -336,6 +338,7 @@ fn monitor_loop(app: AppHandle, hwnd: isize) {
         if should_hide != hidden {
             hidden = should_hide;
             dlog!("[WINDOW] hidden -> {}", hidden);
+            crate::backdrop::set_island_visible(!hidden);
             if hidden {
                 let _ = window.hide();
                 if inside {

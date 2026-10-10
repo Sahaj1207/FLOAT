@@ -34,6 +34,7 @@ import {
   getIslandAttached,
   subscribeToIslandAttached,
   islandDragStarted,
+  setBackdrop,
   PrivacyState,
   HitRect,
   getMultiSessionState,
@@ -878,6 +879,39 @@ const FloatShell: React.FC = () => {
     secondary && (visualMode === "compact" || visualMode === "compactPreview") ? secondary : null;
   const hasBubble = bubbleActivity !== null;
 
+  // --- Surface: solid black or liquid glass ------------------------------
+  // Auto = the black notch when docked, glass once it floats.
+  const glass = settings.visualStyle === "glass" || (settings.visualStyle === "auto" && !docked);
+  const glassRef = useRef(glass);
+  glassRef.current = glass;
+  // Keep the native blur backdrop glued to the island on every animation
+  // frame of a morph (framer reports the in-flight values).
+  const syncBackdrop = (latest: Record<string, unknown>) => {
+    if (!glassRef.current) return;
+    const num = (key: string, fallback: number) => (typeof latest[key] === "number" ? (latest[key] as number) : fallback);
+    const scale = num("scale", 1);
+    const width = num("width", islandWidth) * scale;
+    const height = num("height", islandHeight) * scale;
+    setBackdrop({
+      x: (WINDOW_WIDTH - width) / 2,
+      y: num("y", islandTop),
+      width,
+      height,
+      topRadius: num("borderTopLeftRadius", topRadius) * scale,
+      bottomRadius: num("borderBottomLeftRadius", bottomRadius) * scale,
+    });
+  };
+  // Glass switching on or off outside a morph (e.g. from Settings). During
+  // morphs the per-frame sync above takes over, so this only depends on glass.
+  useEffect(() => {
+    setBackdrop(
+      glass
+        ? { x: (WINDOW_WIDTH - islandWidth) / 2, y: islandTop, width: islandWidth, height: islandHeight, topRadius, bottomRadius }
+        : null
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [glass]);
+
   const prevGeometryRef = useRef({ width: islandWidth, height: islandHeight });
   useEffect(() => {
     const regionsFor = (width: number, height: number): HitRect[] => {
@@ -1086,7 +1120,8 @@ const FloatShell: React.FC = () => {
   return (
     <motion.div
       ref={shellRef}
-      className={`float-shell ${accentGlow ? "accent-glow" : ""} ${docked ? "attached" : "floating"} ${isExpanded ? "expanded" : ""}`}
+      className={`float-shell ${accentGlow ? "accent-glow" : ""} ${docked ? "attached" : "floating"} ${glass ? "glass" : "solid"} ${isExpanded ? "expanded" : ""}`}
+      onUpdate={syncBackdrop}
       style={accent ? ({ "--float-accent": accent } as React.CSSProperties) : undefined}
       animate={{
         width: islandWidth,

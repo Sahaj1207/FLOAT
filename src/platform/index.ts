@@ -45,6 +45,21 @@ export async function setHitRegions(regions: HitRect[]): Promise<void> {
   }
 }
 
+/** The island's shape in logical px relative to the window, for the glass backdrop. */
+export interface BackdropShape {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  topRadius: number;
+  bottomRadius: number;
+}
+
+/** Position the native blur backdrop under the island (null = no glass). */
+export function setBackdrop(shape: BackdropShape | null): void {
+  invoke("set_backdrop", { shape }).catch(() => {});
+}
+
 /** Whether the island is docked to the top edge (notch) or floating (pill). */
 export async function getIslandAttached(): Promise<boolean> {
   try {

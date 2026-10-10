@@ -10,6 +10,7 @@ macro_rules! dlog {
 
 mod appicon;
 mod autostart;
+mod backdrop;
 mod brightness;
 mod clipboard;
 mod connectivity;
@@ -44,6 +45,7 @@ pub fn run() {
             window::set_hide_in_fullscreen,
             window::reset_window_position,
             window::get_island_attached,
+            backdrop::set_backdrop,
             window::island_drag_started,
             autostart::get_autostart,
             autostart::set_autostart,

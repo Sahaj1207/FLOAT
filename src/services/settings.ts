@@ -3,10 +3,11 @@ import { setClipboardHistoryEnabled, setHideInFullscreen } from "../platform";
 export type AnimationIntensity = "subtle" | "balanced" | "expressive";
 export type IdleBehavior = "alwaysOrb" | "remember" | "alwaysPill";
 export type RestingMode = "orb" | "compact";
-export type VisualStyle = "notch" | "default" | "minimal" | "softGlass";
+// auto: black notch when docked, liquid glass when floating.
+export type VisualStyle = "auto" | "glass" | "black";
 
 export interface FloatSettings {
-  transparency: number; // 0.60 to 1.00, default 0.85
+  transparency: number; // glass tint: how dark the glass is, 0.10 to 0.90, default 0.45
   pillLength: number;   // activity width, 220 to 340, default 300
   orbSize: number;      // 44 to 56, default 48
   animationIntensity: AnimationIntensity; // "subtle" | "balanced" | "expressive", default "balanced"
@@ -15,7 +16,7 @@ export interface FloatSettings {
   notificationContent: boolean;  // default true
   idleBehavior: IdleBehavior;    // "alwaysOrb" | "remember" | "alwaysPill", default "remember"
   rememberedRestingMode: RestingMode; // "orb" | "compact", default "compact"
-  visualStyle: VisualStyle;      // "notch" (solid black) | glass styles, default "notch"
+  visualStyle: VisualStyle;      // "auto" | "glass" | "black", default "auto"
   hideInFullscreen: boolean;     // hide the island while a fullscreen app is focused, default true
   clipboardHistory: boolean;     // keep an in-memory clipboard history, default true
   syncedLyrics: boolean;         // fetch lyrics from LRCLIB (network, opt-in), default false
@@ -25,7 +26,7 @@ export const PILL_LENGTH_MIN = 220;
 export const PILL_LENGTH_MAX = 340;
 
 export const DEFAULT_FLOAT_SETTINGS: FloatSettings = {
-  transparency: 1.0,
+  transparency: 0.45,
   pillLength: 300,
   orbSize: 48,
   animationIntensity: "balanced",
@@ -34,7 +35,7 @@ export const DEFAULT_FLOAT_SETTINGS: FloatSettings = {
   notificationContent: true,
   idleBehavior: "alwaysPill",
   rememberedRestingMode: "compact",
-  visualStyle: "notch",
+  visualStyle: "auto",
   hideInFullscreen: true,
   clipboardHistory: true,
   syncedLyrics: false,
@@ -43,7 +44,11 @@ export const DEFAULT_FLOAT_SETTINGS: FloatSettings = {
 const SETTINGS_STORAGE_KEY = "float_settings_v1";
 // Bumped when defaults change in a way saved settings should adopt once.
 // v2: MacBook-notch design (solid notch style, island idle, wider activities).
-const SETTINGS_VERSION = 2;
+// v3: real glass; styles become auto / glass / black, transparency = glass tint.
+const SETTINGS_VERSION = 3;
+
+export const GLASS_TINT_MIN = 0.1;
+export const GLASS_TINT_MAX = 0.9;
 
 type SettingsListener = (settings: FloatSettings) => void;
 const listeners = new Set<SettingsListener>();
@@ -61,18 +66,23 @@ export function loadSettings(): FloatSettings {
     if (!raw) return DEFAULT_FLOAT_SETTINGS;
     const parsed = JSON.parse(raw);
     if (parsed.settingsVersion !== SETTINGS_VERSION) {
+      const fromBeforeNotch = (parsed.settingsVersion ?? 1) < 2;
       Object.assign(parsed, {
         settingsVersion: SETTINGS_VERSION,
         visualStyle: DEFAULT_FLOAT_SETTINGS.visualStyle,
         transparency: DEFAULT_FLOAT_SETTINGS.transparency,
-        idleBehavior: DEFAULT_FLOAT_SETTINGS.idleBehavior,
-        pillLength: DEFAULT_FLOAT_SETTINGS.pillLength,
       });
+      if (fromBeforeNotch) {
+        Object.assign(parsed, {
+          idleBehavior: DEFAULT_FLOAT_SETTINGS.idleBehavior,
+          pillLength: DEFAULT_FLOAT_SETTINGS.pillLength,
+        });
+      }
       localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(parsed));
     }
     const transparency =
       typeof parsed.transparency === "number" && !isNaN(parsed.transparency)
-        ? Math.min(1.0, Math.max(0.6, parsed.transparency))
+        ? Math.min(GLASS_TINT_MAX, Math.max(GLASS_TINT_MIN, parsed.transparency))
         : DEFAULT_FLOAT_SETTINGS.transparency;
     const pillLength =
       typeof parsed.pillLength === "number" && !isNaN(parsed.pillLength)
@@ -109,7 +119,7 @@ export function loadSettings(): FloatSettings {
       ? (parsed.rememberedRestingMode as RestingMode)
       : DEFAULT_FLOAT_SETTINGS.rememberedRestingMode;
 
-    const validVisualStyles: VisualStyle[] = ["notch", "default", "minimal", "softGlass"];
+    const validVisualStyles: VisualStyle[] = ["auto", "glass", "black"];
     const visualStyle = validVisualStyles.includes(parsed.visualStyle)
       ? (parsed.visualStyle as VisualStyle)
       : DEFAULT_FLOAT_SETTINGS.visualStyle;
@@ -165,7 +175,7 @@ export function applySettingsToNative(settings: FloatSettings): void {
 }
 
 export function applySettingsToDOM(settings: FloatSettings): void {
-  const clampedTransparency = Math.min(1.0, Math.max(0.6, settings.transparency));
+  const clampedTransparency = Math.min(GLASS_TINT_MAX, Math.max(GLASS_TINT_MIN, settings.transparency));
   const clampedPillLength = Math.min(
     PILL_LENGTH_MAX,
     Math.max(PILL_LENGTH_MIN, settings.pillLength ?? DEFAULT_FLOAT_SETTINGS.pillLength)
@@ -177,7 +187,7 @@ export function applySettingsToDOM(settings: FloatSettings): void {
   const intensity = settings.animationIntensity ?? DEFAULT_FLOAT_SETTINGS.animationIntensity;
   const visualStyle = settings.visualStyle ?? DEFAULT_FLOAT_SETTINGS.visualStyle;
 
-  document.documentElement.style.setProperty("--float-glass-opacity", clampedTransparency.toString());
+  document.documentElement.style.setProperty("--float-glass-tint", clampedTransparency.toString());
   document.documentElement.style.setProperty("--float-pill-width", `${clampedPillLength}px`);
   document.documentElement.style.setProperty("--float-orb-size", `${clampedOrbSize}px`);
   document.documentElement.setAttribute("data-intensity", intensity);

@@ -7,14 +7,14 @@
    ============================================================ */
 
 :root {
-  /* Glass opacity settings variable (default 0.85, range 0.60 - 1.00) */
-  --float-glass-opacity: 0.85;
+  /* Glass tint: how dark the glass is (Settings > Glass Tint) */
+  --float-glass-tint: 0.45;
 
-  /* Surface colors — deep physical dark glass dynamically driven by opacity setting */
-  --float-bg: rgba(12, 12, 15, var(--float-glass-opacity));
-  --float-bg-hover: rgba(18, 18, 22, calc(var(--float-glass-opacity) * 1.04));
-  --float-border: rgba(255, 255, 255, 0.12);
-  --float-border-hover: rgba(255, 255, 255, 0.18);
+  /* Surface tokens. .float-shell.solid / .glass (FloatShell.css) override
+     these per surface; the defaults here are the solid notch. */
+  --float-bg: #000;
+  --float-border: transparent;
+  --float-border-hover: transparent;
 
   /* Accent: album-art color while media is active (set on .float-shell) */
   --float-accent: var(--float-text-primary);
@@ -23,13 +23,7 @@
   --float-text-primary: rgba(255, 255, 255, 0.95);
   --float-text-secondary: rgba(255, 255, 255, 0.6);
 
-  /* Glow / shadow — subtle inset glass highlight, zero outer shadow */
-  --float-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.12);
-  --float-glow: 0 0 0 1px rgba(255, 255, 255, 0.1),
-                inset 0 1px 1.5px rgba(255, 255, 255, 0.15);
-
-  /* Blur */
-  --float-blur: 32px;
+  --float-shadow: none;
 
   /* Dimensions */
   --float-orb-size: 48px;
@@ -69,41 +63,6 @@
   --float-anim-presence-brightness: 1.06;
   --float-anim-eq-amp: 1.25;
   --float-anim-reveal-y: 6px;
-}
-
-/* ---- Visual Style Presets ---- */
-
-/* Notch: solid black, borderless, like the MacBook notch */
-:root[data-style="notch"] {
-  --float-bg: rgba(0, 0, 0, var(--float-glass-opacity));
-  --float-blur: 0px;
-  --float-border: transparent;
-  --float-border-hover: transparent;
-  --float-shadow: none;
-}
-
-:root,
-:root[data-style="default"] {
-  --float-blur: 32px;
-  --float-border: rgba(255, 255, 255, 0.12);
-  --float-border-hover: rgba(255, 255, 255, 0.18);
-  --float-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.12);
-}
-
-:root[data-style="minimal"] {
-  --float-blur: 24px;
-  --float-border: rgba(255, 255, 255, 0.08);
-  --float-border-hover: rgba(255, 255, 255, 0.14);
-  --float-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.06);
-}
-
-:root[data-style="softGlass"],
-:root[data-style="soft-glass"] {
-  --float-blur: 44px;
-  --float-border: rgba(255, 255, 255, 0.16);
-  --float-border-hover: rgba(255, 255, 255, 0.22);
-  --float-shadow: inset 0 1.5px 2px rgba(255, 255, 255, 0.18),
-                  inset 0 -1px 2px rgba(0, 0, 0, 0.25);
 }
 
 /* ---- Reset & transparency ---- */

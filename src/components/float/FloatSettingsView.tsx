@@ -10,6 +10,8 @@ import {
   DEFAULT_FLOAT_SETTINGS,
   PILL_LENGTH_MIN,
   PILL_LENGTH_MAX,
+  GLASS_TINT_MIN,
+  GLASS_TINT_MAX,
 } from "../../services/settings";
 import { getAutostart, getHotkey, setAutostart, subscribeToAutostart } from "../../platform";
 import "./FloatSettingsView.css";
@@ -31,7 +33,7 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = () => {
 
   const handleTransparencyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawVal = parseInt(e.target.value, 10);
-    const newTransparency = Math.min(1.0, Math.max(0.6, rawVal / 100));
+    const newTransparency = Math.min(GLASS_TINT_MAX, Math.max(GLASS_TINT_MIN, rawVal / 100));
     const nextSettings = { ...settings, transparency: newTransparency };
     setSettings(nextSettings);
     saveSettings(nextSettings);
@@ -179,59 +181,35 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = () => {
               <span className="float-setting-name">Visual Style</span>
             </div>
             <span className="float-setting-value-badge" style={{ textTransform: "capitalize" }}>
-              {visualStyle === "softGlass" ? "Soft Glass" : visualStyle === "default" ? "Glass" : visualStyle}
+              {visualStyle}
             </span>
           </div>
 
           <div className="float-setting-segmented-group" role="radiogroup" aria-label="Visual Style">
-            <button
-              type="button"
-              role="radio"
-              aria-checked={visualStyle === "notch"}
-              className={`float-setting-segment-btn ${visualStyle === "notch" ? "active" : ""}`}
-              onClick={() => handleVisualStyleChange("notch")}
-              data-no-drag="true"
-            >
-              <span>Notch</span>
-              <span className="float-setting-segment-desc">Solid black</span>
-            </button>
-            <button
-              type="button"
-              role="radio"
-              aria-checked={visualStyle === "default"}
-              className={`float-setting-segment-btn ${visualStyle === "default" ? "active" : ""}`}
-              onClick={() => handleVisualStyleChange("default")}
-              data-no-drag="true"
-            >
-              <span>Glass</span>
-              <span className="float-setting-segment-desc">Frosted</span>
-            </button>
-            <button
-              type="button"
-              role="radio"
-              aria-checked={visualStyle === "minimal"}
-              className={`float-setting-segment-btn ${visualStyle === "minimal" ? "active" : ""}`}
-              onClick={() => handleVisualStyleChange("minimal")}
-              data-no-drag="true"
-            >
-              <span>Minimal</span>
-              <span className="float-setting-segment-desc">Calm & crisp</span>
-            </button>
-            <button
-              type="button"
-              role="radio"
-              aria-checked={visualStyle === "softGlass"}
-              className={`float-setting-segment-btn ${visualStyle === "softGlass" ? "active" : ""}`}
-              onClick={() => handleVisualStyleChange("softGlass")}
-              data-no-drag="true"
-            >
-              <span>Soft Glass</span>
-              <span className="float-setting-segment-desc">Rich depth</span>
-            </button>
+            {(
+              [
+                ["auto", "Auto", "Notch · glass pill"],
+                ["glass", "Glass", "Liquid glass"],
+                ["black", "Black", "Solid black"],
+              ] as const
+            ).map(([value, label, desc]) => (
+              <button
+                key={value}
+                type="button"
+                role="radio"
+                aria-checked={visualStyle === value}
+                className={`float-setting-segment-btn ${visualStyle === value ? "active" : ""}`}
+                onClick={() => handleVisualStyleChange(value)}
+                data-no-drag="true"
+              >
+                <span>{label}</span>
+                <span className="float-setting-segment-desc">{desc}</span>
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Glass Transparency */}
+        {/* Glass Tint */}
         <div className="float-setting-card">
           <div className="float-setting-label-row">
             <div className="float-setting-label-left">
@@ -248,7 +226,7 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = () => {
                 <path d="M12 2a7 7 0 1 0 10 10" />
               </svg>
               <label htmlFor="glass-transparency-slider" className="float-setting-name">
-                Glass Transparency
+                Glass Tint
               </label>
             </div>
             <span className="float-setting-value-badge">{transparencyPercent}%</span>
@@ -258,15 +236,15 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = () => {
             <input
               id="glass-transparency-slider"
               type="range"
-              min="60"
-              max="100"
+              min={GLASS_TINT_MIN * 100}
+              max={GLASS_TINT_MAX * 100}
               step="1"
               value={transparencyPercent}
               onChange={handleTransparencyChange}
               className="float-setting-slider"
-              aria-label="Glass Transparency"
-              aria-valuemin={60}
-              aria-valuemax={100}
+              aria-label="Glass Tint"
+              aria-valuemin={GLASS_TINT_MIN * 100}
+              aria-valuemax={GLASS_TINT_MAX * 100}
               aria-valuenow={transparencyPercent}
               data-no-drag="true"
             />

@@ -11,8 +11,6 @@
   color: var(--float-text-primary);
 
   background: var(--float-bg);
-  backdrop-filter: blur(var(--float-blur));
-  -webkit-backdrop-filter: blur(var(--float-blur));
   border: 1px solid var(--float-border);
   box-shadow: var(--float-shadow);
   transition: border-color var(--float-transition);
