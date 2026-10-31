@@ -1,10 +1,14 @@
-import { setClipboardHistoryEnabled, setHideInFullscreen } from "../platform";
+import { setClipboardHistoryEnabled, setDownloadAlerts, setHideInFullscreen } from "../platform";
 
 export type AnimationIntensity = "subtle" | "balanced" | "expressive";
 export type IdleBehavior = "alwaysOrb" | "remember" | "alwaysPill";
 export type RestingMode = "orb" | "compact";
 // auto: black notch when docked, liquid glass when floating.
 export type VisualStyle = "auto" | "glass" | "black";
+// pill: a detached island just below the top edge (iPhone, new MacBook Pro).
+// notch: fused to the screen edge like the older MacBook notch.
+export type IslandShape = "pill" | "notch";
+export type HoverDelay = "short" | "normal" | "long";
 
 export interface FloatSettings {
   transparency: number; // glass tint: how dark the glass is, 0.10 to 0.90, default 0.45
@@ -25,6 +29,12 @@ export interface FloatSettings {
   weatherCity: string;           // city name looked up for weather
   weatherFahrenheit: boolean;    // default false (Celsius)
   calendarUrl: string;           // private ICS link for the calendar widget ("" = off)
+  islandShape: IslandShape;      // "pill" | "notch", default "pill"
+  hoverDelay: HoverDelay;        // how long to rest on the island before it opens, default "normal"
+  scrollVolume: boolean;         // scrolling on the island changes the volume, default true
+  scrollSkip: boolean;           // sideways scrolling skips tracks, default true
+  middleClickPlayPause: boolean; // middle-click on the island plays / pauses, default true
+  downloadAlerts: boolean;       // show finished downloads and Nearby Share files, default true
 }
 
 export const PILL_LENGTH_MIN = 220;
@@ -49,13 +59,20 @@ export const DEFAULT_FLOAT_SETTINGS: FloatSettings = {
   weatherCity: "",
   weatherFahrenheit: false,
   calendarUrl: "",
+  islandShape: "pill",
+  hoverDelay: "normal",
+  scrollVolume: true,
+  scrollSkip: true,
+  middleClickPlayPause: true,
+  downloadAlerts: true,
 };
 
 const SETTINGS_STORAGE_KEY = "float_settings_v1";
 // Bumped when defaults change in a way saved settings should adopt once.
 // v2: MacBook-notch design (solid notch style, island idle, wider activities).
 // v3: real glass; styles become auto / glass / black, transparency = glass tint.
-const SETTINGS_VERSION = 3;
+// v4: the island becomes a detached pill by default, like the new MacBook Pro.
+const SETTINGS_VERSION = 4;
 
 export const GLASS_TINT_MIN = 0.1;
 export const GLASS_TINT_MAX = 0.9;
@@ -76,12 +93,15 @@ export function loadSettings(): FloatSettings {
     if (!raw) return DEFAULT_FLOAT_SETTINGS;
     const parsed = JSON.parse(raw);
     if (parsed.settingsVersion !== SETTINGS_VERSION) {
-      const fromBeforeNotch = (parsed.settingsVersion ?? 1) < 2;
-      Object.assign(parsed, {
-        settingsVersion: SETTINGS_VERSION,
-        visualStyle: DEFAULT_FLOAT_SETTINGS.visualStyle,
-        transparency: DEFAULT_FLOAT_SETTINGS.transparency,
-      });
+      const version = parsed.settingsVersion ?? 1;
+      const fromBeforeNotch = version < 2;
+      if (version < 3) {
+        Object.assign(parsed, {
+          visualStyle: DEFAULT_FLOAT_SETTINGS.visualStyle,
+          transparency: DEFAULT_FLOAT_SETTINGS.transparency,
+        });
+      }
+      Object.assign(parsed, { settingsVersion: SETTINGS_VERSION, islandShape: DEFAULT_FLOAT_SETTINGS.islandShape });
       if (fromBeforeNotch) {
         Object.assign(parsed, {
           idleBehavior: DEFAULT_FLOAT_SETTINGS.idleBehavior,
@@ -153,7 +173,16 @@ export function loadSettings(): FloatSettings {
     const bool = (value: unknown, fallback: boolean) => (typeof value === "boolean" ? value : fallback);
     const text = (value: unknown, max: number) => (typeof value === "string" ? value.slice(0, max) : "");
 
+    const pick = <T extends string>(value: unknown, options: readonly T[], fallback: T): T =>
+      options.includes(value as T) ? (value as T) : fallback;
+
     return {
+      islandShape: pick(parsed.islandShape, ["pill", "notch"] as const, DEFAULT_FLOAT_SETTINGS.islandShape),
+      hoverDelay: pick(parsed.hoverDelay, ["short", "normal", "long"] as const, DEFAULT_FLOAT_SETTINGS.hoverDelay),
+      scrollVolume: bool(parsed.scrollVolume, DEFAULT_FLOAT_SETTINGS.scrollVolume),
+      scrollSkip: bool(parsed.scrollSkip, DEFAULT_FLOAT_SETTINGS.scrollSkip),
+      middleClickPlayPause: bool(parsed.middleClickPlayPause, DEFAULT_FLOAT_SETTINGS.middleClickPlayPause),
+      downloadAlerts: bool(parsed.downloadAlerts, DEFAULT_FLOAT_SETTINGS.downloadAlerts),
       weatherEnabled: bool(parsed.weatherEnabled, DEFAULT_FLOAT_SETTINGS.weatherEnabled),
       weatherCity: text(parsed.weatherCity, 80),
       weatherFahrenheit: bool(parsed.weatherFahrenheit, DEFAULT_FLOAT_SETTINGS.weatherFahrenheit),
@@ -193,6 +222,7 @@ export function saveSettings(settings: FloatSettings): void {
 export function applySettingsToNative(settings: FloatSettings): void {
   setHideInFullscreen(settings.hideInFullscreen);
   setClipboardHistoryEnabled(settings.clipboardHistory);
+  setDownloadAlerts(settings.downloadAlerts);
 }
 
 export function applySettingsToDOM(settings: FloatSettings): void {

@@ -13,8 +13,8 @@ import {
   GLASS_TINT_MIN,
   GLASS_TINT_MAX,
 } from "../../services/settings";
-import { getAutostart, getHotkey, setAutostart, subscribeToAutostart } from "../../platform";
-import { ChevronLeft } from "lucide-react";
+import { getAutostart, getHotkey, getSearchHotkey, setAutostart, subscribeToAutostart } from "../../platform";
+import { ChevronLeft, MousePointer2, Pill } from "lucide-react";
 import "./FloatSettingsView.css";
 
 interface FloatSettingsViewProps {
@@ -56,6 +56,62 @@ const CommitInput: React.FC<{
     />
   );
 };
+
+const SwitchRow: React.FC<{ title: string; desc: string; checked: boolean; onToggle: () => void }> = ({
+  title,
+  desc,
+  checked,
+  onToggle,
+}) => (
+  <div className="float-setting-toggle-row">
+    <div className="float-setting-toggle-left">
+      <span className="float-setting-toggle-title">{title}</span>
+      <span className="float-setting-toggle-desc">{desc}</span>
+    </div>
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      className={`float-setting-switch ${checked ? "checked" : ""}`}
+      onClick={onToggle}
+      data-no-drag="true"
+      aria-label={`Toggle ${title}`}
+    >
+      <span className="float-setting-switch-handle" />
+    </button>
+  </div>
+);
+
+function Segmented<T extends string>({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: T;
+  options: readonly (readonly [T, string, string])[];
+  onChange: (value: T) => void;
+}) {
+  return (
+    <div className="float-setting-segmented-group" role="radiogroup" aria-label={label}>
+      {options.map(([v, title, desc]) => (
+        <button
+          key={v}
+          type="button"
+          role="radio"
+          aria-checked={value === v}
+          className={`float-setting-segment-btn ${value === v ? "active" : ""}`}
+          onClick={() => onChange(v)}
+          data-no-drag="true"
+        >
+          <span>{title}</span>
+          <span className="float-setting-segment-desc">{desc}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export const FloatSettingsView: React.FC<FloatSettingsViewProps> = ({ onClose }) => {
   const [settings, setSettings] = useState<FloatSettings>(() => loadSettings());
@@ -131,6 +187,10 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = ({ onClose })
   // Launch at startup lives in the OS, not in saved settings.
   const [autostart, setAutostartState] = useState(false);
   const [hotkey, setHotkey] = useState<string | null>(null);
+  const [searchHotkey, setSearchHotkey] = useState<string | null>(null);
+  useEffect(() => {
+    getSearchHotkey().then(setSearchHotkey);
+  }, []);
   useEffect(() => {
     let isMounted = true;
     let unlisten: (() => void) | null = null;
@@ -223,6 +283,25 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = ({ onClose })
       </div>
 
       <div className="float-settings-body">
+        {/* Island Shape */}
+        <div className="float-setting-card">
+          <div className="float-setting-label-row">
+            <div className="float-setting-label-left">
+              <Pill className="float-setting-icon" strokeWidth={2} />
+              <span className="float-setting-name">Island Shape</span>
+            </div>
+          </div>
+          <Segmented
+            label="Island Shape"
+            value={settings.islandShape}
+            options={[
+              ["pill", "Island", "A pill below the edge"],
+              ["notch", "Notch", "Joined to the top edge"],
+            ] as const}
+            onChange={(islandShape) => update({ islandShape })}
+          />
+        </div>
+
         {/* Visual Style Preset */}
         <div className="float-setting-card">
           <div className="float-setting-label-row">
@@ -248,7 +327,7 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = ({ onClose })
           <div className="float-setting-segmented-group" role="radiogroup" aria-label="Visual Style">
             {(
               [
-                ["auto", "Auto", "Notch · glass pill"],
+                ["auto", "Auto", "Black docked, glass floating"],
                 ["glass", "Glass", "Liquid glass"],
                 ["black", "Black", "Solid black"],
               ] as const
@@ -462,7 +541,7 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = ({ onClose })
               data-no-drag="true"
             >
               <span>Island</span>
-              <span className="float-setting-segment-desc">Stay as the notch</span>
+              <span className="float-setting-segment-desc">Stay as the island</span>
             </button>
           </div>
         </div>
@@ -603,6 +682,57 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = ({ onClose })
           </div>
         </div>
 
+        {/* Mouse & Touch */}
+        <div className="float-setting-card">
+          <div className="float-setting-label-row">
+            <div className="float-setting-label-left">
+              <MousePointer2 className="float-setting-icon" strokeWidth={2} />
+              <span className="float-setting-name">Mouse &amp; Touch</span>
+            </div>
+          </div>
+
+          <SwitchRow
+            title="Open on Hover"
+            desc="Rest the pointer on the island to open it; it closes when you move away. Off: click or tap to open"
+            checked={settings.openOnHover}
+            onToggle={handleToggleOpenOnHover}
+          />
+          {settings.openOnHover && (
+            <Segmented
+              label="Hover delay"
+              value={settings.hoverDelay}
+              options={[
+                ["short", "Quick", "Opens almost at once"],
+                ["normal", "Normal", "Recommended"],
+                ["long", "Relaxed", "Fewer accidental opens"],
+              ] as const}
+              onChange={(hoverDelay) => update({ hoverDelay })}
+            />
+          )}
+          <SwitchRow
+            title="Scroll for Volume"
+            desc="Scroll on the island to change the volume"
+            checked={settings.scrollVolume}
+            onToggle={() => update({ scrollVolume: !settings.scrollVolume })}
+          />
+          <SwitchRow
+            title="Swipe Sideways to Skip"
+            desc="Scroll sideways (or Shift + scroll) on the island for the next or previous track"
+            checked={settings.scrollSkip}
+            onToggle={() => update({ scrollSkip: !settings.scrollSkip })}
+          />
+          <SwitchRow
+            title="Middle-Click to Play or Pause"
+            desc="Click the scroll wheel on the island to play or pause"
+            checked={settings.middleClickPlayPause}
+            onToggle={() => update({ middleClickPlayPause: !settings.middleClickPlayPause })}
+          />
+          <p className="float-setting-note">
+            Touchscreen: tap to open, flick down to open, flick up to close. Touch and hold, then drag, to move the island.
+            {searchHotkey ? ` ${searchHotkey} opens search.` : ""}
+          </p>
+        </div>
+
         {/* Widgets */}
         <div className="float-setting-card">
           <div className="float-setting-label-row">
@@ -692,23 +822,13 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = ({ onClose })
             </div>
           </div>
 
-          <div className="float-setting-toggle-row">
-            <div className="float-setting-toggle-left">
-              <span className="float-setting-toggle-title">Open on Hover</span>
-              <span className="float-setting-toggle-desc">Rest the pointer on the notch to open the panel; it closes when you move away. Off: click to open</span>
-            </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={settings.openOnHover}
-              className={`float-setting-switch ${settings.openOnHover ? "checked" : ""}`}
-              onClick={handleToggleOpenOnHover}
-              data-no-drag="true"
-              aria-label="Toggle Open on Hover"
-            >
-              <span className="float-setting-switch-handle" />
-            </button>
-          </div>
+
+          <SwitchRow
+            title="Downloads &amp; Nearby Share"
+            desc="Show files as they finish downloading or arrive with Nearby Share, with Open and Show in folder"
+            checked={settings.downloadAlerts}
+            onToggle={() => update({ downloadAlerts: !settings.downloadAlerts })}
+          />
 
           <div className="float-setting-toggle-row">
             <div className="float-setting-toggle-left">

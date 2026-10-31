@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { motion, LayoutGroup, AnimatePresence } from "framer-motion";
 import { FloatPill } from "./FloatPill";
-import { FloatSurface } from "./FloatSurface";
+import { FloatSurface, SurfaceRequest } from "./FloatSurface";
 import { FloatOrb, OrbNotificationState, OrbFocusState } from "./FloatOrb";
 import { SplitBubble } from "./SplitBubble";
 import { useAlbumArt } from "./useAlbumArt";
@@ -31,6 +31,7 @@ import {
   subscribeToBluetoothDevice,
   subscribeToFileDrag,
   subscribeToBrightness,
+  subscribeToDownloads,
   getIslandAttached,
   subscribeToIslandAttached,
   islandDragStarted,
@@ -79,6 +80,9 @@ const CORNER_SMOOTHING = 0.6;
 const EAR_SIZE = 7;
 const FLOATING_IDLE_WIDTH = 150;
 const FLOATING_IDLE_HEIGHT = 36;
+// The detached pill (default shape) docks a few px below the screen edge,
+// like the Dynamic Island on iPhone and the new MacBook Pro.
+const PILL_DOCK_TOP = 6;
 const SURFACE_WIDTH = 580;
 const SURFACE_HEIGHT = 244;
 const NOTIF_PREVIEW_WIDTH = 240;
@@ -96,6 +100,14 @@ const NOTIFICATION_DWELL_MS = 3500;
 const VOLUME_HUD_MS = 1600;
 const STATUS_HUD_MS = 2600;
 const TIMER_DONE_MS = 10_000;
+const DOWNLOAD_MS = 7000;
+// A call banner stays until the call's notification goes away, at most this long.
+const CALL_MAX_MS = 45_000;
+// A download within this long of a Nearby Share notification came from it.
+const NEARBY_WINDOW_MS = 120_000;
+// Touch: a flick opens/closes; moving the island needs a short hold first.
+const TOUCH_SWIPE_PX = 14;
+const TOUCH_HOLD_TO_MOVE_MS = 350;
 const VOLUME_STEP = 0.02;
 const WHEEL_NOTCH = 100;
 const SKIP_COOLDOWN_MS = 600;
@@ -103,7 +115,7 @@ const SWIPE_DISMISS_PX = 12;
 
 const DOUBLE_TAP_WINDOW_MS = 250;
 const IDLE_TO_ORB_DELAY_MS = 3000;
-const HOVER_OPEN_MS = 280;
+const HOVER_OPEN_MS = { short: 140, normal: 280, long: 550 };
 const HOVER_CLOSE_MS = 320;
 
 // Morph spring per Animation Intensity. Damping ratios ~1.0 / 0.78 / 0.62:
@@ -155,9 +167,16 @@ const FloatShell: React.FC = () => {
   const openedByHoverRef = useRef(false);
   const [pressed, setPressed] = useState(false);
   const fileDragRef = useRef(false);
+  // Which tab the panel should show when it opens from a command.
+  const [surfaceRequest, setSurfaceRequest] = useState<SurfaceRequest | null>(null);
+  const requestNonceRef = useRef(0);
+  const requestTab = useCallback((tab: SurfaceRequest["tab"]) => {
+    setSurfaceRequest({ tab, nonce: ++requestNonceRef.current });
+  }, []);
 
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
+  const searchShowingRef = useRef(false);
 
   const visualModeRef = useRef(visualMode);
   visualModeRef.current = visualMode;
@@ -242,6 +261,11 @@ const FloatShell: React.FC = () => {
     setQuickActionsOpen(false);
     if (nextMode !== "expanded" || reason !== "hover-open") {
       openedByHoverRef.current = false;
+    }
+    if (nextMode !== "expanded") {
+      // The next open starts on Home again.
+      setSurfaceRequest(null);
+      searchShowingRef.current = false;
     }
     setVisualMode(nextMode);
   }, [clearHoverTimers, clearClickTimer, clearIdleToOrbTimer]);
@@ -464,9 +488,18 @@ const FloatShell: React.FC = () => {
     let isMounted = true;
     let unlisten: (() => void) | null = null;
     subscribeToIslandCommand((command) => {
-      if (command === "toggle" && visualModeRef.current === "expanded") {
+      const expanded = visualModeRef.current === "expanded";
+      if (command === "search") {
+        // The search key toggles: press again to put it away.
+        if (expanded && searchShowingRef.current) {
+          collapse();
+          return;
+        }
+        requestTab("search");
+        if (!expanded) transitionTo("expanded", "command-search");
+      } else if (command === "toggle" && expanded) {
         collapse();
-      } else if (visualModeRef.current !== "expanded") {
+      } else if (!expanded) {
         transitionTo("expanded", `command-${command}`);
       }
     }).then((fn) => {
@@ -477,7 +510,7 @@ const FloatShell: React.FC = () => {
       isMounted = false;
       unlisten?.();
     };
-  }, [collapse, transitionTo]);
+  }, [collapse, transitionTo, requestTab]);
 
   // Ambient idle timer: Compact Pill -> ~3s untouched -> Orb
   useEffect(() => {
@@ -549,6 +582,9 @@ const FloatShell: React.FC = () => {
     };
   }, []);
 
+  // The notification behind the current call banner, if any.
+  const callNotificationRef = useRef<number | null>(null);
+
   // Listen to Windows notification presence events
   useEffect(() => {
     let isMounted = true;
@@ -576,6 +612,11 @@ const FloatShell: React.FC = () => {
 
       if (payload.removedId) {
         const remId = payload.removedId;
+        // Answered, declined or missed: the ringing banner goes too.
+        if (remId === callNotificationRef.current) {
+          callNotificationRef.current = null;
+          dismissKind("call");
+        }
         setNotifications((prev) => prev.filter((n) => n.id !== remId));
       }
 
@@ -590,7 +631,32 @@ const FloatShell: React.FC = () => {
           body: payload.body,
         });
 
-        if (payload.isNew && cfg.notificationPresence) {
+        const item = payload.item;
+        const appText = `${item?.appId ?? ""} ${payload.appName ?? ""}`.toLowerCase();
+        if (payload.isNew && /nearby|nearshare/.test(appText)) {
+          lastNearbyRef.current = Date.now();
+        }
+        // Phone Link rings as a toast; show it as a call activity instead.
+        const isCall =
+          payload.isNew &&
+          /yourphone|phone link|phonelink/.test(appText) &&
+          /incoming|calling|call from|is calling/i.test(`${payload.title ?? ""} ${payload.body ?? ""}`);
+        if (isCall) {
+          callNotificationRef.current = item?.id ?? null;
+          const caller =
+            payload.title && !/incoming call/i.test(payload.title) ? payload.title : payload.body || "Unknown caller";
+          show(
+            {
+              kind: "call",
+              id: "call",
+              priority: ActivityPriority.call,
+              caller: caller.replace(/^(incoming call|call) from\s*/i, ""),
+              appId: item?.appId,
+              appName: payload.appName,
+            },
+            CALL_MAX_MS
+          );
+        } else if (payload.isNew && cfg.notificationPresence) {
           if (cfg.notificationPreview) {
             const openedPreview = visualModeRef.current === "orb";
             if (openedPreview) {
@@ -631,6 +697,10 @@ const FloatShell: React.FC = () => {
           notificationTimerRef.current = null;
         }
         dismissKind("notification");
+        if (callNotificationRef.current !== null) {
+          callNotificationRef.current = null;
+          dismissKind("call");
+        }
         setNotificationPreviewOpen(false);
         setNotificationState({
           hasNotification: false,
@@ -786,7 +856,7 @@ const FloatShell: React.FC = () => {
             openedByHoverRef.current = true;
             transitionTo("expanded", "hover-open");
           }
-        }, HOVER_OPEN_MS);
+        }, HOVER_OPEN_MS[settingsRef.current.hoverDelay]);
       } else if (mode === "compact") {
         previewTimerRef.current = setTimeout(() => {
           if (!isDraggingRef.current) {
@@ -898,7 +968,7 @@ const FloatShell: React.FC = () => {
     islandWidth = pillWidth + (isPreview ? PREVIEW_EXTRA_WIDTH : 0);
     islandHeight = isPreview ? PREVIEW_HEIGHT : ACTIVITY_HEIGHT;
     bottomRadius = isPreview ? 20 : 15;
-  } else if (attached) {
+  } else if (attached && settings.islandShape === "notch") {
     // Nothing live: a quiet notch; hovering reveals the time.
     islandWidth = isPreview ? pillWidth : NOTCH_IDLE_WIDTH;
     islandHeight = isPreview ? ACTIVITY_HEIGHT : NOTCH_IDLE_HEIGHT;
@@ -908,22 +978,22 @@ const FloatShell: React.FC = () => {
     islandHeight = isPreview ? ACTIVITY_HEIGHT : FLOATING_IDLE_HEIGHT;
     bottomRadius = 18;
   }
-  // Docked: square top, flush with the edge. Floating: a full pill (or a
-  // rounded card when expanded), hanging just below the window top.
-  const docked = attached && !isOrb;
+  // Notch: square top, flush with the edge. Pill (docked below the edge or
+  // floating): a full capsule, or a rounded card when expanded.
+  const docked = attached && !isOrb && settings.islandShape === "notch";
   if (!docked && !isExpanded && !isOrb) {
     bottomRadius = Math.round(islandHeight / 2);
   }
   const topRadius = docked ? 0 : bottomRadius;
-  const islandTop = docked ? 0 : FLOAT_TOP;
+  const islandTop = docked ? 0 : attached && !isOrb ? PILL_DOCK_TOP : FLOAT_TOP;
 
   const bubbleActivity =
     secondary && (visualMode === "compact" || visualMode === "compactPreview") ? secondary : null;
   const hasBubble = bubbleActivity !== null;
 
   // --- Surface: solid black or liquid glass ------------------------------
-  // Auto = the black notch when docked, glass once it floats.
-  const glass = settings.visualStyle === "glass" || (settings.visualStyle === "auto" && !docked);
+  // Auto = black while docked at the top (notch or pill), glass once it floats.
+  const glass = settings.visualStyle === "glass" || (settings.visualStyle === "auto" && !(attached && !isOrb));
   const glassRef = useRef(glass);
   glassRef.current = glass;
   // Floating pills and the orb are true capsules; everything else uses
@@ -1025,7 +1095,19 @@ const FloatShell: React.FC = () => {
     return () => clearTimeout(settle);
   }, [islandWidth, islandHeight, islandTop, hasBubble]);
 
+  const touchRef = useRef<{ touch: boolean; at: number }>({ touch: false, at: 0 });
+
   const handlePointerDown = (e: React.PointerEvent) => {
+    // Roomier controls while the island is being used by touch.
+    document.documentElement.dataset.input = e.pointerType === "touch" ? "touch" : "mouse";
+    if (e.button === 1) {
+      // Middle-click: play / pause, like a headset button.
+      if (settingsRef.current.middleClickPlayPause && activeMedia?.hasMedia && visualModeRef.current !== "expanded") {
+        e.preventDefault();
+        mediaPlayPause(activeMedia.id);
+      }
+      return;
+    }
     if (e.button !== 0) return;
     const target = e.target as HTMLElement;
     if (target.closest("button, a, input, [data-no-drag]")) return;
@@ -1034,6 +1116,7 @@ const FloatShell: React.FC = () => {
     clearIdleToOrbTimer();
     isDraggingRef.current = false;
     dragStartRef.current = { x: e.screenX, y: e.screenY };
+    touchRef.current = { touch: e.pointerType === "touch", at: Date.now() };
     setPressed(true);
   };
 
@@ -1041,6 +1124,25 @@ const FloatShell: React.FC = () => {
     if (!dragStartRef.current) return;
     const dx = e.screenX - dragStartRef.current.x;
     const dy = e.screenY - dragStartRef.current.y;
+
+    // Touch: flick down to open, flick up to close. Moving the island
+    // needs a short hold first, so a flick is never mistaken for a drag.
+    if (touchRef.current.touch) {
+      const vertical = Math.abs(dy) > Math.abs(dx) * 1.4;
+      const held = Date.now() - touchRef.current.at >= TOUCH_HOLD_TO_MOVE_MS;
+      if (!held) {
+        const expanded = visualModeRef.current === "expanded";
+        if (vertical && !expanded && dy > TOUCH_SWIPE_PX && primaryRef.current?.kind !== "notification") {
+          dragStartRef.current = null;
+          setPressed(false);
+          transitionTo("expanded", "touch-swipe-down");
+        } else if (vertical && expanded && dy < -TOUCH_SWIPE_PX) {
+          dragStartRef.current = null;
+          collapse();
+        }
+        if (primaryRef.current?.kind !== "notification") return;
+      }
+    }
 
     // Swipe up on a notification banner dismisses it instead of dragging.
     if (primaryRef.current?.kind === "notification" && dy < -SWIPE_DISMISS_PX && Math.abs(dy) > Math.abs(dx)) {
@@ -1099,13 +1201,14 @@ const FloatShell: React.FC = () => {
 
   const handleWheel = (e: React.WheelEvent) => {
     if (visualModeRef.current === "expanded") return;
+    const cfg = settingsRef.current;
     // Scrolling means "adjust", not "open": cancel a pending hover-open.
     clearHoverTimers();
     const wheel = wheelRef.current;
     const horizontal = e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY);
 
     if (horizontal) {
-      if (!activeMedia?.hasMedia) return;
+      if (!cfg.scrollSkip || !activeMedia?.hasMedia) return;
       wheel.skip += e.shiftKey ? e.deltaY : e.deltaX;
       const now = Date.now();
       if (Math.abs(wheel.skip) >= WHEEL_NOTCH && now - wheel.lastSkip > SKIP_COOLDOWN_MS) {
@@ -1116,6 +1219,7 @@ const FloatShell: React.FC = () => {
       return;
     }
 
+    if (!cfg.scrollVolume) return;
     // One mouse-wheel notch (deltaY 100) = 2%. Touchpads send many small
     // deltas, so batch them into one native call per flush.
     wheel.volumeDelta += (-e.deltaY / WHEEL_NOTCH) * VOLUME_STEP;
@@ -1130,6 +1234,8 @@ const FloatShell: React.FC = () => {
   };
 
   // --- System status activities ------------------------------------------
+  // When Nearby Share last posted a notification (its files land in Downloads).
+  const lastNearbyRef = useRef(0);
   const [privacy, setPrivacy] = useState<PrivacyState>({ microphone: null, camera: null });
   const privacyRef = useRef(privacy);
 
@@ -1139,6 +1245,14 @@ const FloatShell: React.FC = () => {
 
     // Hardware volume keys and other apps changing the volume.
     unlisteners.push(subscribeToVolumeChanged((state) => showVolume(state)));
+
+    unlisteners.push(subscribeToDownloads(({ name, path }) => {
+      const nearby = Date.now() - lastNearbyRef.current < NEARBY_WINDOW_MS;
+      show(
+        { kind: "download", id: `download:${path}`, priority: ActivityPriority.download, name, path, nearby },
+        DOWNLOAD_MS
+      );
+    }));
 
     unlisteners.push(subscribeToBrightness((level) => {
       show({ kind: "brightness", id: "brightness", priority: ActivityPriority.brightness, level }, VOLUME_HUD_MS);
@@ -1257,6 +1371,10 @@ const FloatShell: React.FC = () => {
             onDismissNotification={handleDismissNotificationItem}
             onClearAllNotifications={handleClearAllNotifications}
             focusActive={focusState?.status === "active"}
+            request={surfaceRequest}
+            onTabChange={(tab) => {
+              searchShowingRef.current = tab === "search";
+            }}
           />
         ) : isOrb ? (
           <FloatOrb
