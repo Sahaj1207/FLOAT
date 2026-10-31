@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.1.0
+## 2.1.1
 
 Inspired by the Dynamic Island on the new MacBook Pro.
 
@@ -9,6 +9,8 @@ Inspired by the Dynamic Island on the new MacBook Pro.
 - **Downloads and Nearby Share.** Finished downloads and received files show in the island with Open and Show in folder.
 - **Calls.** Incoming Phone Link calls show as a ringing activity until the call ends.
 - **Updates from inside FLOAT.** Settings › Updates › Check for updates. FLOAT only asks GitHub when you press it, downloads the right installer for your copy, checks it against GitHub's published checksum and opens it.
+- **Smoother music controls.** Play/pause responds the instant you tap and its icon morphs between the two shapes. Resting the pointer on the island's play button no longer opens the panel, so you can play and pause right from the pill.
+- **New waveform.** The three bouncing bars are now a five-bar waveform that follows six frequency bands of what's playing, moves on springs at 60 fps, and settles into dots when paused.
 - **Mouse & Touch settings.** Hover delay, scroll for volume, sideways skip, middle-click play/pause. On touchscreens: tap or flick down to open, flick up to close, hold then drag to move, with larger controls.
 
 ## 2.0.0

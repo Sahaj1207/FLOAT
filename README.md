@@ -4,7 +4,7 @@ A Dynamic Island for Windows.
 
 FLOAT is a lightweight MacBook-style notch for Windows. It hangs from the top of your screen and brings media controls, a live audio visualizer, Windows notifications, a volume HUD and quick settings into one place.
 
-## FLOAT v2.1.0
+## FLOAT v2.1.1
 
 Inspired by the Dynamic Island on the new MacBook Pro: search apps, files and settings right from the island, a detached pill shape, download and call activities, mouse and touch controls, and updates from inside the app. See [CHANGELOG.md](CHANGELOG.md) for everything that changed.
 
@@ -258,7 +258,7 @@ FLOAT/
 
 ## 📦 Project Status
 
-**FLOAT v2.1.0** is the latest release. It adds search, the island pill shape, download and call activities, mouse and touch settings, and in-app updates (Settings › Updates). Install the MSIX for the full experience: launch at startup, instant notifications and Wi-Fi/Bluetooth toggles need the packaged app.
+**FLOAT v2.1.1** is the latest release. It adds search, the island pill shape, download and call activities, mouse and touch settings, and in-app updates (Settings › Updates). Install the MSIX for the full experience: launch at startup, instant notifications and Wi-Fi/Bluetooth toggles need the packaged app.
 
 Glass needs Windows 11; on Windows 10 the island falls back to a solid tint.
 

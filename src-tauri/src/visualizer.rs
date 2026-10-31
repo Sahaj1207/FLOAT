@@ -2,10 +2,10 @@
 //! default output device.
 //!
 //! Capture only runs while the frontend has a playing equalizer on screen
-//! (`set_visualizer_active`). Samples are split into three bands with
-//! one-pole filters, and per-band RMS is normalized by a slow peak follower
-//! so quiet and loud tracks both fill the bars. Levels are emitted ~30 times
-//! per second as `audio-levels`.
+//! (`set_visualizer_active`). Samples are split into six bands (bass to
+//! treble) by a chain of one-pole filters, and per-band RMS is normalized by
+//! a slow peak follower so quiet and loud tracks both fill the bars. Levels
+//! are emitted ~60 times per second as `audio-levels`.
 
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use serde::Serialize;
@@ -14,11 +14,11 @@ use std::sync::{Arc, Mutex, OnceLock};
 use std::time::{Duration, Instant};
 use tauri::{AppHandle, Emitter};
 
-const BANDS: usize = 3;
-/// Band split points in Hz: low < 200 <= mid < 2000 <= high.
-const LOW_CUTOFF: f32 = 200.0;
-const HIGH_CUTOFF: f32 = 2000.0;
-const EMIT_EVERY: Duration = Duration::from_millis(33);
+const BANDS: usize = 6;
+/// Band split points in Hz, roughly log-spaced: sub-bass, bass, low mids,
+/// mids, presence, treble.
+const CUTOFFS: [f32; BANDS - 1] = [90.0, 250.0, 600.0, 1500.0, 4000.0];
+const EMIT_EVERY: Duration = Duration::from_millis(16);
 const DEVICE_CHECK_EVERY: Duration = Duration::from_secs(2);
 const SILENCE_RMS: f32 = 1e-4;
 
@@ -57,20 +57,24 @@ fn start_capture(accum: Arc<Mutex<Accumulator>>) -> Option<Capture> {
     let config = device.default_output_config().ok()?;
     let channels = config.channels() as usize;
     let rate = config.sample_rate().0 as f32;
-    let (a_low, a_high) = (lowpass_alpha(LOW_CUTOFF, rate), lowpass_alpha(HIGH_CUTOFF, rate));
+    let alphas = CUTOFFS.map(|c| lowpass_alpha(c, rate));
     let failed = Arc::new(AtomicBool::new(false));
 
-    let mut lp_low = 0.0f32;
-    let mut lp_high = 0.0f32;
+    // Each band is the difference between neighbouring low-passes.
+    let mut lp = [0.0f32; BANDS - 1];
     let mut process = move |mono: &mut dyn Iterator<Item = f32>| {
         let mut local = [0.0f32; BANDS];
         let mut n = 0u32;
         for x in mono {
-            lp_low += a_low * (x - lp_low);
-            lp_high += a_high * (x - lp_high);
-            let bands = [lp_low, lp_high - lp_low, x - lp_high];
-            for (acc, b) in local.iter_mut().zip(bands) {
-                *acc += b * b;
+            for (y, a) in lp.iter_mut().zip(alphas) {
+                *y += a * (x - *y);
+            }
+            let mut below = 0.0;
+            for (b, acc) in local.iter_mut().enumerate() {
+                let upper = if b < BANDS - 1 { lp[b] } else { x };
+                let band = upper - below;
+                *acc += band * band;
+                below = upper;
             }
             n += 1;
         }
@@ -181,7 +185,8 @@ fn run(app: AppHandle) {
             // Fast attack, slow release on the normalizing peak.
             peaks[b] = if rms > peaks[b] { rms } else { (peaks[b] * 0.996).max(SILENCE_RMS) };
             let target = (rms / peaks[b]).powf(0.8).min(1.0);
-            let k = if target > smoothed[b] { 0.6 } else { 0.25 };
+            // The UI springs between updates, so only light smoothing here.
+            let k = if target > smoothed[b] { 0.7 } else { 0.3 };
             smoothed[b] += (target - smoothed[b]) * k;
             levels[b] = smoothed[b];
         }

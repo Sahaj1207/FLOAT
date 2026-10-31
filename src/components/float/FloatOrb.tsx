@@ -205,7 +205,7 @@ export const FloatOrb: React.FC<FloatOrbProps> = ({
                   exit={{ opacity: 0, scale: 0.8 }}
                   transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
                 >
-                  <AudioBars className="orb-equalizer-bars" barClass="orb-bar" />
+                  <AudioBars className="orb-equalizer-bars" barClass="orb-bar" count={3} />
                 </motion.div>
               ) : hasMedia ? (
                 <motion.div

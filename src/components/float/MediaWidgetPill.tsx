@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MediaSession } from '../../platform/media';
-import { mediaPlayPause } from '../../platform';
+import { PlayPauseIcon, usePlayPause } from './PlayPause';
 import { mediaTimeline } from './mediaTimeline';
 import { useAlbumArt } from './useAlbumArt';
 import { AudioBars } from './AudioBars';
@@ -15,6 +15,7 @@ interface Props {
 
 export const MediaWidgetPill: React.FC<Props> = ({ media, sessionCount = 1, isPreview = false }) => {
   const albumArt = useAlbumArt(media);
+  const [playing, togglePlay] = usePlayPause(media);
   const fillRef = useRef<HTMLDivElement>(null);
 
   // Register preview progress bar element to central timeline manager
@@ -94,7 +95,7 @@ export const MediaWidgetPill: React.FC<Props> = ({ media, sessionCount = 1, isPr
   }, [trackKey, displayTitle]);
 
   return (
-    <motion.div className={`media-widget-pill ${media.hasMedia && media.isPlaying ? 'presence-active' : ''}`}>
+    <motion.div className={`media-widget-pill ${media.hasMedia && playing ? 'presence-active' : ''}`}>
       <motion.div 
         layoutId="media-art" 
         className={`media-pill-art-container ${isPreview ? 'preview' : ''}`}
@@ -163,71 +164,19 @@ export const MediaWidgetPill: React.FC<Props> = ({ media, sessionCount = 1, isPr
           </span>
         )}
 
-        <div className="media-pill-indicator-slot">
-          <AnimatePresence mode="wait" initial={false}>
-            {media.isPlaying ? (
-              <motion.div 
-                key="equalizer"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-              >
-                <AudioBars className="equalizer-bars" barClass="bar" />
-              </motion.div>
-            ) : (
-              <motion.div 
-                key="music-dot"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                className="music-dot" 
-              />
-            )}
-          </AnimatePresence>
-        </div>
-        
-        <button 
+        <AudioBars className="equalizer-bars" barClass="bar" count={5} playing={playing} />
+
+        <button
           className="media-pill-control"
           onClick={(e) => {
             e.stopPropagation();
-            console.log("[MEDIA CONTROL] play_pause session=" + media.id);
-            mediaPlayPause(media.id);
+            togglePlay();
           }}
           data-no-drag="true"
-          aria-label={media.isPlaying ? "Pause" : "Play"}
+          aria-label={playing ? "Pause" : "Play"}
         >
           <span className="media-pill-icon-wrapper">
-            <AnimatePresence mode="popLayout" initial={false}>
-              {media.isPlaying ? (
-                <motion.svg 
-                  key="pill-pause"
-                  initial={{ scale: 0.75, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.75, opacity: 0 }}
-                  transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
-                  viewBox="0 0 24 24" 
-                  fill="currentColor" 
-                  className="pill-control-icon"
-                >
-                  <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-                </motion.svg>
-              ) : (
-                <motion.svg 
-                  key="pill-play"
-                  initial={{ scale: 0.75, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.75, opacity: 0 }}
-                  transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
-                  viewBox="0 0 24 24" 
-                  fill="currentColor" 
-                  className="pill-control-icon"
-                >
-                  <path d="M8 5v14l11-7z"/>
-                </motion.svg>
-              )}
-            </AnimatePresence>
+            <PlayPauseIcon playing={playing} className="pill-control-icon" />
           </span>
         </button>
       </motion.div>

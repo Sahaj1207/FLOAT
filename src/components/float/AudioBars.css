@@ -1,5 +1,26 @@
-/* While live levels arrive, inline heights replace the fallback keyframes. */
-.audio-live > span {
+/* Waveform bars. Each container sets --bar-w (bar width) and its height; bars
+   grow from the middle between a dot (--level 0) and full height (1). */
+.audio-bars {
+  --bar-w: 2.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.audio-bars > span {
+  flex-shrink: 0;
+  width: var(--bar-w);
+  height: calc(var(--bar-w) + (100% - var(--bar-w)) * var(--level, 0));
+  border-radius: 999px;
+  background: var(--float-accent);
   animation: none !important;
-  transition: height 80ms linear;
+}
+
+/* Paused bars dim a little as they settle into dots. */
+.audio-bars > span {
+  transition: opacity 0.3s ease;
+}
+
+.audio-bars.audio-paused > span {
+  opacity: 0.55;
 }

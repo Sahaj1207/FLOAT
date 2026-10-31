@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MediaSession, MultiSessionState } from '../../platform/media';
-import { mediaPlayPause, mediaNext, mediaPrev, mediaSeek, selectMediaSession } from '../../platform';
+import { mediaNext, mediaPrev, mediaSeek, selectMediaSession } from '../../platform';
 import { mediaTimeline } from './mediaTimeline';
 import { useAlbumArt } from './useAlbumArt';
+import { PlayPauseIcon, usePlayPause } from './PlayPause';
 import './MediaWidgetSurface.css';
 
 interface Props {
@@ -18,6 +19,7 @@ interface Props {
 
 export const MediaWidgetSurface: React.FC<Props> = ({ media, multiState, onSelectSession, layout = "vertical", subline }) => {
   const albumArt = useAlbumArt(media);
+  const [playing, togglePlay] = usePlayPause(media);
   const [isSeekingState, setIsSeekingState] = useState(false);
 
   // DOM Refs for direct updates from central MediaTimelineManager
@@ -337,47 +339,18 @@ export const MediaWidgetSurface: React.FC<Props> = ({ media, multiState, onSelec
             >
               <svg viewBox="0 0 24 24" fill="currentColor" className="icon"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
             </button>
-            <button 
-              className="media-btn play-pause" 
-              onClick={(e) => { 
-                e.stopPropagation(); 
-                console.log("[MEDIA CONTROL] play_pause session=" + media.id);
-                mediaPlayPause(media.id); 
+            <button
+              className="media-btn play-pause"
+              onClick={(e) => {
+                e.stopPropagation();
+                togglePlay();
               }}
               disabled={!media.canPlayPause}
-              aria-label={media.isPlaying ? "Pause" : "Play"}
+              aria-label={playing ? "Pause" : "Play"}
               data-no-drag="true"
             >
               <span className="media-btn-icon-wrapper">
-                <AnimatePresence mode="popLayout" initial={false}>
-                  {media.isPlaying ? (
-                    <motion.svg 
-                      key="pause"
-                      initial={{ scale: 0.75, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      exit={{ scale: 0.75, opacity: 0 }}
-                      transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
-                      viewBox="0 0 24 24" 
-                      fill="currentColor" 
-                      className="icon"
-                    >
-                      <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-                    </motion.svg>
-                  ) : (
-                    <motion.svg 
-                      key="play"
-                      initial={{ scale: 0.75, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      exit={{ scale: 0.75, opacity: 0 }}
-                      transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
-                      viewBox="0 0 24 24" 
-                      fill="currentColor" 
-                      className="icon"
-                    >
-                      <path d="M8 5v14l11-7z"/>
-                    </motion.svg>
-                  )}
-                </AnimatePresence>
+                <PlayPauseIcon playing={playing} className="icon" />
               </span>
             </button>
             <button 

@@ -50,15 +50,7 @@ const MediaMinimal: React.FC<{ activity: Extract<Activity, { kind: "media" }> }>
   return (
     <>
       {art && <img className="split-bubble-art" src={art} alt="" draggable={false} />}
-      {playing ? (
-        <AudioBars className={`split-bubble-eq playing ${art ? "over-art" : ""}`} barClass="split-bubble-bar" />
-      ) : (
-        <span className={`split-bubble-eq ${art ? "over-art" : ""}`}>
-          <span />
-          <span />
-          <span />
-        </span>
-      )}
+      <AudioBars className={`split-bubble-eq ${art ? "over-art" : ""}`} barClass="split-bubble-bar" count={4} playing={playing} />
     </>
   );
 };

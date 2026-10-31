@@ -661,7 +661,7 @@ export async function subscribeToFileDrag(callback: (event: FileDragEvent) => vo
 }
 
 export interface AudioLevelsPayload {
-  /** Low, mid, high band levels, 0..1. */
+  /** Six band levels from bass to treble, 0..1. */
   levels: number[];
   silent: boolean;
 }

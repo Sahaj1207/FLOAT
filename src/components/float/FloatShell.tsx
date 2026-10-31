@@ -851,12 +851,19 @@ const FloatShell: React.FC = () => {
       if (settingsRef.current.openOnHover) {
         // Rest on the notch briefly and the whole panel opens. A passing
         // cursor, a drag, or a live banner/HUD never triggers it.
-        previewTimerRef.current = setTimeout(() => {
-          if (hoveringRef.current && !isDraggingRef.current && !hasTransientRef.current && !fileDragRef.current) {
-            openedByHoverRef.current = true;
-            transitionTo("expanded", "hover-open");
+        const delay = HOVER_OPEN_MS[settingsRef.current.hoverDelay];
+        const tryOpen = () => {
+          if (!hoveringRef.current || isDraggingRef.current || hasTransientRef.current || fileDragRef.current) return;
+          // Resting on a control (play/pause, dismiss) means "use it", not
+          // "open": wait until the pointer is back on the island itself.
+          if (shellRef.current?.querySelector("button:hover, [data-no-drag]:hover")) {
+            previewTimerRef.current = setTimeout(tryOpen, delay);
+            return;
           }
-        }, HOVER_OPEN_MS[settingsRef.current.hoverDelay]);
+          openedByHoverRef.current = true;
+          transitionTo("expanded", "hover-open");
+        };
+        previewTimerRef.current = setTimeout(tryOpen, delay);
       } else if (mode === "compact") {
         previewTimerRef.current = setTimeout(() => {
           if (!isDraggingRef.current) {
@@ -1110,7 +1117,11 @@ const FloatShell: React.FC = () => {
     }
     if (e.button !== 0) return;
     const target = e.target as HTMLElement;
-    if (target.closest("button, a, input, [data-no-drag]")) return;
+    if (target.closest("button, a, input, [data-no-drag]")) {
+      // Pressing a control is never the start of a hover-open.
+      clearHoverTimers();
+      return;
+    }
 
     clearHoverTimers();
     clearIdleToOrbTimer();

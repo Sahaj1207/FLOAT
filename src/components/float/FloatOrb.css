@@ -65,66 +65,6 @@
 }
 
 /* Playing state: 3 restrained equalizer bars */
-.orb-equalizer-bars {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 2px;
-  height: 12px;
-  width: 11px;
-}
-
-.orb-equalizer-bars .orb-bar {
-  width: 2px;
-  background-color: var(--float-accent);
-  border-radius: 1px;
-  will-change: height;
-}
-
-.orb-equalizer-bars .orb-bar-1 {
-  height: 35%;
-  animation: orb-eq-bar-1 0.85s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
-}
-
-.orb-equalizer-bars .orb-bar-2 {
-  height: 80%;
-  animation: orb-eq-bar-2 1.05s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
-  animation-delay: 0.15s;
-}
-
-.orb-equalizer-bars .orb-bar-3 {
-  height: 50%;
-  animation: orb-eq-bar-3 0.92s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
-  animation-delay: 0.3s;
-}
-
-@keyframes orb-eq-bar-1 {
-  0% {
-    height: calc(25% * var(--float-anim-eq-amp, 1));
-  }
-  100% {
-    height: calc(90% * var(--float-anim-eq-amp, 1));
-  }
-}
-
-@keyframes orb-eq-bar-2 {
-  0% {
-    height: calc(90% * var(--float-anim-eq-amp, 1));
-  }
-  100% {
-    height: calc(30% * var(--float-anim-eq-amp, 1));
-  }
-}
-
-@keyframes orb-eq-bar-3 {
-  0% {
-    height: calc(40% * var(--float-anim-eq-amp, 1));
-  }
-  100% {
-    height: calc(100% * var(--float-anim-eq-amp, 1));
-  }
-}
-
 /* Notification Presence Indicator */
 .orb-notification-slot {
   position: absolute;
@@ -334,12 +274,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .orb-equalizer-bars .orb-bar {
-    animation: none !important;
-  }
-  .orb-equalizer-bars .orb-bar-1 { height: 40% !important; }
-  .orb-equalizer-bars .orb-bar-2 { height: 75% !important; }
-  .orb-equalizer-bars .orb-bar-3 { height: 55% !important; }
   .orb-notification-dot {
     transition: none !important;
   }
@@ -373,4 +307,10 @@
   background: #a855f7;
   box-shadow: 0 0 6px rgba(168, 85, 247, 0.5);
   will-change: transform, opacity;
+}
+
+.orb-equalizer-bars {
+  --bar-w: 2px;
+  gap: 2px;
+  height: 14px;
 }
