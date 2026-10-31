@@ -15,10 +15,12 @@ mod brightness;
 mod calendar;
 mod clipboard;
 mod connectivity;
+mod downloads;
 mod focus;
 mod lyrics;
 mod media;
 mod notifications;
+mod search;
 mod shelf;
 mod sysmon;
 mod sysstats;
@@ -53,6 +55,13 @@ pub fn run() {
             autostart::get_autostart,
             autostart::set_autostart,
             tray::get_hotkey,
+            tray::get_search_hotkey,
+            search::search,
+            search::search_ready,
+            search::search_open,
+            search::search_icon,
+            downloads::set_download_alerts,
+            downloads::open_download,
             visualizer::set_visualizer_active,
             volume::get_volume,
             volume::change_volume,
@@ -100,6 +109,8 @@ pub fn run() {
         ])
         .setup(|app| {
             shelf::init(app);
+            search::init();
+            downloads::init(app);
             if let Err(e) = window::init(app) {
                 eprintln!("Failed to init window: {}", e);
             }

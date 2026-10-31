@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, CircleCheck, House, Inbox, SlidersHorizontal, Timer } from "lucide-react";
+import { Bell, CircleCheck, House, Inbox, Search, SlidersHorizontal, Timer } from "lucide-react";
 import { MediaSession, MultiSessionState } from "../../platform/media";
-import { NotificationItem } from "../../platform";
+import { getSearchHotkey, NotificationItem } from "../../platform";
 import { HomeView } from "./HomeView";
 import { TrayView } from "./TrayView";
 import { TasksView } from "./TasksView";
@@ -10,6 +10,7 @@ import { TimerView } from "./TimerView";
 import { FloatNotificationsView } from "./FloatNotificationsView";
 import { FloatSettingsView } from "./FloatSettingsView";
 import { ControlsView } from "./ControlCenter";
+import { SearchView } from "./SearchView";
 import { shouldShowWelcome, Welcome } from "./Welcome";
 import "./ui.css";
 import "./FloatSurface.css";
@@ -23,14 +24,24 @@ interface FloatSurfaceProps {
   onDismissNotification?: (id: number) => void;
   onClearAllNotifications?: () => void;
   focusActive?: boolean;
+  /** Switch to a tab from outside (the search hotkey); a new nonce re-applies it. */
+  request?: SurfaceRequest | null;
+  onTabChange?: (tab: SurfaceTab) => void;
+}
+
+export interface SurfaceRequest {
+  tab: SurfaceTab;
+  nonce: number;
+  query?: string;
 }
 
 /** "settings" has no icon of its own; it opens from Controls. */
-export type SurfaceTab = "home" | "tray" | "tasks" | "timer" | "notifications" | "controls" | "settings";
+export type SurfaceTab = "search" | "home" | "tray" | "tasks" | "timer" | "notifications" | "controls" | "settings";
 
 type BarTab = Exclude<SurfaceTab, "settings">;
 
 const TABS: Record<BarTab, { label: string; Icon: React.ComponentType<{ size?: number; strokeWidth?: number }> }> = {
+  search: { label: "Search", Icon: Search },
   home: { label: "Home", Icon: House },
   tray: { label: "Tray", Icon: Inbox },
   tasks: { label: "Tasks", Icon: CircleCheck },
@@ -41,7 +52,7 @@ const TABS: Record<BarTab, { label: string; Icon: React.ComponentType<{ size?: n
 
 // Things you do on the left; system things on the right.
 const LEFT_TABS: BarTab[] = ["home", "tray", "tasks", "timer"];
-const RIGHT_TABS: BarTab[] = ["notifications", "controls"];
+const RIGHT_TABS: BarTab[] = ["search", "notifications", "controls"];
 
 const tabTransition = { duration: 0.18, ease: [0.16, 1, 0.3, 1] as const };
 
@@ -54,9 +65,42 @@ export const FloatSurface: React.FC<FloatSurfaceProps> = ({
   onDismissNotification = () => {},
   onClearAllNotifications = () => {},
   focusActive = false,
+  request = null,
+  onTabChange,
 }) => {
-  const [activeTab, setActiveTab] = useState<SurfaceTab>("home");
-  const [welcome, setWelcome] = useState(shouldShowWelcome);
+  const [activeTab, setActiveTab] = useState<SurfaceTab>(request?.tab ?? "home");
+  const [searchSeed, setSearchSeed] = useState(request?.query ?? "");
+  const [welcome, setWelcome] = useState(() => shouldShowWelcome() && request?.tab !== "search");
+  const [searchHotkey, setSearchHotkey] = useState<string | null>(null);
+
+  useEffect(() => {
+    getSearchHotkey().then(setSearchHotkey);
+  }, []);
+
+  useEffect(() => {
+    if (!request) return;
+    setWelcome(false);
+    setSearchSeed(request.query ?? "");
+    setActiveTab(request.tab);
+  }, [request?.nonce]);
+
+  useEffect(() => {
+    onTabChange?.(welcome ? "home" : activeTab);
+  }, [activeTab, welcome]);
+
+  // Type-to-search: typing on any tab without a text field jumps to search.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (activeTab === "search" || welcome || e.ctrlKey || e.altKey || e.metaKey) return;
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.key.length !== 1 || e.key === " ") return;
+      e.preventDefault();
+      setSearchSeed(e.key);
+      setActiveTab("search");
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [activeTab, welcome]);
 
   const tabButton = (tab: BarTab) => {
     const { label, Icon } = TABS[tab];
@@ -84,6 +128,8 @@ export const FloatSurface: React.FC<FloatSurfaceProps> = ({
   const body = (() => {
     if (welcome) return <Welcome onDone={() => setWelcome(false)} />;
     switch (activeTab) {
+      case "search":
+        return <SearchView initialQuery={searchSeed} onDone={onCollapse} onExit={() => setActiveTab("home")} hotkey={searchHotkey} />;
       case "home":
         return (
           <HomeView

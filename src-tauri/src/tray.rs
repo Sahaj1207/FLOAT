@@ -6,6 +6,14 @@ use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent}
 use tauri::{AppHandle, Emitter, Manager, Wry};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 
+/// Registered after the open hotkey, so adding search never moves the
+/// shortcut people already use. Without one, typing in the open island
+/// still jumps to search.
+const SEARCH_HOTKEYS: [(Modifiers, Code, &str); 2] = [
+    (Modifiers::ALT, Code::Space, "Alt+Space"),
+    (Modifiers::ALT.union(Modifiers::SHIFT), Code::Space, "Alt+Shift+Space"),
+];
+
 /// Tried in order; the first combination no other app owns wins.
 const HOTKEYS: [(Modifiers, Code, &str); 3] = [
     (Modifiers::CONTROL.union(Modifiers::ALT), Code::Space, "Ctrl+Alt+Space"),
@@ -13,8 +21,11 @@ const HOTKEYS: [(Modifiers, Code, &str); 3] = [
     (Modifiers::CONTROL.union(Modifiers::ALT), Code::KeyI, "Ctrl+Alt+I"),
 ];
 
-/// The hotkey that was actually registered, if any.
-pub struct ActiveHotkey(Option<&'static str>);
+/// The hotkeys that were actually registered, if any.
+pub struct ActiveHotkeys {
+    open: Option<(Shortcut, &'static str)>,
+    search: Option<(Shortcut, &'static str)>,
+}
 
 /// Sent to the frontend as `island-command`.
 #[derive(Clone, Copy, Serialize)]
@@ -22,6 +33,8 @@ pub struct ActiveHotkey(Option<&'static str>);
 pub enum IslandCommand {
     Open,
     Toggle,
+    /// Open straight into search (or close it if it's showing).
+    Search,
 }
 
 struct TrayItems {
@@ -48,25 +61,35 @@ pub fn sync_autostart(app: &AppHandle, enabled: bool) {
     }
 }
 
-fn register_hotkey(app: &tauri::App) -> Option<&'static str> {
-    for (mods, code, label) in HOTKEYS {
-        match app.global_shortcut().register(Shortcut::new(Some(mods), code)) {
-            Ok(()) => return Some(label),
+fn register_first(app: &tauri::App, choices: &[(Modifiers, Code, &'static str)]) -> Option<(Shortcut, &'static str)> {
+    for &(mods, code, label) in choices {
+        let shortcut = Shortcut::new(Some(mods), code);
+        match app.global_shortcut().register(shortcut) {
+            Ok(()) => return Some((shortcut, label)),
             Err(e) => dlog!("[TRAY] {} unavailable: {}", label, e),
         }
     }
-    eprintln!("[TRAY] No global hotkey could be registered");
     None
 }
 
 #[tauri::command]
-pub fn get_hotkey(state: tauri::State<'_, ActiveHotkey>) -> Option<String> {
-    state.0.map(str::to_string)
+pub fn get_hotkey(state: tauri::State<'_, ActiveHotkeys>) -> Option<String> {
+    state.open.map(|(_, label)| label.to_string())
+}
+
+#[tauri::command]
+pub fn get_search_hotkey(state: tauri::State<'_, ActiveHotkeys>) -> Option<String> {
+    state.search.map(|(_, label)| label.to_string())
 }
 
 pub fn init(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
-    let hotkey = register_hotkey(app);
-    app.manage(ActiveHotkey(hotkey));
+    let open_key = register_first(app, &HOTKEYS);
+    let search = register_first(app, &SEARCH_HOTKEYS);
+    if open_key.is_none() {
+        eprintln!("[TRAY] No global hotkey could be registered");
+    }
+    let hotkey = open_key.map(|(_, label)| label);
+    app.manage(ActiveHotkeys { open: open_key, search });
 
     let visible = CheckMenuItem::with_id(app, "visible", "Show Island", true, true, None::<&str>)?;
     let open = MenuItem::with_id(app, "open", "Open Island", true, hotkey)?;
@@ -142,10 +165,15 @@ pub fn init(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
 
 pub fn global_shortcut_plugin() -> tauri::plugin::TauriPlugin<Wry> {
     tauri_plugin_global_shortcut::Builder::new()
-        .with_handler(|app, _shortcut, event| {
-            if event.state() == ShortcutState::Pressed {
-                command_island(app, IslandCommand::Toggle);
+        .with_handler(|app, shortcut, event| {
+            if event.state() != ShortcutState::Pressed {
+                return;
             }
+            let is_search = app
+                .try_state::<ActiveHotkeys>()
+                .and_then(|keys| keys.search)
+                .map_or(false, |(key, _)| key == *shortcut);
+            command_island(app, if is_search { IslandCommand::Search } else { IslandCommand::Toggle });
         })
         .build()
 }

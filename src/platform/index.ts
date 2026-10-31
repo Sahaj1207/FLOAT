@@ -103,7 +103,7 @@ export async function subscribeToWindowFocus(
   }
 }
 
-export type IslandCommand = "open" | "toggle";
+export type IslandCommand = "open" | "toggle" | "search";
 
 /** Commands from the tray icon, global hotkey, or a second app launch. */
 export async function subscribeToIslandCommand(
@@ -112,6 +112,100 @@ export async function subscribeToIslandCommand(
   return await listen<IslandCommand>("island-command", (event) => {
     callback(event.payload);
   });
+}
+
+/** The global hotkey that opens search, or null if none could be registered. */
+export async function getSearchHotkey(): Promise<string | null> {
+  try {
+    return await invoke<string | null>("get_search_hotkey");
+  } catch {
+    return null;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Search                                                             */
+/* ------------------------------------------------------------------ */
+
+export type SearchKind = "app" | "setting" | "folder" | "file";
+
+export interface SearchResult {
+  kind: SearchKind;
+  name: string;
+  /** "Application", "Settings", or the containing folder. */
+  detail: string;
+  /** AUMID, settings URI or path; also the result's identity. */
+  target: string;
+}
+
+/** Local search over apps, Settings pages and the user's folders. */
+export async function searchEverything(
+  query: string,
+  limit: number,
+  boosts: Record<string, number>
+): Promise<SearchResult[]> {
+  try {
+    return await invoke<SearchResult[]>("search", { query, limit, boosts });
+  } catch {
+    return [];
+  }
+}
+
+/** False until the first index build has finished. */
+export async function isSearchReady(): Promise<boolean> {
+  try {
+    return await invoke<boolean>("search_ready");
+  } catch {
+    return true;
+  }
+}
+
+/** Launch an app, open a setting or file, or reveal a file in Explorer. */
+export async function openSearchResult(target: string, reveal = false): Promise<void> {
+  try {
+    await invoke("search_open", { target, reveal });
+  } catch (e) {
+    console.error("openSearchResult failed:", e);
+  }
+}
+
+/** Base64 PNG shell icon for a file or folder result, or null. */
+export async function getSearchIcon(path: string): Promise<string | null> {
+  try {
+    return await invoke<string | null>("search_icon", { path });
+  } catch {
+    return null;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Downloads (and Nearby Share, which saves into Downloads)           */
+/* ------------------------------------------------------------------ */
+
+export interface DownloadPayload {
+  name: string;
+  path: string;
+  size: number;
+}
+
+export async function subscribeToDownloads(callback: (payload: DownloadPayload) => void): Promise<UnlistenFn> {
+  return await listen<DownloadPayload>("download-finished", (event) => callback(event.payload));
+}
+
+export async function setDownloadAlerts(enabled: boolean): Promise<void> {
+  try {
+    await invoke("set_download_alerts", { enabled });
+  } catch {
+    // Not in a Tauri context
+  }
+}
+
+export async function openDownload(path: string, reveal = false): Promise<void> {
+  try {
+    await invoke("open_download", { path, reveal });
+  } catch (e) {
+    console.error("openDownload failed:", e);
+  }
 }
 
 /** The global hotkey that opens the island, or null if none could be registered. */
