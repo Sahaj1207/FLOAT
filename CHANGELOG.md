@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.1.0
 
 Inspired by the Dynamic Island on the new MacBook Pro.
 
@@ -8,6 +8,7 @@ Inspired by the Dynamic Island on the new MacBook Pro.
 - **Island shape.** The docked island is now a black pill a few pixels below the top edge, like the new MacBook Pro. The fused notch is still available in Settings › Island Shape.
 - **Downloads and Nearby Share.** Finished downloads and received files show in the island with Open and Show in folder.
 - **Calls.** Incoming Phone Link calls show as a ringing activity until the call ends.
+- **Updates from inside FLOAT.** Settings › Updates › Check for updates. FLOAT only asks GitHub when you press it, downloads the right installer for your copy, checks it against GitHub's published checksum and opens it.
 - **Mouse & Touch settings.** Hover delay, scroll for volume, sideways skip, middle-click play/pause. On touchscreens: tap or flick down to open, flick up to close, hold then drag to move, with larger controls.
 
 ## 2.0.0

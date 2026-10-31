@@ -15,6 +15,7 @@ import {
 } from "../../services/settings";
 import { getAutostart, getHotkey, getSearchHotkey, setAutostart, subscribeToAutostart } from "../../platform";
 import { ChevronLeft, MousePointer2, Pill } from "lucide-react";
+import { UpdatesCard } from "./UpdatesCard";
 import "./FloatSettingsView.css";
 
 interface FloatSettingsViewProps {
@@ -902,6 +903,7 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = ({ onClose })
             </button>
           </div>
         </div>
+        <UpdatesCard />
       </div>
 
       <div className="float-settings-footer">

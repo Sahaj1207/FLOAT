@@ -4,7 +4,7 @@
 
 There are two installers. Most people should use the first.
 
-**1. Setup program (recommended): `FLOAT_2.0.0_x64-setup.exe`**
+**1. Setup program (recommended): `FLOAT_<version>_x64-setup.exe`**
 
 Download it and run it. Windows SmartScreen may say *"Windows protected your PC"* because FLOAT isn't signed by a paid publisher certificate: choose **More info**, then **Run anyway**. That's the only extra step.
 
@@ -22,5 +22,7 @@ Only trust a certificate from a source you trust; this one only vouches for FLOA
 **Which one?** Both run the same FLOAT. The MSIX gets notifications instantly; the setup program checks for new ones about every second and a half. Everything else is identical.
 
 **Requirements:** Windows 10 (1809) or Windows 11. The glass effect needs Windows 11; Windows 10 shows a solid tint instead.
+
+**Updating:** in FLOAT, open Controls › Settings › Updates and choose **Check for updates**. FLOAT only contacts GitHub when you press it. If a newer version exists, **Install** downloads the same kind of installer you used, checks it against the checksum GitHub publishes, and opens it. Your settings and tasks are kept.
 
 **Uninstalling:** Settings › Apps › Installed apps › FLOAT › Uninstall.

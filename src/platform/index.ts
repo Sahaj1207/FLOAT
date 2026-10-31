@@ -208,6 +208,34 @@ export async function openDownload(path: string, reveal = false): Promise<void> 
   }
 }
 
+/* ------------------------------------------------------------------ */
+/*  Updates (manual: only when the user asks)                          */
+/* ------------------------------------------------------------------ */
+
+export interface UpdateInfo {
+  current: string;
+  latest: string;
+  available: boolean;
+  notes: string;
+  page: string;
+  channel: "msix" | "setup";
+}
+
+export async function checkForUpdate(): Promise<UpdateInfo> {
+  return await invoke<UpdateInfo>("check_for_update");
+}
+
+/** Download, verify and open the latest installer. Rejects with a readable message. */
+export async function installUpdate(): Promise<void> {
+  await invoke("install_update");
+}
+
+export async function subscribeToUpdateProgress(
+  callback: (progress: { received: number; total: number }) => void
+): Promise<UnlistenFn> {
+  return await listen<{ received: number; total: number }>("update-progress", (event) => callback(event.payload));
+}
+
 /** The global hotkey that opens the island, or null if none could be registered. */
 export async function getHotkey(): Promise<string | null> {
   try {

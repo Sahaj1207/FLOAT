@@ -1176,7 +1176,7 @@ dependencies = [
 
 [[package]]
 name = "float"
-version = "2.0.0"
+version = "2.1.0"
 dependencies = [
  "base64 0.23.1",
  "chrono",
@@ -1185,6 +1185,7 @@ dependencies = [
  "rrule",
  "serde",
  "serde_json",
+ "sha2",
  "sysinfo",
  "tauri",
  "tauri-build",

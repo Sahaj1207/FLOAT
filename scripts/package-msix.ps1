@@ -183,9 +183,11 @@ if ($NoInstall) {
     Write-Host "[7/7] Skipping install (-NoInstall)." -ForegroundColor Cyan
 } else {
     Write-Host "[7/7] Installing packaged application..." -ForegroundColor Cyan
+    # A newer version installs over the old one and keeps its data (settings,
+    # tasks). Only a same-or-older build has to replace it, which wipes that.
     $existing = Get-AppxPackage | Where-Object { $_.Name -like "*FLOAT*" }
-    if ($existing) {
-        Write-Host "Removing previously installed package..."
+    if ($existing -and [version]$existing.Version -ge [version]$msixVersion) {
+        Write-Host "Removing installed $($existing.Version) (not older than $msixVersion; its data is reset)..."
         $existing | Remove-AppxPackage
     }
     Add-AppxPackage -Path "$msixPath" -ForceApplicationShutdown

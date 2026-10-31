@@ -4,15 +4,16 @@ A Dynamic Island for Windows.
 
 FLOAT is a lightweight MacBook-style notch for Windows. It hangs from the top of your screen and brings media controls, a live audio visualizer, Windows notifications, a volume HUD and quick settings into one place.
 
-## FLOAT v2.0.0
+## FLOAT v2.1.0
 
-A ground-up redesign: a MacBook-style notch with real liquid glass, a calm focused panel, and a set of everyday tools. See [CHANGELOG.md](CHANGELOG.md) for everything that changed.
+Inspired by the Dynamic Island on the new MacBook Pro: search apps, files and settings right from the island, a detached pill shape, download and call activities, mouse and touch controls, and updates from inside the app. See [CHANGELOG.md](CHANGELOG.md) for everything that changed.
 
 ---
 
 ## ✨ Features
 
-- **MacBook-Style Notch**: Solid black, flush with the top edge, with concave corners that join it to the bezel. It grows downward to fit whatever is live: a quiet notch when idle, a slim strip for music, a taller drop-down for notifications.
+- **Search in the Island**: Find apps, Settings pages, files and folders, and get instant sums and unit conversions. Open it with the search icon, Alt+Space (when free), or just start typing in the open panel. Everything is searched locally.
+- **Dynamic Island or Notch**: By default a black pill just below the top edge, like the new MacBook Pro; or, in Settings, a notch flush with the top edge. It grows to fit whatever is live: music, notifications, downloads, calls.
 - **Optional Orb Mode**: Prefer a floating circle? Set Idle Behavior to Orb and the island shrinks to a 48×48 orb after ~3 seconds untouched.
 - **Interactive Awakening**: Hovering over or interacting with the Orb smoothly restores the active compact pill.
 - **Spotify & Windows GSMTC Media Integration**: Universal support for Spotify, Apple Music, YouTube, and browser playback via Windows Global System Media Transport Controls.
@@ -140,7 +141,7 @@ Pill / Orb ──( Click )──► Expanded Surface [ Media | Notifications | S
 
 Download from the [Releases](https://github.com/Sahaj1207/FLOAT/releases/latest) page:
 
-- **Setup program (recommended)**: run `FLOAT_2.0.0_x64-setup.exe`. If Windows SmartScreen appears, choose **More info**, then **Run anyway**.
+- **Setup program (recommended)**: run `FLOAT_<version>_x64-setup.exe`. If Windows SmartScreen appears, choose **More info**, then **Run anyway**.
 - **MSIX package**: `FLOAT.msix` needs FLOAT's certificate trusted once before it will install on a new PC.
 
 Step-by-step instructions for both are in [docs/INSTALL.md](docs/INSTALL.md).
@@ -257,7 +258,7 @@ FLOAT/
 
 ## 📦 Project Status
 
-**FLOAT v2.0.0** is the latest release. It replaces the 1.x pill and orb with the notch design and adds the panel tools (Tray, Tasks, Timer, Controls). Install the MSIX for the full experience: launch at startup, instant notifications and Wi-Fi/Bluetooth toggles need the packaged app.
+**FLOAT v2.1.0** is the latest release. It adds search, the island pill shape, download and call activities, mouse and touch settings, and in-app updates (Settings › Updates). Install the MSIX for the full experience: launch at startup, instant notifications and Wi-Fi/Bluetooth toggles need the packaged app.
 
 Glass needs Windows 11; on Windows 10 the island falls back to a solid tint.
 

@@ -25,6 +25,7 @@ mod shelf;
 mod sysmon;
 mod sysstats;
 mod tray;
+mod updater;
 mod visualizer;
 mod volume;
 mod weather;
@@ -62,6 +63,8 @@ pub fn run() {
             search::search_icon,
             downloads::set_download_alerts,
             downloads::open_download,
+            updater::check_for_update,
+            updater::install_update,
             visualizer::set_visualizer_active,
             volume::get_volume,
             volume::change_volume,
