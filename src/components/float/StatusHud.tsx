@@ -1,9 +1,11 @@
 import React from "react";
-import { BatteryActivity, StatusActivity } from "../../activities/types";
+import { BatteryActivity, DownloadActivity, StatusActivity } from "../../activities/types";
 import { TimerIcon } from "./Timer";
 import { TrayIcon } from "./Shelf";
 import { formatTimer } from "../../activities/timerStore";
-import { Bluetooth, Moon, Sun, Zap } from "lucide-react";
+import { ArrowDownToLine, Bluetooth, FolderOpen, Moon, Phone, Share2, Sun, Zap } from "lucide-react";
+import { openDownload } from "../../platform";
+import { AppIcon } from "./AppIcon";
 import "./StatusHud.css";
 
 /** Brief system-status live activities: charging, low battery, camera/mic, Focus. */
@@ -55,6 +57,23 @@ export const StatusHud: React.FC<{ activity: StatusActivity }> = ({ activity }) 
           <span className="status-hud-detail">{activity.device}</span>
         </div>
       );
+    case "download":
+      return <DownloadHud activity={activity} />;
+    case "call":
+      return (
+        <div className="status-hud">
+          {activity.appId ? (
+            <AppIcon appId={activity.appId} appName={activity.appName} size={22} />
+          ) : (
+            <Phone className="status-hud-icon call" fill="currentColor" strokeWidth={0} />
+          )}
+          <span className="status-hud-label status-hud-grow">{activity.caller}</span>
+          <span className="status-hud-call-badge">
+            <Phone size={11} fill="currentColor" strokeWidth={0} />
+            Incoming call
+          </span>
+        </div>
+      );
     case "focus":
       return (
         <div className="status-hud">
@@ -64,6 +83,43 @@ export const StatusHud: React.FC<{ activity: StatusActivity }> = ({ activity }) 
         </div>
       );
   }
+};
+
+const DownloadHud: React.FC<{ activity: DownloadActivity }> = ({ activity }) => {
+  const Icon = activity.nearby ? Share2 : ArrowDownToLine;
+  return (
+    <div className="status-hud">
+      <Icon className="status-hud-icon download" strokeWidth={2.2} />
+      <span className="status-hud-label">{activity.nearby ? "Received" : "Downloaded"}</span>
+      <span className="status-hud-detail status-hud-file" title={activity.name}>
+        {activity.name}
+      </span>
+      <button
+        type="button"
+        className="status-hud-btn"
+        onClick={(e) => {
+          e.stopPropagation();
+          openDownload(activity.path, true);
+        }}
+        data-no-drag="true"
+        aria-label="Show in folder"
+        title="Show in folder"
+      >
+        <FolderOpen size={13} strokeWidth={2.2} />
+      </button>
+      <button
+        type="button"
+        className="status-hud-btn primary"
+        onClick={(e) => {
+          e.stopPropagation();
+          openDownload(activity.path);
+        }}
+        data-no-drag="true"
+      >
+        Open
+      </button>
+    </div>
+  );
 };
 
 export const SunIcon: React.FC<{ className?: string }> = ({ className = "" }) => (

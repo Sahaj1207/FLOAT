@@ -16,7 +16,10 @@ export const ActivityPriority = {
   bluetooth: 108,
   shelf: 112,
   battery: 110,
+  download: 113,
   timerDone: 115,
+  // A ringing phone beats everything but your own adjustments.
+  call: 118,
   // User-initiated feedback wins over everything else.
   volume: 120,
   brightness: 120,
@@ -89,6 +92,26 @@ export interface ShelfActivity {
   count: number;
 }
 
+export interface DownloadActivity {
+  kind: "download";
+  id: string;
+  priority: number;
+  name: string;
+  path: string;
+  /** Arrived with Nearby Share rather than a browser download. */
+  nearby: boolean;
+}
+
+export interface CallActivity {
+  kind: "call";
+  id: string;
+  priority: number;
+  caller: string;
+  /** App showing the call (Phone Link), for its icon. */
+  appId?: string;
+  appName?: string;
+}
+
 export interface FocusActivity {
   kind: "focus";
   id: string;
@@ -121,12 +144,24 @@ export type Activity =
   | FocusActivity
   | BluetoothActivity
   | ShelfActivity
+  | DownloadActivity
+  | CallActivity
   | BrightnessActivity;
 
 /** Short system-status activities rendered by StatusHud. */
-export type StatusActivity = BatteryActivity | PrivacyActivity | FocusActivity | TimerDoneActivity | BluetoothActivity | ShelfActivity | BrightnessActivity;
+export type StatusActivity =
+  | BatteryActivity
+  | PrivacyActivity
+  | FocusActivity
+  | TimerDoneActivity
+  | BluetoothActivity
+  | ShelfActivity
+  | DownloadActivity
+  | CallActivity
+  | BrightnessActivity;
 
-export const isStatusActivity = (a: Activity | null): a is StatusActivity =>
-  a !== null && (a.kind === "battery" || a.kind === "privacy" || a.kind === "focus" || a.kind === "timerDone" || a.kind === "bluetooth" || a.kind === "shelf" || a.kind === "brightness");
+const STATUS_KINDS = new Set<string>(["battery", "privacy", "focus", "timerDone", "bluetooth", "shelf", "download", "call", "brightness"]);
+
+export const isStatusActivity = (a: Activity | null): a is StatusActivity => a !== null && STATUS_KINDS.has(a.kind);
 
 export type ActivityKind = Activity["kind"];
