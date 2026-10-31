@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+Inspired by the Dynamic Island on the new MacBook Pro.
+
+- **Search in the island.** Find apps, Settings pages, files and folders, and get instant sums and unit conversions ("15% of 80", "5 km to mi"). Open it with the search icon, Alt+Space (when no other app owns it), or just start typing in the open panel. Everything is searched locally; it learns what you open most.
+- **Island shape.** The docked island is now a black pill a few pixels below the top edge, like the new MacBook Pro. The fused notch is still available in Settings › Island Shape.
+- **Downloads and Nearby Share.** Finished downloads and received files show in the island with Open and Show in folder.
+- **Calls.** Incoming Phone Link calls show as a ringing activity until the call ends.
+- **Mouse & Touch settings.** Hover delay, scroll for volume, sideways skip, middle-click play/pause. On touchscreens: tap or flick down to open, flick up to close, hold then drag to move, with larger controls.
+
 ## 2.0.0
 
 A ground-up redesign. FLOAT is now a MacBook-style notch for Windows.
