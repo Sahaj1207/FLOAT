@@ -825,6 +825,13 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = ({ onClose })
 
 
           <SwitchRow
+            title="Music Waves"
+            desc="Glowing waves behind the player that move with the music"
+            checked={settings.musicWaves}
+            onToggle={() => update({ musicWaves: !settings.musicWaves })}
+          />
+
+          <SwitchRow
             title="Downloads &amp; Nearby Share"
             desc="Show files as they finish downloading or arrive with Nearby Share, with Open and Show in folder"
             checked={settings.downloadAlerts}

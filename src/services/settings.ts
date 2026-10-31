@@ -35,6 +35,7 @@ export interface FloatSettings {
   scrollSkip: boolean;           // sideways scrolling skips tracks, default true
   middleClickPlayPause: boolean; // middle-click on the island plays / pauses, default true
   downloadAlerts: boolean;       // show finished downloads and Nearby Share files, default true
+  musicWaves: boolean;           // glowing waves behind the player that move with the music, default true
 }
 
 export const PILL_LENGTH_MIN = 220;
@@ -65,6 +66,7 @@ export const DEFAULT_FLOAT_SETTINGS: FloatSettings = {
   scrollSkip: true,
   middleClickPlayPause: true,
   downloadAlerts: true,
+  musicWaves: true,
 };
 
 const SETTINGS_STORAGE_KEY = "float_settings_v1";
@@ -183,6 +185,7 @@ export function loadSettings(): FloatSettings {
       scrollSkip: bool(parsed.scrollSkip, DEFAULT_FLOAT_SETTINGS.scrollSkip),
       middleClickPlayPause: bool(parsed.middleClickPlayPause, DEFAULT_FLOAT_SETTINGS.middleClickPlayPause),
       downloadAlerts: bool(parsed.downloadAlerts, DEFAULT_FLOAT_SETTINGS.downloadAlerts),
+      musicWaves: bool(parsed.musicWaves, DEFAULT_FLOAT_SETTINGS.musicWaves),
       weatherEnabled: bool(parsed.weatherEnabled, DEFAULT_FLOAT_SETTINGS.weatherEnabled),
       weatherCity: text(parsed.weatherCity, 80),
       weatherFahrenheit: bool(parsed.weatherFahrenheit, DEFAULT_FLOAT_SETTINGS.weatherFahrenheit),

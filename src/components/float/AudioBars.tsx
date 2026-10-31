@@ -25,6 +25,18 @@ function release(listener: Listener) {
   }
 }
 
+/** Live levels for any visual (also starts and stops the native capture). */
+export function useLevelsFeed(active: boolean, listener: Listener) {
+  const ref = useRef(listener);
+  ref.current = listener;
+  useEffect(() => {
+    if (!active) return;
+    const forward: Listener = (payload) => ref.current(payload);
+    retain(forward);
+    return () => release(forward);
+  }, [active]);
+}
+
 // Keep a gentle idle wave while the output is silent (e.g. muted), so a
 // playing track never looks frozen.
 const SILENT_FALLBACK_MS = 1200;

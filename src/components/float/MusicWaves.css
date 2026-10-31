@@ -1,0 +1,30 @@
+/* Behind the Home content, along the panel's bottom edge. The blur turns
+   the layered waves into a soft glow; the mask fades them out at the sides
+   and towards the top so they never compete with the text. */
+.music-waves {
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  bottom: -14px;
+  width: 120%;
+  height: 120px;
+  pointer-events: none;
+  filter: blur(8px) saturate(1.4);
+  opacity: 0.95;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 45%), linear-gradient(to right, transparent, #000 18%, #000 82%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 45%), linear-gradient(to right, transparent, #000 18%, #000 82%, transparent);
+  mask-composite: intersect;
+  transition: opacity 0.6s ease;
+  z-index: 0;
+}
+
+.music-waves:not(.playing) {
+  opacity: 0.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .music-waves {
+    display: none;
+  }
+}

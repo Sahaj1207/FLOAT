@@ -4,6 +4,8 @@ import { MediaWidgetSurface } from "./MediaWidgetSurface";
 import { CurrentLyric } from "./Lyrics";
 import { useNextEvent, upcomingLabel, WeatherChip } from "./Widgets";
 import { useTasks } from "../../activities/tasksStore";
+import { loadSettings, subscribeToSettings } from "../../services/settings";
+import { MusicWaves } from "./MusicWaves";
 import "./HomeView.css";
 
 interface HomeViewProps {
@@ -31,9 +33,12 @@ const timeOf = (d: Date) => d.toLocaleTimeString(undefined, { hour: "numeric", m
 export const HomeView: React.FC<HomeViewProps> = ({ media, multiState, onSelectSession, onOpenTasks }) => {
   const now = useNow(10_000);
   const playing = !!media?.hasMedia;
+  const [waves, setWaves] = useState(() => loadSettings().musicWaves);
+  useEffect(() => subscribeToSettings((s) => setWaves(s.musicWaves)), []);
 
   return (
     <div className="home">
+      {playing && waves && <MusicWaves playing={!!media?.isPlaying} accentKey={`${media?.id}:${media?.title}`} />}
       <div className="home-main">
         {playing ? (
           <MediaWidgetSurface
