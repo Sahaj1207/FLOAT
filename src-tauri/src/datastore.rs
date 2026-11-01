@@ -66,16 +66,17 @@ fn today() -> String {
 fn daily_backup(app: &AppHandle) {
     let (Ok(data), Some(root)) = (data_dir(app), backups_dir(app)) else { return };
     let day = root.join(today());
-    if day.exists() {
+    // Nothing saved yet (first run), or today's copy already made.
+    let sources: Vec<PathBuf> = KEYS.iter().map(|k| data.join(format!("{k}.json"))).filter(|p| p.exists()).collect();
+    if sources.is_empty() || (day.exists() && fs::read_dir(&day).map_or(false, |mut d| d.next().is_some())) {
         return;
     }
     if fs::create_dir_all(&day).is_err() {
         return;
     }
-    for key in KEYS {
-        let src = data.join(format!("{key}.json"));
-        if src.exists() {
-            let _ = fs::copy(&src, day.join(format!("{key}.json")));
+    for src in &sources {
+        if let Some(name) = src.file_name() {
+            let _ = fs::copy(src, day.join(name));
         }
     }
     let Ok(entries) = fs::read_dir(&root) else { return };
