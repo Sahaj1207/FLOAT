@@ -72,6 +72,8 @@ export const FloatSurface: React.FC<FloatSurfaceProps> = ({
   const [searchSeed, setSearchSeed] = useState(request?.query ?? "");
   const [welcome, setWelcome] = useState(() => shouldShowWelcome() && request?.tab !== "search");
   const [searchHotkey, setSearchHotkey] = useState<string | null>(null);
+  // Search opening a task or note in its tab.
+  const [tasksOpen, setTasksOpen] = useState<{ mode: "tasks" | "notes"; noteId?: string } | null>(null);
 
   useEffect(() => {
     getSearchHotkey().then(setSearchHotkey);
@@ -113,6 +115,7 @@ export const FloatSurface: React.FC<FloatSurfaceProps> = ({
         className={`float-surface-nav-btn ${active ? "active" : ""}`}
         onClick={(e) => {
           e.stopPropagation();
+          setTasksOpen(null);
           setActiveTab(tab);
         }}
         data-no-drag="true"
@@ -129,7 +132,18 @@ export const FloatSurface: React.FC<FloatSurfaceProps> = ({
     if (welcome) return <Welcome onDone={() => setWelcome(false)} />;
     switch (activeTab) {
       case "search":
-        return <SearchView initialQuery={searchSeed} onDone={onCollapse} onExit={() => setActiveTab("home")} hotkey={searchHotkey} />;
+        return (
+          <SearchView
+            initialQuery={searchSeed}
+            onDone={onCollapse}
+            onExit={() => setActiveTab("home")}
+            onNavigate={(mode, noteId) => {
+              setTasksOpen({ mode, noteId });
+              setActiveTab("tasks");
+            }}
+            hotkey={searchHotkey}
+          />
+        );
       case "home":
         return (
           <HomeView
@@ -142,7 +156,7 @@ export const FloatSurface: React.FC<FloatSurfaceProps> = ({
       case "tray":
         return <TrayView />;
       case "tasks":
-        return <TasksView />;
+        return <TasksView mode={tasksOpen?.mode} noteId={tasksOpen?.noteId ?? null} />;
       case "timer":
         return <TimerView />;
       case "notifications":

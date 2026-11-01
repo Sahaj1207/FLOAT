@@ -121,6 +121,30 @@
   background: var(--focus);
 }
 
+.search-icon-tile.command {
+  background: #48484a;
+}
+
+.search-icon-tile.danger {
+  background: var(--red);
+}
+
+.search-icon-tile.clip {
+  background: #5e5ce6;
+}
+
+.search-icon-tile.tray {
+  background: #0a84ff;
+}
+
+.search-icon-tile.task {
+  background: var(--green);
+}
+
+.search-icon-tile.note {
+  background: #c9a227;
+}
+
 .search-icon-tile.web {
   background: var(--tint);
 }

@@ -515,6 +515,13 @@ export interface BluetoothDeviceInfo {
   connected: boolean;
 }
 
+export type SystemCommand = "lock" | "sleep" | "restart" | "shutdown" | "signout" | "dark" | "light" | "recyclebin" | "mic";
+
+/** Run one of the fixed system commands search offers. */
+export async function runSystemCommand(name: SystemCommand): Promise<void> {
+  await invoke("system_command", { name });
+}
+
 /** Battery % a Bluetooth headset or phone reports, or null. */
 export async function getBluetoothBattery(name: string): Promise<number | null> {
   try {

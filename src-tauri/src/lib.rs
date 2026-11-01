@@ -25,6 +25,7 @@ mod notifications;
 mod search;
 mod shelf;
 mod sysmon;
+mod syscmd;
 mod sysstats;
 mod textgrab;
 mod tray;
@@ -70,6 +71,7 @@ pub fn run() {
             micmute::toggle_mic_mute,
             micmute::get_mic_muted,
             btbattery::bluetooth_battery,
+            syscmd::system_command,
             textgrab::textgrab_start,
             textgrab::textgrab_image,
             textgrab::textgrab_recognize,
