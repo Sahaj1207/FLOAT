@@ -24,6 +24,7 @@ mod search;
 mod shelf;
 mod sysmon;
 mod sysstats;
+mod textgrab;
 mod tray;
 mod updater;
 mod visualizer;
@@ -40,8 +41,13 @@ fn log_from_js(msg: String) {
 pub fn run() {
     tauri::Builder::default()
         // Must be registered first: a second launch just opens the island.
-        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
-            tray::command_island(app, tray::IslandCommand::Open);
+        .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+            // `float.exe --copy-text` starts Copy Text (for custom shortcuts).
+            if args.iter().any(|a| a == "--copy-text") {
+                textgrab::start(app);
+            } else {
+                tray::command_island(app, tray::IslandCommand::Open);
+            }
         }))
         .plugin(tauri_plugin_opener::init())
         .plugin(tray::global_shortcut_plugin())
@@ -57,6 +63,11 @@ pub fn run() {
             autostart::set_autostart,
             tray::get_hotkey,
             tray::get_search_hotkey,
+            tray::get_text_hotkey,
+            textgrab::textgrab_start,
+            textgrab::textgrab_image,
+            textgrab::textgrab_recognize,
+            textgrab::textgrab_cancel,
             search::search,
             search::search_ready,
             search::search_open,

@@ -14,6 +14,12 @@ const SEARCH_HOTKEYS: [(Modifiers, Code, &str); 2] = [
     (Modifiers::ALT.union(Modifiers::SHIFT), Code::Space, "Alt+Shift+Space"),
 ];
 
+/// Copy Text from Anything.
+const TEXT_HOTKEYS: [(Modifiers, Code, &str); 2] = [
+    (Modifiers::CONTROL.union(Modifiers::ALT), Code::KeyT, "Ctrl+Alt+T"),
+    (Modifiers::ALT.union(Modifiers::SHIFT), Code::KeyT, "Alt+Shift+T"),
+];
+
 /// Tried in order; the first combination no other app owns wins.
 const HOTKEYS: [(Modifiers, Code, &str); 3] = [
     (Modifiers::CONTROL.union(Modifiers::ALT), Code::Space, "Ctrl+Alt+Space"),
@@ -25,6 +31,7 @@ const HOTKEYS: [(Modifiers, Code, &str); 3] = [
 pub struct ActiveHotkeys {
     open: Option<(Shortcut, &'static str)>,
     search: Option<(Shortcut, &'static str)>,
+    text: Option<(Shortcut, &'static str)>,
 }
 
 /// Sent to the frontend as `island-command`.
@@ -78,6 +85,11 @@ pub fn get_hotkey(state: tauri::State<'_, ActiveHotkeys>) -> Option<String> {
 }
 
 #[tauri::command]
+pub fn get_text_hotkey(state: tauri::State<'_, ActiveHotkeys>) -> Option<String> {
+    state.text.map(|(_, label)| label.to_string())
+}
+
+#[tauri::command]
 pub fn get_search_hotkey(state: tauri::State<'_, ActiveHotkeys>) -> Option<String> {
     state.search.map(|(_, label)| label.to_string())
 }
@@ -85,11 +97,12 @@ pub fn get_search_hotkey(state: tauri::State<'_, ActiveHotkeys>) -> Option<Strin
 pub fn init(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let open_key = register_first(app, &HOTKEYS);
     let search = register_first(app, &SEARCH_HOTKEYS);
+    let text = register_first(app, &TEXT_HOTKEYS);
     if open_key.is_none() {
         eprintln!("[TRAY] No global hotkey could be registered");
     }
     let hotkey = open_key.map(|(_, label)| label);
-    app.manage(ActiveHotkeys { open: open_key, search });
+    app.manage(ActiveHotkeys { open: open_key, search, text });
 
     let visible = CheckMenuItem::with_id(app, "visible", "Show Island", true, true, None::<&str>)?;
     let open = MenuItem::with_id(app, "open", "Open Island", true, hotkey)?;
@@ -169,10 +182,15 @@ pub fn global_shortcut_plugin() -> tauri::plugin::TauriPlugin<Wry> {
             if event.state() != ShortcutState::Pressed {
                 return;
             }
-            let is_search = app
-                .try_state::<ActiveHotkeys>()
-                .and_then(|keys| keys.search)
-                .map_or(false, |(key, _)| key == *shortcut);
+            let keys = app.try_state::<ActiveHotkeys>();
+            let matches = |pick: fn(&ActiveHotkeys) -> Option<(Shortcut, &'static str)>| {
+                keys.as_ref().and_then(|k| pick(k)).map_or(false, |(key, _)| key == *shortcut)
+            };
+            if matches(|k| k.text) {
+                crate::textgrab::start(app);
+                return;
+            }
+            let is_search = matches(|k| k.search);
             command_island(app, if is_search { IslandCommand::Search } else { IslandCommand::Toggle });
         })
         .build()

@@ -1,14 +1,18 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
+import { TextGrab } from "./components/textgrab/TextGrab";
 import "@fontsource-variable/inter";
 import "./index.css";
 import { invoke } from "@tauri-apps/api/core";
 import { loadSettings, applySettingsToDOM, applySettingsToNative } from "./services/settings";
 
+// The Copy Text overlay is its own window loading this same page.
+const isTextGrab = window.location.hash === "#textgrab";
+
 // Apply initial user settings to DOM
 applySettingsToDOM(loadSettings());
-applySettingsToNative(loadSettings());
+if (!isTextGrab) applySettingsToNative(loadSettings());
 
 // Redirect frontend logs to Rust stdout in development only. In release
 // builds every console call would otherwise cost an IPC round-trip.
@@ -43,6 +47,6 @@ if (import.meta.env.DEV) {
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <App />
+    {isTextGrab ? <TextGrab /> : <App />}
   </React.StrictMode>
 );

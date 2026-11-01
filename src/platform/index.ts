@@ -179,6 +179,53 @@ export async function getSearchIcon(path: string): Promise<string | null> {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Copy Text from Anything (on-device OCR)                            */
+/* ------------------------------------------------------------------ */
+
+/** Freeze the screen under the cursor and open the selection overlay. */
+export async function textgrabStart(): Promise<void> {
+  try {
+    await invoke("textgrab_start");
+  } catch {
+    // Not in a Tauri context
+  }
+}
+
+/** The frozen screen (base64 PNG) and its size in physical pixels. */
+export async function textgrabImage(): Promise<[string, number, number] | null> {
+  try {
+    return await invoke<[string, number, number] | null>("textgrab_image");
+  } catch {
+    return null;
+  }
+}
+
+/** Read and copy the text in a box (physical px). Rejects with a readable message. */
+export async function textgrabRecognize(x: number, y: number, width: number, height: number): Promise<number> {
+  return await invoke<number>("textgrab_recognize", { x, y, width, height });
+}
+
+export async function textgrabCancel(): Promise<void> {
+  try {
+    await invoke("textgrab_cancel");
+  } catch {
+    // Not in a Tauri context
+  }
+}
+
+export async function getTextHotkey(): Promise<string | null> {
+  try {
+    return await invoke<string | null>("get_text_hotkey");
+  } catch {
+    return null;
+  }
+}
+
+export async function subscribeToTextGrabbed(callback: (payload: { text: string; lines: number }) => void): Promise<UnlistenFn> {
+  return await listen<{ text: string; lines: number }>("text-grabbed", (event) => callback(event.payload));
+}
+
+/* ------------------------------------------------------------------ */
 /*  Downloads (and Nearby Share, which saves into Downloads)           */
 /* ------------------------------------------------------------------ */
 

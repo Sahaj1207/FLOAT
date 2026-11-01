@@ -245,3 +245,8 @@
     opacity: 0.7;
   }
 }
+
+/* Copy Text */
+.status-hud-icon.copied {
+  color: var(--tint);
+}

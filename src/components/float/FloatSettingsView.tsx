@@ -13,7 +13,7 @@ import {
   GLASS_TINT_MIN,
   GLASS_TINT_MAX,
 } from "../../services/settings";
-import { getAutostart, getHotkey, getSearchHotkey, setAutostart, subscribeToAutostart } from "../../platform";
+import { getAutostart, getHotkey, getSearchHotkey, getTextHotkey, setAutostart, subscribeToAutostart } from "../../platform";
 import { ChevronLeft, MousePointer2, Pill, Target } from "lucide-react";
 import { UpdatesCard } from "./UpdatesCard";
 import "./FloatSettingsView.css";
@@ -189,8 +189,10 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = ({ onClose })
   const [autostart, setAutostartState] = useState(false);
   const [hotkey, setHotkey] = useState<string | null>(null);
   const [searchHotkey, setSearchHotkey] = useState<string | null>(null);
+  const [textHotkey, setTextHotkey] = useState<string | null>(null);
   useEffect(() => {
     getSearchHotkey().then(setSearchHotkey);
+    getTextHotkey().then(setTextHotkey);
   }, []);
   useEffect(() => {
     let isMounted = true;
@@ -762,6 +764,7 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = ({ onClose })
           <p className="float-setting-note">
             Touchscreen: tap to open, flick down to open, flick up to close. Touch and hold, then drag, to move the island.
             {searchHotkey ? ` ${searchHotkey} opens search.` : ""}
+            {textHotkey ? ` ${textHotkey} copies text from anything on screen.` : ""}
           </p>
         </div>
 

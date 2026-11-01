@@ -3,7 +3,7 @@ import { BatteryActivity, DownloadActivity, StatusActivity } from "../../activit
 import { TimerIcon } from "./Timer";
 import { TrayIcon } from "./Shelf";
 import { formatTimer } from "../../activities/timerStore";
-import { ArrowDownToLine, BellDot, Bluetooth, FolderOpen, Moon, Phone, Share2, Sun, Zap } from "lucide-react";
+import { ArrowDownToLine, BellDot, Bluetooth, ScanText, FolderOpen, Moon, Phone, Share2, Sun, Zap } from "lucide-react";
 import { openDownload } from "../../platform";
 import { AppIcon } from "./AppIcon";
 import "./StatusHud.css";
@@ -59,6 +59,18 @@ export const StatusHud: React.FC<{ activity: StatusActivity }> = ({ activity }) 
       );
     case "download":
       return <DownloadHud activity={activity} />;
+    case "textCopied":
+      return (
+        <div className="status-hud">
+          <ScanText className={`status-hud-icon ${activity.lines ? "copied" : ""}`} strokeWidth={2.2} />
+          <span className="status-hud-label">{activity.lines ? "Copied text" : "No text found"}</span>
+          {activity.lines > 0 && (
+            <span className="status-hud-detail" title={activity.preview}>
+              {activity.lines > 1 ? `${activity.lines} lines` : activity.preview}
+            </span>
+          )}
+        </div>
+      );
     case "focusSummary":
       return (
         <div className="status-hud">

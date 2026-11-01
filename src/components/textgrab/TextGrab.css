@@ -1,0 +1,114 @@
+/* Overlay for Copy Text from Anything. The still screenshot fills the
+   window; everything outside the selection dims, like macOS's screenshot
+   and Live Text selection. */
+html:has(.textgrab),
+body:has(.textgrab),
+#root:has(.textgrab) {
+  padding: 0 !important;
+  margin: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #000;
+}
+
+.textgrab {
+  position: fixed;
+  inset: 0;
+  cursor: crosshair;
+  user-select: none;
+  font-family: var(--float-font);
+}
+
+.textgrab-still {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.textgrab-dim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.32);
+  animation: textgrab-fade 0.2s ease-out;
+}
+
+.textgrab-selection {
+  position: absolute;
+  border-radius: 6px;
+  /* The huge shadow dims everything around the selection. */
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.95), 0 0 0 100vmax rgba(0, 0, 0, 0.32);
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
+}
+
+.textgrab-selection.reading {
+  box-shadow: 0 0 0 2px var(--tint), 0 0 18px 2px rgba(10, 132, 255, 0.45), 0 0 0 100vmax rgba(0, 0, 0, 0.32);
+}
+
+/* A soft light sweeping across while the text is read. */
+.textgrab-scan {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.28) 50%, transparent 70%);
+  background-size: 250% 100%;
+  animation: textgrab-sweep 0.9s ease-in-out infinite;
+}
+
+.textgrab-hint {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: rgba(30, 30, 32, 0.78);
+  backdrop-filter: blur(20px) saturate(1.6);
+  box-shadow: 0 0 0 0.5px rgba(255, 255, 255, 0.18), 0 8px 30px rgba(0, 0, 0, 0.35);
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translateX(-50%);
+  animation: textgrab-drop 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.textgrab.selecting .textgrab-hint {
+  opacity: 0.85;
+}
+
+.textgrab-hint kbd {
+  padding: 1px 6px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.7);
+  font: inherit;
+  font-size: 11px;
+}
+
+@keyframes textgrab-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes textgrab-drop {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -10px) scale(0.96);
+  }
+}
+
+@keyframes textgrab-sweep {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}

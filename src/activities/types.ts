@@ -32,6 +32,7 @@ export const ActivityPriority = {
   // A ringing phone beats everything but your own adjustments.
   call: 118,
   // User-initiated feedback wins over everything else.
+  textCopied: 119,
   volume: 120,
   brightness: 120,
 } as const;
@@ -140,6 +141,15 @@ export interface MeetingActivity {
   joinUrl: string | null;
 }
 
+export interface TextCopiedActivity {
+  kind: "textCopied";
+  id: string;
+  priority: number;
+  lines: number;
+  /** First line, for the preview. */
+  preview: string;
+}
+
 export interface FocusSummaryActivity {
   kind: "focusSummary";
   id: string;
@@ -174,6 +184,7 @@ export type Activity =
   | SessionActivity
   | MeetingActivity
   | FocusSummaryActivity
+  | TextCopiedActivity
   | TimerActivity
   | TimerDoneActivity
   | NotificationActivity
@@ -199,9 +210,10 @@ export type StatusActivity =
   | DownloadActivity
   | CallActivity
   | FocusSummaryActivity
+  | TextCopiedActivity
   | BrightnessActivity;
 
-const STATUS_KINDS = new Set<string>(["battery", "privacy", "focus", "timerDone", "bluetooth", "shelf", "download", "call", "focusSummary", "brightness"]);
+const STATUS_KINDS = new Set<string>(["battery", "privacy", "focus", "timerDone", "bluetooth", "shelf", "download", "call", "focusSummary", "textCopied", "brightness"]);
 
 export const isStatusActivity = (a: Activity | null): a is StatusActivity => a !== null && STATUS_KINDS.has(a.kind);
 

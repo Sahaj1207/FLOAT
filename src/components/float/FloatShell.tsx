@@ -32,6 +32,7 @@ import {
   subscribeToFileDrag,
   subscribeToBrightness,
   subscribeToDownloads,
+  subscribeToTextGrabbed,
   getIslandAttached,
   subscribeToIslandAttached,
   islandDragStarted,
@@ -1335,6 +1336,13 @@ const FloatShell: React.FC = () => {
 
     // Hardware volume keys and other apps changing the volume.
     unlisteners.push(subscribeToVolumeChanged((state) => showVolume(state)));
+
+    unlisteners.push(subscribeToTextGrabbed(({ text, lines }) => {
+      show(
+        { kind: "textCopied", id: "textCopied", priority: ActivityPriority.textCopied, lines, preview: text.split("\n")[0] ?? "" },
+        STATUS_HUD_MS
+      );
+    }));
 
     unlisteners.push(subscribeToDownloads(({ name, path }) => {
       const nearby = Date.now() - lastNearbyRef.current < NEARBY_WINDOW_MS;

@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.2.0
+
+Two productivity features, after Apple's Focus and Live Text.
+
+- **Focus Sessions.** Pick a task (or type one), choose 25, 50 or any minutes, and the island becomes that task: a progress ring and countdown that stay with you while you work. When time's up: Done (ticks the task off), +5, or a break (5 min, 10 after a long session). Start from Focus & Timer, the target button on any task, or search ("focus", "focus 50", "focus report 25"). Today's focus time, sessions and streak stay on your PC.
+- **Calm notifications while focusing.** FLOAT holds its notification banners and shows a short summary when the session ends, or just the unread dot (Settings › Focus Sessions). Calls always come through.
+- **Meeting countdown.** With your calendar linked, the next meeting appears in the island 10 minutes before, counting down, with **Join** for Teams, Zoom, Meet and Webex links. A meeting starting pauses your focus session.
+- **Copy Text from Anything.** Press Ctrl+Alt+T (or search "copy text"), drag over any part of the screen, and its text is copied, even from images, videos and screenshots. Recognition runs on your PC with Windows' built-in text recognition. `float.exe --copy-text` starts it too, for your own shortcuts.
+
 ## 2.1.2
 
 Inspired by the Dynamic Island on the new MacBook Pro.

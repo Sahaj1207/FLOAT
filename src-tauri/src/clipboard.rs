@@ -287,6 +287,11 @@ pub fn init(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+/// Put plain text on the clipboard (it also lands in the history).
+pub fn copy_text(text: &str) -> Result<(), String> {
+    write_clipboard(&Content::Text(text.to_string()))
+}
+
 fn write_clipboard(content: &Content) -> Result<(), String> {
     let (format, bytes): (u32, Vec<u8>) = match content {
         Content::Text(t) => {
