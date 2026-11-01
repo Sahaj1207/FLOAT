@@ -108,15 +108,16 @@ pub async fn check_for_update() -> Result<UpdateInfo, String> {
     })
 }
 
-fn pick_asset(release: &Release) -> Option<Asset> {
-    let wanted = |name: &str| match channel() {
+fn pick_asset(release: &Release, channel: &str) -> Option<Asset> {
+    let wanted = |name: &str| match channel {
         "msix" => name.eq_ignore_ascii_case("FLOAT.msix"),
         _ => name.to_lowercase().ends_with("-setup.exe"),
     };
     release.assets.iter().find(|a| wanted(&a.name)).cloned()
 }
 
-fn download(app: &AppHandle, asset: &Asset) -> Result<PathBuf, String> {
+/// Download and verify; `progress(received, total)` as bytes arrive.
+fn download(asset: &Asset, progress: impl Fn(u64, u64)) -> Result<PathBuf, String> {
     if !asset.browser_download_url.starts_with(RELEASE_HOST) {
         return Err("Unexpected download location".into());
     }
@@ -154,7 +155,7 @@ fn download(app: &AppHandle, asset: &Asset) -> Result<PathBuf, String> {
         received += n as u64;
         if received - last_emit > 256 * 1024 || received == asset.size {
             last_emit = received;
-            let _ = app.emit("update-progress", Progress { received, total: asset.size });
+            progress(received, asset.size);
         }
     }
     drop(file);
@@ -175,8 +176,10 @@ pub async fn install_update(app: AppHandle) -> Result<(), String> {
     let handle = app.clone();
     let path = tauri::async_runtime::spawn_blocking(move || {
         let release = latest_release()?;
-        let asset = pick_asset(&release).ok_or("This release has no installer for your copy of FLOAT")?;
-        download(&handle, &asset)
+        let asset = pick_asset(&release, channel()).ok_or("This release has no installer for your copy of FLOAT")?;
+        download(&asset, |received, total| {
+            let _ = handle.emit("update-progress", Progress { received, total });
+        })
     })
     .await
     .map_err(|e| e.to_string())??;
@@ -215,4 +218,25 @@ mod tests {
         assert!(release.tag_name.starts_with('v'));
         assert!(!release.assets.is_empty());
     }
+
+    /// Downloads the latest setup program from GitHub and verifies it against
+    /// GitHub's checksum, exactly as Install does (without opening it).
+    /// Talks to GitHub; run with `cargo test -- --ignored`.
+    #[test]
+    #[ignore]
+    fn downloads_and_verifies_latest() {
+        let release = latest_release().expect("latest release");
+        for channel in ["setup", "msix"] {
+            let asset = pick_asset(&release, channel).expect("installer asset");
+            let path = download(&asset, |_, _| {}).expect("download + checksum");
+            assert_eq!(std::fs::metadata(&path).unwrap().len(), asset.size);
+            let _ = std::fs::remove_file(path);
+        }
+        // A tampered or truncated download is refused (same test: the
+        // downloads share a temp file).
+        let mut bad = pick_asset(&release, "setup").expect("installer asset");
+        bad.digest = Some(format!("sha256:{}", "0".repeat(64)));
+        assert!(download(&bad, |_, _| {}).is_err());
+    }
+
 }
