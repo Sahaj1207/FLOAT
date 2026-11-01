@@ -444,6 +444,8 @@ export const SearchView: React.FC<SearchViewProps> = ({ initialQuery = "", onDon
             "aria-selected": isSelected,
             className: `search-row ${isSelected ? "selected" : ""} ${row.type}`,
             onMouseMove: () => !isSelected && setSelected(i),
+            // Keep focus in the field, so the keyboard keeps working.
+            onMouseDown: (e: React.MouseEvent) => e.preventDefault(),
             onClick: (e: React.MouseEvent) => {
               e.stopPropagation();
               activate(row, e.ctrlKey || e.altKey);

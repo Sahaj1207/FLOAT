@@ -64,6 +64,20 @@ export const PasteView: React.FC<{ onDone: () => void; onExit: () => void; hotke
   }, [query, clips, snippets]);
 
   useEffect(() => setSelected(0), [query]);
+
+  // Keys pressed while the field isn't focused (e.g. after a click) are
+  // handled the same way, and focus returns to the field.
+  const keyHandlerRef = useRef<(e: KeyboardEvent | React.KeyboardEvent) => void>(() => {});
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (document.activeElement === inputRef.current) return;
+      inputRef.current?.focus();
+      // Typing characters lands in the field; everything else is ours.
+      if (e.key.length !== 1 || e.ctrlKey || e.metaKey) keyHandlerRef.current(e);
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, []);
   useEffect(() => {
     listRef.current?.querySelector<HTMLElement>(`[data-row="${selected}"]`)?.scrollIntoView({ block: "nearest" });
   }, [selected]);
@@ -94,7 +108,7 @@ export const PasteView: React.FC<{ onDone: () => void; onExit: () => void; hotke
     }
   };
 
-  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const onKeyDown = (e: KeyboardEvent | React.KeyboardEvent) => {
     e.stopPropagation();
     if (e.key === "ArrowDown") {
       e.preventDefault();
@@ -118,6 +132,8 @@ export const PasteView: React.FC<{ onDone: () => void; onExit: () => void; hotke
       paste(items[Number(e.key) - 1]);
     }
   };
+
+  keyHandlerRef.current = onKeyDown;
 
   const firstClip = items.findIndex((i) => i.type === "clip");
 
@@ -156,6 +172,8 @@ export const PasteView: React.FC<{ onDone: () => void; onExit: () => void; hotke
                 aria-selected={isSelected}
                 className={`search-row ${isSelected ? "selected" : ""}`}
                 onMouseMove={() => !isSelected && setSelected(i)}
+                // Keep focus in the field, so the keyboard keeps working.
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={() => paste(item)}
                 data-no-drag="true"
               >

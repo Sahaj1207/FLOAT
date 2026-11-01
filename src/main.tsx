@@ -10,6 +10,26 @@ import { loadSettings, applySettingsToDOM, applySettingsToNative } from "./servi
 // The Copy Text overlay is its own window loading this same page.
 const isTextGrab = window.location.hash === "#textgrab";
 
+// FLOAT is an app, not a web page: the web engine's own shortcuts (print,
+// save, find, reload, zoom, caret browsing...) must never fire. Editing keys
+// (copy, paste, undo, select all) still work in text fields.
+const BLOCKED_CTRL = new Set(["p", "s", "f", "g", "h", "j", "o", "r", "u", "n", "t", "w", "=", "+", "-", "0"]);
+window.addEventListener(
+  "keydown",
+  (e) => {
+    const ctrl = e.ctrlKey || e.metaKey;
+    const key = e.key.toLowerCase();
+    if ((ctrl && BLOCKED_CTRL.has(key)) || ["F3", "F5", "F7", "F12"].includes(e.key) || (ctrl && e.shiftKey && key === "i")) {
+      e.preventDefault();
+    }
+  },
+  // Capture: before anything else sees it. Views still get the event (for
+  // example Ctrl+P to pin in the paste picker); only the default is cancelled.
+  true
+);
+// Ctrl + mouse wheel would zoom the whole island.
+window.addEventListener("wheel", (e) => e.ctrlKey && e.preventDefault(), { passive: false });
+
 // Apply initial user settings to DOM
 applySettingsToDOM(loadSettings());
 if (!isTextGrab) applySettingsToNative(loadSettings());
