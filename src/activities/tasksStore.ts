@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { saveToDisk } from "../services/persist";
 
 /** A simple local to-do list, stored only on this PC. */
 export interface Task {
@@ -29,7 +30,9 @@ const listeners = new Set<() => void>();
 function set(next: Task[]) {
   tasks = next;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+    const json = JSON.stringify(tasks);
+    localStorage.setItem(STORAGE_KEY, json);
+    saveToDisk(STORAGE_KEY, json);
   } catch {
     // Storage full or unavailable; keep the in-memory list.
   }

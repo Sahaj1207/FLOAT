@@ -1,12 +1,11 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App";
-import { TextGrab } from "./components/textgrab/TextGrab";
-import { SettingsApp } from "./settings/SettingsApp";
 import "@fontsource-variable/inter";
 import "./index.css";
 import { invoke } from "@tauri-apps/api/core";
 import { loadSettings, applySettingsToDOM, applySettingsToNative, applySavedShortcuts } from "./services/settings";
+import { flushToDisk, hydrateFromDisk } from "./services/persist";
+import { listen } from "@tauri-apps/api/event";
 
 // Copy Text's overlay and Settings are their own windows, loading this same page.
 const isTextGrab = window.location.hash === "#textgrab";
@@ -32,13 +31,27 @@ window.addEventListener(
 // Ctrl + mouse wheel would zoom the whole island.
 window.addEventListener("wheel", (e) => e.ctrlKey && e.preventDefault(), { passive: false });
 
-// Apply initial user settings to DOM
-applySettingsToDOM(loadSettings());
-// Native settings are applied once, by the island window.
-if (!isTextGrab && !isSettings) {
-  applySettingsToNative(loadSettings());
-  applySavedShortcuts(loadSettings());
+async function start() {
+  // Your saved data comes from disk first (see services/persist.ts).
+  await hydrateFromDisk();
+  applySettingsToDOM(loadSettings());
+  // Native settings are applied once, by the island window.
+  if (!isTextGrab && !isSettings) {
+    applySettingsToNative(loadSettings());
+    applySavedShortcuts(loadSettings());
+  }
+  const view = isTextGrab
+    ? (await import("./components/textgrab/TextGrab")).TextGrab
+    : isSettings
+    ? (await import("./settings/SettingsApp")).SettingsApp
+    : (await import("./App")).default;
+  ReactDOM.createRoot(document.getElementById("root")!).render(
+    <React.StrictMode>{React.createElement(view)}</React.StrictMode>
+  );
 }
+window.addEventListener("beforeunload", flushToDisk);
+// A restore in Settings: every window starts again from the restored files.
+listen("float-data-restored", () => location.reload()).catch(() => {});
 
 // Redirect frontend logs to Rust stdout in development only. In release
 // builds every console call would otherwise cost an IPC round-trip.
@@ -71,8 +84,4 @@ if (import.meta.env.DEV) {
   console.log("[MEDIA UI] Frontend log redirection initialized");
 }
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    {isTextGrab ? <TextGrab /> : isSettings ? <SettingsApp /> : <App />}
-  </React.StrictMode>
-);
+start();

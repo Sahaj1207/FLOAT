@@ -16,6 +16,7 @@ mod btbattery;
 mod calendar;
 mod clipboard;
 mod connectivity;
+mod datastore;
 mod downloads;
 mod focus;
 mod hotkeys;
@@ -60,6 +61,7 @@ pub fn run() {
             }
         }))
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tray::global_shortcut_plugin())
         .plugin(tauri_plugin_drag::init())
         .invoke_handler(tauri::generate_handler![
@@ -86,6 +88,12 @@ pub fn run() {
             hotkeys::set_shortcut,
             hotkeys::pause_shortcuts,
             settingswin::open_settings,
+            datastore::store_load,
+            datastore::store_save,
+            datastore::store_paths,
+            datastore::store_reveal,
+            datastore::export_data,
+            datastore::import_data,
             textgrab::textgrab_start,
             textgrab::textgrab_image,
             textgrab::textgrab_recognize,

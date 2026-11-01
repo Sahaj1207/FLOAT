@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { saveToDisk } from "../services/persist";
 
 /** Quick Notes: plain-text scratchpad notes, saved on this PC only. */
 export interface Note {
@@ -29,7 +30,9 @@ const listeners = new Set<() => void>();
 function set(next: Note[]) {
   notes = next;
   try {
-    localStorage.setItem(KEY, JSON.stringify(notes));
+    const json = JSON.stringify(notes);
+    localStorage.setItem(KEY, json);
+    saveToDisk(KEY, json);
   } catch {
     // Not persisted this time.
   }

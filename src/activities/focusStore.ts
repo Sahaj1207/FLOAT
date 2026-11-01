@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { saveToDisk } from "../services/persist";
 
 /**
  * Focus Sessions: work on one task for a set time, then take a break.
@@ -59,7 +60,9 @@ function load<T>(key: string, fallback: T): T {
 
 function save(key: string, value: unknown) {
   try {
-    localStorage.setItem(key, JSON.stringify(value));
+    const json = JSON.stringify(value);
+    localStorage.setItem(key, json);
+    saveToDisk(key, json);
   } catch {
     // Not persisted; the session still runs.
   }

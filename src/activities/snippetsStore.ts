@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { saveToDisk } from "../services/persist";
 
 /**
  * Pinned snippets: text you paste often (an email address, a signature, an
@@ -34,7 +35,9 @@ const listeners = new Set<() => void>();
 function set(next: Snippet[]) {
   snippets = next;
   try {
-    localStorage.setItem(KEY, JSON.stringify(snippets));
+    const json = JSON.stringify(snippets);
+    localStorage.setItem(KEY, json);
+    saveToDisk(KEY, json);
   } catch {
     // Not persisted this time.
   }

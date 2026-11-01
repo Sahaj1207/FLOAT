@@ -15,6 +15,10 @@ import {
   Trash2,
 } from "lucide-react";
 import { openUrl } from "@tauri-apps/plugin-opener";
+import { invoke } from "@tauri-apps/api/core";
+import { emit } from "@tauri-apps/api/event";
+import { ask, open as openDialog, save as saveDialog } from "@tauri-apps/plugin-dialog";
+import { reloadFromDisk } from "../services/persist";
 import {
   checkForUpdate,
   clearClipboardHistory,
@@ -104,6 +108,7 @@ const GeneralPage: React.FC = () => {
           <Switch label="Downloads and Nearby Share" on={s.downloadAlerts} onChange={(downloadAlerts) => update({ downloadAlerts })} />
         </Row>
       </Group>
+      <YourData />
       <Group foot="Puts every setting back to how FLOAT comes. Your tasks, notes and pinned snippets are kept.">
         <Row id="reset" label="Reset all settings">
           {confirmReset ? (
@@ -130,6 +135,61 @@ const GeneralPage: React.FC = () => {
         </Row>
       </Group>
     </>
+  );
+};
+
+/** Back up, restore, and where your data lives. */
+const YourData: React.FC = () => {
+  const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
+  const today = new Date().toISOString().slice(0, 10);
+
+  const exportAll = async () => {
+    const path = await saveDialog({ defaultPath: `FLOAT backup ${today}.json`, filters: [{ name: "FLOAT backup", extensions: ["json"] }] }).catch(() => null);
+    if (!path) return;
+    invoke("export_data", { path })
+      .then(() => setStatus({ ok: true, text: "Backup saved" }))
+      .catch((e) => setStatus({ ok: false, text: String(e) }));
+  };
+
+  const importAll = async () => {
+    const path = await openDialog({ multiple: false, filters: [{ name: "FLOAT backup", extensions: ["json"] }] }).catch(() => null);
+    if (!path || Array.isArray(path)) return;
+    const sure = await ask("This replaces your current tasks, notes, pinned snippets, focus history and settings with the ones in the backup. Today's data is kept in the daily backups.", {
+      title: "Restore from this backup?",
+      kind: "warning",
+      okLabel: "Restore",
+      cancelLabel: "Cancel",
+    }).catch(() => false);
+    if (!sure) return;
+    try {
+      await invoke("import_data", { path });
+      await reloadFromDisk();
+      // Every FLOAT window starts again from the restored data.
+      await emit("float-data-restored");
+      location.reload();
+    } catch (e) {
+      setStatus({ ok: false, text: String(e) });
+    }
+  };
+
+  return (
+    <Group title="Your data" foot="Your tasks, notes, pinned snippets, focus history and settings are saved on this PC, with the previous version of each kept in case of a crash. Once a day FLOAT also copies them to Documents › FLOAT › Backups and keeps the last 7 days, even if you uninstall. Nothing leaves your PC.">
+      <Row id="export" label="Back up everything" desc={status ? <span className={`sw-status ${status.ok ? "ok" : "error"}`}>{status.text}</span> : "One file you can keep, or move to another PC"}>
+        <button type="button" className="sw-btn" onClick={exportAll}>
+          Export…
+        </button>
+      </Row>
+      <Row id="import" label="Restore from a backup" desc="An exported file, or one from the daily backups">
+        <button type="button" className="sw-btn" onClick={importAll}>
+          Import…
+        </button>
+      </Row>
+      <Row id="backups" label="Daily backups" desc="Documents › FLOAT › Backups">
+        <button type="button" className="sw-btn" onClick={() => invoke("store_reveal", { backups: true }).catch(() => {})}>
+          Show in Explorer
+        </button>
+      </Row>
+    </Group>
   );
 };
 
@@ -622,7 +682,7 @@ const AboutPage: React.FC = () => {
 
 export const SECTIONS: Section[][] = [
   [
-    { id: "general", title: "General", blurb: "Startup, full screen and downloads.", Icon: Settings2, tile: ["#9a9aa1", "#6e6e75"], Page: GeneralPage, rows: [["autostart", "Open at login", "startup boot launch"], ["fullscreen", "Hide in full screen", "games"], ["downloads", "Downloads and Nearby Share"], ["reset", "Reset all settings", "defaults"]] },
+    { id: "general", title: "General", blurb: "Startup, your data and backups.", Icon: Settings2, tile: ["#9a9aa1", "#6e6e75"], Page: GeneralPage, rows: [["autostart", "Open at login", "startup boot launch"], ["fullscreen", "Hide in full screen", "games"], ["downloads", "Downloads and Nearby Share"], ["export", "Back up everything", "export backup save data"], ["import", "Restore from a backup", "import restore"], ["backups", "Daily backups", "backup folder"], ["reset", "Reset all settings", "defaults"]] },
     { id: "island", title: "Island", blurb: "Its shape, size and motion.", Icon: IslandGlyph, tile: ["#3a3a3c", "#000000"], Page: IslandPage, rows: [["shape", "Shape", "notch pill"], ["idle", "When idle", "orb"], ["width", "Activity width", "size"], ["orb", "Orb size"], ["animation", "Animation", "spring motion"]] },
     { id: "appearance", title: "Appearance", blurb: "Black, glass and music waves.", Icon: Palette, tile: ["#5e9bff", "#2a5cff"], Page: AppearancePage, rows: [["style", "Style", "glass black auto"], ["tint", "Glass tint", "transparency"], ["waves", "Music waves", "visualizer glow"]] },
   ],

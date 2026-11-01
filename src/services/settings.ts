@@ -1,5 +1,6 @@
 import { setClipboardHistoryEnabled, setDownloadAlerts, setHideInFullscreen, setShortcut, ShortcutAction } from "../platform";
 import { emit, listen } from "@tauri-apps/api/event";
+import { saveToDisk } from "./persist";
 
 export type AnimationIntensity = "subtle" | "balanced" | "expressive";
 export type IdleBehavior = "alwaysOrb" | "remember" | "alwaysPill";
@@ -246,7 +247,9 @@ export function loadSettings(): FloatSettings {
 
 export function saveSettings(settings: FloatSettings): void {
   try {
-    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ ...settings, settingsVersion: SETTINGS_VERSION }));
+    const json = JSON.stringify({ ...settings, settingsVersion: SETTINGS_VERSION });
+    localStorage.setItem(SETTINGS_STORAGE_KEY, json);
+    saveToDisk(SETTINGS_STORAGE_KEY, json);
     applySettingsToDOM(settings);
     applySettingsToNative(settings);
     listeners.forEach((l) => l(settings));
