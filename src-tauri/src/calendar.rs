@@ -13,7 +13,8 @@ use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
 const CACHE_FOR: Duration = Duration::from_secs(10 * 60);
-const MAX_EVENTS: usize = 3;
+// Enough that skipping all-day and multi-day spans still leaves a next event.
+const MAX_EVENTS: usize = 10;
 /// Don't look further ahead than this.
 const HORIZON_DAYS: i64 = 30;
 
@@ -316,5 +317,24 @@ mod tests {
         let public = "https://calendar.google.com/calendar/ical/me%40gmail.com/public/basic.ics";
         assert!(explain(public, ureq::Error::StatusCode(404)).contains("Secret address in iCal format"));
         assert!(explain("https://outlook.office365.com/x.ics", ureq::Error::StatusCode(404)).contains("private"));
+    }
+
+    /// Debug against a real calendar: FLOAT_CAL_FILE = path holding the link.
+    #[test]
+    #[ignore]
+    fn real_calendar_times() {
+        let url = std::fs::read_to_string(std::env::var("FLOAT_CAL_FILE").unwrap()).unwrap();
+        let ics = fetch(&url).expect("fetch");
+        let now = Utc::now();
+        println!("now {}", now.with_timezone(&chrono::Local));
+        for e in upcoming(&parse_events(&ics), now) {
+            let start = DateTime::from_timestamp_millis(e.start).unwrap().with_timezone(&chrono::Local);
+            let end = DateTime::from_timestamp_millis(e.end).unwrap().with_timezone(&chrono::Local);
+            println!("event title_len={} all_day={} start={} end={}", e.title.len(), e.all_day, start, end);
+        }
+        for line in ics.lines().filter(|l| l.starts_with("DTSTART") || l.starts_with("DTEND") || l.starts_with("RRULE")).take(12) {
+            // Times and rules only.
+            println!("raw {}", line);
+        }
     }
 }

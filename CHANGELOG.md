@@ -1,8 +1,9 @@
 # Changelog
 
-## 2.2.1
+## 2.2.2
 
 - **Calendar link check.** Settings › Widgets › Calendar now says whether your link works ("Connected · next: Standup, Mon 9:00") or why not. Pasting Google's public address for a private calendar explains that you need the "Secret address in iCal format" instead.
+- **Smarter "next event".** Like Apple's Up Next, all-day events and long multi-day events (a trip, a course) no longer show as your next event or count down in the island; only real appointments do.
 
 ## 2.2.0
 

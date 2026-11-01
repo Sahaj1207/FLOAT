@@ -16,6 +16,7 @@ import {
 import { getCalendarEvents, getAutostart, getHotkey, getSearchHotkey, getTextHotkey, setAutostart, subscribeToAutostart } from "../../platform";
 import { ChevronLeft, MousePointer2, Pill, Target } from "lucide-react";
 import { UpdatesCard } from "./UpdatesCard";
+import { isAppointment } from "./Widgets";
 import "./FloatSettingsView.css";
 
 interface FloatSettingsViewProps {
@@ -69,12 +70,12 @@ const CalendarStatus: React.FC<{ url: string }> = ({ url }) => {
     getCalendarEvents(url)
       .then((events) => {
         if (cancelled) return;
-        const next = events.find((e) => !e.allDay) ?? events[0];
+        const next = events.find(isAppointment);
         setStatus({
           ok: true,
           text: next
             ? `Connected · next: ${next.title}, ${new Date(next.start).toLocaleString(undefined, { weekday: "short", hour: "numeric", minute: "2-digit" })}`
-            : "Connected · no events in the next 30 days",
+            : "Connected · no upcoming meetings in the next 30 days",
         });
       })
       .catch((e) => !cancelled && setStatus({ ok: false, text: String(e) }));

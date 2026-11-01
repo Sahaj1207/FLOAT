@@ -125,6 +125,15 @@ export function upcomingLabel(event: CalendarEvent, now: number): string {
   return start.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
 }
 
+// Longer than this, an event is a span (a trip, a course), not an appointment.
+const SPAN_MS = 12 * 60 * 60_000;
+
+/**
+ * Whether an event is an appointment worth showing as "next", like Apple's
+ * Up Next: not all-day, and not a multi-day span that's just in progress.
+ */
+export const isAppointment = (e: CalendarEvent) => !e.allDay && e.end - e.start < SPAN_MS;
+
 /** The next event from the linked ICS calendar, or null (none, or no link). */
 export function useNextEvent(): CalendarEvent | null {
   const { calendarUrl } = useSettings();
@@ -152,7 +161,7 @@ export function useNextEvent(): CalendarEvent | null {
     };
   }, [calendarUrl]);
 
-  return events.find((e) => e.end > now) ?? null;
+  return events.find((e) => e.end > now && isAppointment(e)) ?? null;
 }
 
 /* ---- System stats ------------------------------------------------------------------ */
