@@ -2,7 +2,9 @@ import React, { useEffect, useState } from "react";
 import {
   CalendarEvent,
   getCalendarEvents,
+  getSystemStats,
   getWeather,
+  SystemStats,
   Weather,
 } from "../../platform";
 import { FloatSettings, loadSettings, subscribeToSettings } from "../../services/settings";
@@ -161,3 +163,47 @@ export function useNextEvent(): CalendarEvent | null {
 
   return events.find((e) => e.end > now && isAppointment(e)) ?? null;
 }
+
+/* ---- System stats ------------------------------------------------------------------ */
+
+function rate(bytesPerSec: number): string {
+  if (bytesPerSec >= 1024 * 1024) return `${(bytesPerSec / 1024 / 1024).toFixed(1)} MB/s`;
+  if (bytesPerSec >= 1024) return `${Math.round(bytesPerSec / 1024)} KB/s`;
+  return "0 KB/s";
+}
+
+const Meter: React.FC<{ label: string; percent: number }> = ({ label, percent }) => (
+  <span className="stat" title={`${label} ${Math.round(percent)}%`}>
+    <span className="stat-label">{label}</span>
+    <span className="stat-bar">
+      <span className={percent > 85 ? "hot" : ""} style={{ width: `${Math.min(100, percent)}%` }} />
+    </span>
+    <span className="stat-value">{Math.round(percent)}%</span>
+  </span>
+);
+
+/** CPU, memory and network speed; sampled only while mounted. */
+export const StatsStrip: React.FC = () => {
+  const [stats, setStats] = useState<SystemStats | null>(null);
+  useEffect(() => {
+    let isMounted = true;
+    const load = () => getSystemStats().then((s) => isMounted && s && setStats(s));
+    load();
+    const timer = setInterval(load, 1500);
+    return () => {
+      isMounted = false;
+      clearInterval(timer);
+    };
+  }, []);
+  if (!stats) return <div className="cc-card stats-strip" />;
+  return (
+    <div className="cc-card stats-strip">
+      <Meter label="CPU" percent={stats.cpu} />
+      <Meter label="RAM" percent={(stats.memoryUsed / stats.memoryTotal) * 100} />
+      <span className="stat net" title="Download / upload">
+        <span>↓ {rate(stats.down)}</span>
+        <span>↑ {rate(stats.up)}</span>
+      </span>
+    </div>
+  );
+};

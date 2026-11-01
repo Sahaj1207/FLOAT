@@ -1,320 +1,196 @@
-/* Controls, modelled on macOS Control Center: one grid, one module style
-   (rounded rectangles of the same fill, padding and gaps), round toggles that
-   turn blue, and thick pill sliders with the icon inside the track. */
+.cc-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
 
+/* ---- Controls tab ---- */
 .cc-view {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto 1fr 1fr auto;
-  grid-template-areas:
-    "short short"
-    "connect display"
-    "connect sound"
-    "connect smalls";
-  gap: 8px;
+  gap: 10px;
   height: 100%;
-  padding: 2px 18px 16px;
+  padding: var(--s-1) var(--s-5) var(--s-4);
   box-sizing: border-box;
+  overflow-y: auto;
 }
 
-.cc-module {
-  position: relative;
-  border-radius: var(--r-tile);
-  background: rgba(255, 255, 255, 0.075);
-  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.06);
-  corner-shape: superellipse(1.35);
-}
-
-.cc-module-title {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: -0.005em;
-  color: var(--text-1);
-}
-
-/* ---- Connectivity ---- */
-.cc-connect {
-  grid-area: connect;
+.cc-column {
   display: flex;
   flex-direction: column;
-  justify-content: space-around;
-  padding: 6px 8px 6px 10px;
+  gap: 6px;
+  min-width: 0;
 }
 
-.cc-line {
+.cc-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 9px 11px;
+  border-radius: var(--r-tile);
+  background: var(--fill-1);
+}
+
+.cc-card-head {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-height: 40px;
+  gap: 9px;
 }
 
-.cc-round {
+.cc-badge {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   flex-shrink: 0;
-  padding: 0;
   border: none;
   border-radius: 50%;
-  background: var(--fill-2);
-  color: var(--text-1);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--float-text-primary);
+  cursor: default;
+}
+
+button.cc-badge {
   cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease, transform 0.12s cubic-bezier(0.2, 0.8, 0.25, 1);
 }
 
-.cc-round.on {
-  background: var(--tint);
-  color: #fff;
-}
-
-.cc-round:hover {
-  filter: brightness(1.15);
-}
-
-.cc-round:active {
-  transform: scale(0.9);
-}
-
-.cc-round.busy {
-  animation: cc-busy 0.9s ease-in-out infinite;
-}
-
-@keyframes cc-busy {
-  50% {
-    opacity: 0.55;
-  }
-}
-
-.cc-line-text {
+.cc-card-title {
   display: flex;
-  flex: 1;
   flex-direction: column;
-  align-items: flex-start;
+  flex: 1;
   min-width: 0;
-  padding: 0;
-  border: none;
-  background: none;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-
-.cc-line-title {
   font-size: 12.5px;
   font-weight: 600;
-  color: var(--text-1);
+  color: var(--float-text-primary);
 }
 
-.cc-line-caption {
-  max-width: 100%;
+.cc-card-caption {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 11px;
-  color: var(--text-2);
+  font-weight: 500;
+  color: var(--float-text-secondary);
 }
 
-.cc-more {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  flex-shrink: 0;
+.cc-link {
+  align-self: flex-start;
   padding: 0;
   border: none;
-  border-radius: 50%;
   background: none;
-  color: var(--text-3);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--float-text-secondary);
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
 }
 
-.cc-more:hover {
-  background: var(--fill-2);
-  color: var(--text-1);
+.cc-link:hover {
+  color: var(--float-text-primary);
 }
 
-.cc-more.inline {
-  width: 18px;
-  height: 18px;
+.cc-device-list {
+  margin: 2px 0 0 37px;
+  padding: 0;
+  list-style: none;
+  font-size: 11px;
+  color: var(--float-text-secondary);
 }
 
 .cc-error {
-  font-size: 10.5px;
-  color: var(--orange);
+  font-size: 11px;
+  color: #ff6961;
 }
 
-/* ---- Pill sliders ---- */
-.cc-slider-module {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 6px;
-  padding: 8px 12px;
-}
-
-.cc-display {
-  grid-area: display;
-}
-
-.cc-sound {
-  grid-area: sound;
-}
-
-.cc-pill {
-  position: relative;
-  height: 22px;
-  border-radius: 11px;
-  background: rgba(255, 255, 255, 0.12);
-  overflow: hidden;
-}
-
-.cc-pill-fill {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  background: #fff;
-  border-radius: 11px 0 0 11px;
-  transition: width 0.08s linear;
-}
-
-.cc-pill input {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  opacity: 0;
+.cc-slider {
+  flex: 1;
+  min-width: 0;
+  height: 6px;
+  appearance: none;
+  border-radius: 3px;
+  background: linear-gradient(to right, var(--cc-color, var(--float-accent)) var(--cc-fill), rgba(255, 255, 255, 0.14) var(--cc-fill));
   cursor: pointer;
 }
 
-.cc-pill-icon {
-  position: absolute;
-  left: 4px;
-  top: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.cc-slider::-webkit-slider-thumb {
+  appearance: none;
   width: 14px;
   height: 14px;
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--text-2);
-  cursor: pointer;
-  transition: color 0.15s ease;
-  z-index: 1;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 
-/* On the white fill, the icon turns dark, as in Control Center. */
-.cc-pill-icon.covered {
-  color: #3a3a3c;
-}
-
-/* ---- Small modules ---- */
-.cc-smalls {
-  grid-area: smalls;
-  display: grid;
-  grid-template-columns: 1fr 1fr 58px;
-  gap: 8px;
-}
-
-.cc-small {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 52px;
-  padding: 0 10px;
-}
-
-.cc-small-text {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
+.cc-value {
+  min-width: 32px;
+  text-align: right;
   font-size: 11px;
-  color: var(--text-2);
-  white-space: nowrap;
-}
-
-.cc-small-text b {
-  font-size: 12.5px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  color: var(--text-1);
+  color: var(--float-text-secondary);
 }
 
-.cc-ring {
-  position: relative;
+.cc-card-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.cc-mini {
+  justify-content: center;
+}
+
+.cc-mini-value {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  flex-shrink: 0;
-  color: #30d158;
-}
-
-.cc-ring svg {
-  position: absolute;
-  inset: 0;
-}
-
-.cc-ring circle {
-  transition: stroke-dashoffset 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.cc-ring-inner {
-  position: relative;
-  display: flex;
-}
-
-.cc-ring-num {
-  font-size: 10px;
-  font-weight: 700;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
-  color: var(--text-1);
+  color: var(--float-text-primary);
 }
 
-.cc-gear {
-  flex-direction: column;
-  justify-content: center;
-  gap: 3px;
-  padding: 0;
+.cc-mini-value .cc-icon {
+  width: 13px;
+  height: 13px;
+}
+
+.cc-mini-button {
   border: none;
-  color: var(--text-1);
   font: inherit;
-  font-size: 10.5px;
-  font-weight: 500;
+  text-align: left;
   cursor: pointer;
-  transition: background 0.15s ease, transform 0.12s cubic-bezier(0.2, 0.8, 0.25, 1);
 }
 
-.cc-gear span {
-  font-size: 10px;
-  color: var(--text-2);
+.cc-mini-button:hover {
+  background: rgba(255, 255, 255, 0.11);
 }
 
-.cc-gear:hover {
-  background: rgba(255, 255, 255, 0.12);
+.cc-mini-button.on .cc-mini-value {
+  color: #a78bfa;
 }
 
-.cc-gear:active {
-  transform: scale(0.95);
+.cc-badge.sun {
+  color: #ffd60a;
 }
 
-:root[data-input="touch"] .cc-round {
-  width: 36px;
-  height: 36px;
+.cc-quick-icon,
+.cc-badge.on {
+  background: var(--tint);
+  color: #fff;
 }
 
-:root[data-input="touch"] .cc-pill {
-  height: 28px;
-  border-radius: 14px;
+.cc-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+}
+
+.cc-settings {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
 }

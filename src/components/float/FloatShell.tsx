@@ -94,7 +94,7 @@ const PILL_DOCK_TOP = 6;
 const SURFACE_WIDTH = 580;
 const SURFACE_HEIGHT = 244;
 // Controls is taller: shortcuts sit above the toggles.
-const SURFACE_HEIGHT_CONTROLS = 326;
+const SURFACE_HEIGHT_CONTROLS = 312;
 const NOTIF_PREVIEW_WIDTH = 240;
 const NOTIF_PREVIEW_HEIGHT = 56;
 const QUICK_ACTIONS_WIDTH = 176;
@@ -639,11 +639,6 @@ const FloatShell: React.FC = () => {
     let unlisten: (() => void) | null = null;
     subscribeToIslandCommand((command) => {
       const expanded = visualModeRef.current === "expanded";
-      if (command === "controls") {
-        requestTab("controls");
-        if (!expanded) transitionTo("expanded", "command-controls");
-        return;
-      }
       if (command === "paste") {
         // The paste key toggles too.
         if (expanded && pasteShowingRef.current) {

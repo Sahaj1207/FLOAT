@@ -1,16 +1,9 @@
-/* Custom shortcuts: one Control Center module of round buttons. */
+/* Custom shortcuts: round buttons like iPhone's Control Center. */
 .sc-row {
-  grid-area: short;
+  grid-column: 1 / -1;
   display: flex;
-  align-items: flex-start;
-  gap: 2px;
-  min-height: 70px;
-  box-sizing: border-box;
-  padding: 9px 8px 7px;
-  border-radius: var(--r-tile);
-  background: rgba(255, 255, 255, 0.075);
-  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.06);
-  corner-shape: superellipse(1.35);
+  gap: 6px;
+  padding: 2px 0 4px;
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -19,8 +12,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  width: 58px;
+  gap: 5px;
+  width: 56px;
   flex-shrink: 0;
   padding: 0;
   border: none;
@@ -34,12 +27,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   color: #fff;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  transition: filter 0.15s ease;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 2px 8px rgba(0, 0, 0, 0.25);
+  transition: filter 0.15s ease, transform 0.15s ease;
 }
 
 .sc-btn:hover .sc-circle {
@@ -47,13 +40,13 @@
 }
 
 .sc-circle.app {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--fill-2);
 }
 
 .sc-circle.add {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--fill-1);
   color: var(--text-2);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 0 0 1px var(--fill-2);
 }
 
 /* Launching: a soft pulse until it has started. */
@@ -83,18 +76,16 @@
 }
 
 .sc-label {
-  width: 100%;
+  max-width: 56px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  text-align: center;
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 500;
-  line-height: 1.3;
   color: var(--text-2);
 }
 
 :root[data-input="touch"] .sc-circle {
-  width: 42px;
-  height: 42px;
+  width: 46px;
+  height: 46px;
 }
