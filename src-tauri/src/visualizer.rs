@@ -35,7 +35,7 @@ struct LevelsPayload {
 }
 
 static ACTIVE: AtomicBool = AtomicBool::new(false);
-static STARTED: OnceLock<()> = OnceLock::new();
+static STARTED: OnceLock<Option<std::thread::Thread>> = OnceLock::new();
 
 /// One-pole low-pass coefficient for a cutoff at the given sample rate.
 fn lowpass_alpha(cutoff: f32, rate: f32) -> f32 {
@@ -141,6 +141,8 @@ fn run(app: AppHandle) {
             if capture.take().is_some() {
                 dlog!("[VISUALIZER] stopped");
             }
+            // Sleep until set_visualizer_active wakes us.
+            std::thread::park_timeout(Duration::from_secs(5));
             continue;
         }
 
@@ -198,10 +200,15 @@ fn run(app: AppHandle) {
 pub fn set_visualizer_active(app: AppHandle, active: bool) {
     ACTIVE.store(active, Ordering::Relaxed);
     if active {
-        STARTED.get_or_init(|| {
-            let _ = std::thread::Builder::new()
+        let thread = STARTED.get_or_init(|| {
+            std::thread::Builder::new()
                 .name("visualizer".into())
-                .spawn(move || run(app));
+                .spawn(move || run(app))
+                .ok()
+                .map(|h| h.thread().clone())
         });
+        if let Some(t) = thread {
+            t.unpark();
+        }
     }
 }

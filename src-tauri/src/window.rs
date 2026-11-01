@@ -26,8 +26,14 @@ use windows::Win32::UI::WindowsAndMessaging::{
 pub const WINDOW_WIDTH: f64 = 720.0;
 pub const WINDOW_HEIGHT: f64 = 400.0;
 
+/// Poll rate while the cursor is on or near the island (one frame).
 const TICK: Duration = Duration::from_millis(16);
-const SYSTEM_POLL_EVERY: u32 = 30; // ticks (~500ms)
+/// Poll rate while the cursor is far away or the island is hidden. The
+/// margin below is wide enough that a fast mouse is caught before it arrives.
+const IDLE_TICK: Duration = Duration::from_millis(50);
+const HIDDEN_TICK: Duration = Duration::from_millis(100);
+const NEAR_MARGIN: f64 = 160.0; // logical px around the window
+const SYSTEM_POLL_EVERY: Duration = Duration::from_millis(500);
 /// How long after the last move (with the mouse button up) a drag counts as over.
 const SETTLE_AFTER_MOVE: Duration = Duration::from_millis(60);
 /// Dropping the island's top within this many logical px of the screen's top
@@ -275,22 +281,25 @@ fn monitor_loop(app: AppHandle, hwnd: isize) {
     let mut inside = false;
     let mut system: Option<SystemState> = None;
     let mut hidden = false;
-    let mut tick: u32 = 0;
+    let mut system_at: Option<Instant> = None;
+    let mut sleep = TICK;
 
     loop {
-        std::thread::sleep(TICK);
-        tick = tick.wrapping_add(1);
+        std::thread::sleep(sleep);
         let state = app.state::<WindowState>();
 
         // --- Click-through hit testing -----------------------------------
         let mut cursor = POINT::default();
         let mut rect = RECT::default();
+        let mut near = false;
         let now_inside = unsafe {
             GetCursorPos(&mut cursor).as_bool() && GetWindowRect(hwnd, &mut rect).as_bool()
         } && {
             let scale = unsafe { GetDpiForWindow(hwnd) } as f64 / 96.0;
             let lx = (cursor.x - rect.left) as f64 / scale;
             let ly = (cursor.y - rect.top) as f64 / scale;
+            let (w, h) = ((rect.right - rect.left) as f64 / scale, (rect.bottom - rect.top) as f64 / scale);
+            near = lx >= -NEAR_MARGIN && lx <= w + NEAR_MARGIN && ly >= -NEAR_MARGIN && ly <= h + NEAR_MARGIN;
             state.regions.lock().unwrap().iter().any(|r| {
                 lx >= r.x && lx <= r.x + r.width && ly >= r.y && ly <= r.y + r.height
             })
@@ -303,6 +312,7 @@ fn monitor_loop(app: AppHandle, hwnd: isize) {
 
         // --- Settle once a drag has ended (button up, no recent movement) ----
         let button_down = unsafe { GetAsyncKeyState(VK_LBUTTON.0 as i32) } < 0;
+        let dragging = state.moved_at.lock().unwrap().is_some();
         let settled = {
             let mut moved = state.moved_at.lock().unwrap();
             match *moved {
@@ -318,7 +328,8 @@ fn monitor_loop(app: AppHandle, hwnd: isize) {
         }
 
         // --- Focus Assist / fullscreen -------------------------------------
-        if tick % SYSTEM_POLL_EVERY == 0 {
+        if system_at.map_or(true, |t| t.elapsed() >= SYSTEM_POLL_EVERY) {
+            system_at = Some(Instant::now());
             let next = query_system_state();
             if system.map(|s| s.focus) != Some(next.focus) {
                 dlog!("[WINDOW] focus status -> {}", next.focus);
@@ -349,6 +360,15 @@ fn monitor_loop(app: AppHandle, hwnd: isize) {
                 let _ = window.show();
             }
         }
+
+        // Fewer wake-ups when nothing here can need a fast answer.
+        sleep = if hidden {
+            HIDDEN_TICK
+        } else if inside || near || dragging {
+            TICK
+        } else {
+            IDLE_TICK
+        };
     }
 }
 
