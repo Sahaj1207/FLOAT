@@ -173,7 +173,7 @@ const YourData: React.FC = () => {
   };
 
   return (
-    <Group title="Your data" foot="Your tasks, notes, pinned snippets, focus history and settings are saved on this PC, with the previous version of each kept in case of a crash. FLOAT also keeps a daily backup of the last 7 days. Uninstalling FLOAT removes them, so Export first if you want to keep them. Nothing leaves your PC.">
+    <Group title="Your data" foot="Your tasks, notes, pinned snippets, focus history and settings are saved on this PC, with the previous version of each kept in case of a crash. FLOAT also keeps a daily backup of the last 7 days, all in its own folder. To keep a copy somewhere else, or move to another PC, use Export. Nothing leaves your PC.">
       <Row id="export" label="Back up everything" desc={status ? <span className={`sw-status ${status.ok ? "ok" : "error"}`}>{status.text}</span> : "One file you can keep, or move to another PC"}>
         <button type="button" className="sw-btn" onClick={exportAll}>
           Export…
