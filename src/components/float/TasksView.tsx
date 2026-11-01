@@ -3,21 +3,65 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Check, Target, X } from "lucide-react";
 import { focus } from "../../activities/focusStore";
 import { taskList, useTasks } from "../../activities/tasksStore";
+import { NotesView } from "./NotesView";
 import "./TasksView.css";
 
-/** To-do list: type, Enter, tick off. Open tasks first, finished ones below. */
-export const TasksView: React.FC = () => {
+export type TasksMode = "tasks" | "notes";
+const MODE_KEY = "float_tasks_mode_v1";
+
+function loadMode(): TasksMode {
+  try {
+    return localStorage.getItem(MODE_KEY) === "notes" ? "notes" : "tasks";
+  } catch {
+    return "tasks";
+  }
+}
+
+/**
+ * Tasks and Quick Notes share a tab: a to-do list (type, Enter, tick off)
+ * and a scratchpad. Opens on whichever was used last.
+ */
+export const TasksView: React.FC<{ mode?: TasksMode; noteId?: string | null }> = ({ mode: requested, noteId = null }) => {
   const tasks = useTasks();
   const [draft, setDraft] = useState("");
+  const [mode, setModeState] = useState<TasksMode>(() => requested ?? loadMode());
   const open = tasks.filter((t) => !t.done);
   const done = tasks.filter((t) => t.done);
+
+  const setMode = (next: TasksMode) => {
+    setModeState(next);
+    try {
+      localStorage.setItem(MODE_KEY, next);
+    } catch {
+      // Not remembered.
+    }
+  };
 
   return (
     <div className="view tasks-view">
       <div className="view-header">
-        <span className="view-title">Tasks</span>
-        <span className="view-hint">{tasks.length === 0 ? "" : open.length === 0 ? "All done" : `${open.length} to do`}</span>
-        {done.length > 0 && (
+        <div className="segmented" role="tablist" aria-label="Tasks or notes">
+          {(["tasks", "notes"] as const).map((m) => (
+            <button
+              key={m}
+              type="button"
+              role="tab"
+              aria-selected={mode === m}
+              className={mode === m ? "active" : ""}
+              onClick={(e) => {
+                e.stopPropagation();
+                setMode(m);
+              }}
+              data-no-drag="true"
+            >
+              {m === "tasks" ? "Tasks" : "Notes"}
+            </button>
+          ))}
+        </div>
+        {mode === "tasks" && (
+          <span className="view-hint">{tasks.length === 0 ? "" : open.length === 0 ? "All done" : `${open.length} to do`}</span>
+        )}
+        {mode === "tasks" && done.length > 0 && (
           <button
             type="button"
             className="view-action"
@@ -32,6 +76,10 @@ export const TasksView: React.FC = () => {
         )}
       </div>
 
+      {mode === "notes" ? (
+        <NotesView focusNoteId={noteId} />
+      ) : (
+      <>
       <form
         className="task-add"
         onSubmit={(e) => {
@@ -109,6 +157,8 @@ export const TasksView: React.FC = () => {
           ))}
         </AnimatePresence>
       </div>
+      </>
+      )}
     </div>
   );
 };
