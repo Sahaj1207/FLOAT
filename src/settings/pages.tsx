@@ -13,9 +13,7 @@ import {
   Settings2,
   Target,
   Trash2,
-  Zap,
 } from "lucide-react";
-import { ShortcutsPage } from "./ShortcutsPage";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import {
   checkForUpdate,
@@ -630,7 +628,6 @@ export const SECTIONS: Section[][] = [
   ],
   [
     { id: "mouse", title: "Mouse & Touch", blurb: "Hover, scroll, click and touch.", Icon: MousePointer2, tile: ["#4fb3ff", "#0a84ff"], Page: MousePage, rows: [["hover", "Open on hover"], ["delay", "Hover delay"], ["scroll", "Scroll for volume"], ["skip", "Swipe sideways to skip", "track"], ["middle", "Middle-click to play or pause"]] },
-    { id: "shortcuts", title: "Shortcuts", blurb: "Your own one-tap buttons in the island.", Icon: Zap, tile: ["#ff6b9a", "#6d5cff"], Page: ShortcutsPage, rows: [["shortcuts", "Custom shortcuts", "buttons app website folder command"]] },
     { id: "keyboard", title: "Keyboard", blurb: "Shortcuts that work from anywhere.", Icon: Keyboard, tile: ["#a3a3aa", "#76767d"], Page: KeyboardPage, rows: [["key-open", "Open FLOAT shortcut", "hotkey"], ["key-search", "Search shortcut", "hotkey"], ["key-paste", "Paste shortcut", "hotkey clipboard"], ["key-text", "Copy Text shortcut", "hotkey ocr"], ["key-mic", "Mute microphone shortcut", "hotkey mic"]] },
   ],
   [

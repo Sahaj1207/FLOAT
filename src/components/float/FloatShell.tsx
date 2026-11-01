@@ -93,8 +93,6 @@ const FLOATING_IDLE_HEIGHT = 36;
 const PILL_DOCK_TOP = 6;
 const SURFACE_WIDTH = 580;
 const SURFACE_HEIGHT = 244;
-// Controls is taller: shortcuts sit above the toggles.
-const SURFACE_HEIGHT_CONTROLS = 312;
 const NOTIF_PREVIEW_WIDTH = 240;
 const NOTIF_PREVIEW_HEIGHT = 56;
 const QUICK_ACTIONS_WIDTH = 176;
@@ -187,7 +185,6 @@ const FloatShell: React.FC = () => {
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
   const searchShowingRef = useRef(false);
-  const [surfaceTab, setSurfaceTab] = useState<string>("home");
   const pasteShowingRef = useRef(false);
 
   const visualModeRef = useRef(visualMode);
@@ -1127,7 +1124,7 @@ const FloatShell: React.FC = () => {
   let islandHeight: number;
   let bottomRadius: number;
   if (isExpanded) {
-    [islandWidth, islandHeight, bottomRadius] = [SURFACE_WIDTH, surfaceTab === "controls" ? SURFACE_HEIGHT_CONTROLS : SURFACE_HEIGHT, 30];
+    [islandWidth, islandHeight, bottomRadius] = [SURFACE_WIDTH, SURFACE_HEIGHT, 30];
   } else if (showDrop) {
     [islandWidth, islandHeight, bottomRadius] = [DROP_WIDTH, DROP_HEIGHT, 26];
   } else if (isOrb) {
@@ -1586,7 +1583,6 @@ const FloatShell: React.FC = () => {
             request={surfaceRequest}
             onTabChange={(tab) => {
               searchShowingRef.current = tab === "search";
-              setSurfaceTab(tab);
               pasteShowingRef.current = tab === "paste";
             }}
           />
