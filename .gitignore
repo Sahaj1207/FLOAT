@@ -57,3 +57,6 @@ Thumbs.db
 # Logs & Temporary Scratch Files
 *.log
 scratch/
+
+# Promo film renders
+promo/out/

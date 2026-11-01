@@ -1,0 +1,541 @@
+[
+  {
+    "id": "mac",
+    "text": "Mac users have the Dynamic Island.",
+    "duration": 3.216,
+    "words": [
+      {
+        "word": "Mac",
+        "start": 0.1,
+        "end": 0.459041
+      },
+      {
+        "word": "users",
+        "start": 0.472333,
+        "end": 0.871249
+      },
+      {
+        "word": "have",
+        "start": 0.884583,
+        "end": 1.057458
+      },
+      {
+        "word": "the",
+        "start": 1.07075,
+        "end": 1.177125
+      },
+      {
+        "word": "Dynamic",
+        "start": 1.190416,
+        "end": 1.722332
+      },
+      {
+        "word": "Island",
+        "start": 1.735625,
+        "end": 2.280833
+      }
+    ]
+  },
+  {
+    "id": "ask",
+    "text": "So we asked a simple question.",
+    "duration": 2.832,
+    "words": [
+      {
+        "word": "So",
+        "start": 0.1,
+        "end": 0.339375
+      },
+      {
+        "word": "we",
+        "start": 0.352666,
+        "end": 0.552124
+      },
+      {
+        "word": "asked",
+        "start": 0.565416,
+        "end": 0.871249
+      },
+      {
+        "word": "a",
+        "start": 0.884583,
+        "end": 0.951083
+      },
+      {
+        "word": "simple",
+        "start": 0.964375,
+        "end": 1.323416
+      },
+      {
+        "word": "question",
+        "start": 1.336708,
+        "end": 1.908499
+      }
+    ]
+  },
+  {
+    "id": "why",
+    "text": "Why can't Windows?",
+    "duration": 2.328,
+    "words": [
+      {
+        "word": "Why",
+        "start": 0.1,
+        "end": 0.352666
+      },
+      {
+        "word": "can't",
+        "start": 0.365958,
+        "end": 0.671791
+      },
+      {
+        "word": "Windows",
+        "start": 0.685125,
+        "end": 1.389916
+      }
+    ]
+  },
+  {
+    "id": "meet",
+    "text": "Meet FLOAT.",
+    "duration": 1.944,
+    "words": [
+      {
+        "word": "Meet",
+        "start": 0.1,
+        "end": 0.459041
+      },
+      {
+        "word": "FLOAT",
+        "start": 0.472333,
+        "end": 1.017541
+      }
+    ]
+  },
+  {
+    "id": "work",
+    "text": "Not a notch that copies Apple. A place where your work happens.",
+    "duration": 5.496,
+    "words": [
+      {
+        "word": "Not",
+        "start": 0.1,
+        "end": 0.405833
+      },
+      {
+        "word": "a",
+        "start": 0.419166,
+        "end": 0.472374
+      },
+      {
+        "word": "notch",
+        "start": 0.485625,
+        "end": 0.791458
+      },
+      {
+        "word": "that",
+        "start": 0.804791,
+        "end": 0.977666
+      },
+      {
+        "word": "copies",
+        "start": 0.990958,
+        "end": 1.389874
+      },
+      {
+        "word": "Apple",
+        "start": 1.403208,
+        "end": 1.802124
+      },
+      {
+        "word": "A",
+        "start": 2.722875,
+        "end": 2.89575
+      },
+      {
+        "word": "place",
+        "start": 2.909041,
+        "end": 3.214874
+      },
+      {
+        "word": "where",
+        "start": 3.228208,
+        "end": 3.387791
+      },
+      {
+        "word": "your",
+        "start": 3.401083,
+        "end": 3.573958
+      },
+      {
+        "word": "work",
+        "start": 3.58725,
+        "end": 3.919708
+      },
+      {
+        "word": "happens",
+        "start": 3.932958,
+        "end": 4.557958
+      }
+    ]
+  },
+  {
+    "id": "focus",
+    "text": "Start a focus session on any task. FLOAT holds your notifications, and pauses for your meetings.",
+    "duration": 8.016,
+    "words": [
+      {
+        "word": "Start",
+        "start": 0.1,
+        "end": 0.51225
+      },
+      {
+        "word": "a",
+        "start": 0.525541,
+        "end": 0.592041
+      },
+      {
+        "word": "focus",
+        "start": 0.605333,
+        "end": 1.017583
+      },
+      {
+        "word": "session",
+        "start": 1.030833,
+        "end": 1.376583
+      },
+      {
+        "word": "on",
+        "start": 1.389875,
+        "end": 1.549458
+      },
+      {
+        "word": "any",
+        "start": 1.56275,
+        "end": 1.748916
+      },
+      {
+        "word": "task",
+        "start": 1.76225,
+        "end": 2.347375
+      },
+      {
+        "word": "FLOAT",
+        "start": 3.268083,
+        "end": 3.666999
+      },
+      {
+        "word": "holds",
+        "start": 3.680333,
+        "end": 3.986166
+      },
+      {
+        "word": "your",
+        "start": 3.999458,
+        "end": 4.145749
+      },
+      {
+        "word": "notifications",
+        "start": 4.159041,
+        "end": 5.196291
+      },
+      {
+        "word": "and",
+        "start": 5.435625,
+        "end": 5.581916
+      },
+      {
+        "word": "pauses",
+        "start": 5.595208,
+        "end": 6.047333
+      },
+      {
+        "word": "for",
+        "start": 6.060625,
+        "end": 6.153708
+      },
+      {
+        "word": "your",
+        "start": 6.167041,
+        "end": 6.353207
+      },
+      {
+        "word": "meetings",
+        "start": 6.3665,
+        "end": 7.097875
+      }
+    ]
+  },
+  {
+    "id": "text",
+    "text": "Copy text from anything on screen. Even images.",
+    "duration": 4.944,
+    "words": [
+      {
+        "word": "Copy",
+        "start": 0.1,
+        "end": 0.472333
+      },
+      {
+        "word": "text",
+        "start": 0.485625,
+        "end": 0.857958
+      },
+      {
+        "word": "from",
+        "start": 0.871291,
+        "end": 1.030874
+      },
+      {
+        "word": "anything",
+        "start": 1.044166,
+        "end": 1.403207
+      },
+      {
+        "word": "on",
+        "start": 1.4165,
+        "end": 1.549458
+      },
+      {
+        "word": "screen",
+        "start": 1.56275,
+        "end": 2.134541
+      },
+      {
+        "word": "Even",
+        "start": 3.055333,
+        "end": 3.414374
+      },
+      {
+        "word": "images",
+        "start": 3.427666,
+        "end": 4.026082
+      }
+    ]
+  },
+  {
+    "id": "paste",
+    "text": "Paste your clipboard into any app.",
+    "duration": 2.856,
+    "words": [
+      {
+        "word": "Paste",
+        "start": 0.1,
+        "end": 0.432458
+      },
+      {
+        "word": "your",
+        "start": 0.44575,
+        "end": 0.565416
+      },
+      {
+        "word": "clipboard",
+        "start": 0.578708,
+        "end": 1.057416
+      },
+      {
+        "word": "into",
+        "start": 1.07075,
+        "end": 1.363291
+      },
+      {
+        "word": "any",
+        "start": 1.376583,
+        "end": 1.589333
+      },
+      {
+        "word": "app.",
+        "start": 1.602666,
+        "end": 1.921832
+      }
+    ]
+  },
+  {
+    "id": "search",
+    "text": "Search apps, files and settings. Or just type a command.",
+    "duration": 5.808,
+    "words": [
+      {
+        "word": "Search",
+        "start": 0.1,
+        "end": 0.565416
+      },
+      {
+        "word": "apps",
+        "start": 0.578708,
+        "end": 1.004249
+      },
+      {
+        "word": "files",
+        "start": 1.203708,
+        "end": 1.669124
+      },
+      {
+        "word": "and",
+        "start": 1.682458,
+        "end": 1.815416
+      },
+      {
+        "word": "settings",
+        "start": 1.828708,
+        "end": 2.520208
+      },
+      {
+        "word": "Or",
+        "start": 3.440958,
+        "end": 3.573916
+      },
+      {
+        "word": "just",
+        "start": 3.58725,
+        "end": 3.8665
+      },
+      {
+        "word": "type",
+        "start": 3.879791,
+        "end": 4.105874
+      },
+      {
+        "word": "a",
+        "start": 4.119166,
+        "end": 4.159041
+      },
+      {
+        "word": "command",
+        "start": 4.172333,
+        "end": 4.890416
+      }
+    ]
+  },
+  {
+    "id": "craft",
+    "text": "Apple's curves. Real glass. Spring motion.",
+    "duration": 6.048,
+    "words": [
+      {
+        "word": "Apple's",
+        "start": 0.1,
+        "end": 0.552125
+      },
+      {
+        "word": "curves",
+        "start": 0.565416,
+        "end": 1.243624
+      },
+      {
+        "word": "Real",
+        "start": 2.164375,
+        "end": 2.563291
+      },
+      {
+        "word": "glass",
+        "start": 2.576583,
+        "end": 3.214874
+      },
+      {
+        "word": "Spring",
+        "start": 4.132458,
+        "end": 4.571291
+      },
+      {
+        "word": "motion",
+        "start": 4.584583,
+        "end": 5.116499
+      }
+    ]
+  },
+  {
+    "id": "private",
+    "text": "Private. Everything stays on your PC. Free, and open source.",
+    "duration": 7.464,
+    "words": [
+      {
+        "word": "Private",
+        "start": 0.1,
+        "end": 0.831375
+      },
+      {
+        "word": "Everything",
+        "start": 1.752125,
+        "end": 2.27075
+      },
+      {
+        "word": "stays",
+        "start": 2.284041,
+        "end": 2.643082
+      },
+      {
+        "word": "on",
+        "start": 2.656375,
+        "end": 2.776041
+      },
+      {
+        "word": "your",
+        "start": 2.789375,
+        "end": 2.975541
+      },
+      {
+        "word": "PC",
+        "start": 2.988833,
+        "end": 3.693624
+      },
+      {
+        "word": "Free",
+        "start": 4.611166,
+        "end": 5.143082
+      },
+      {
+        "word": "and",
+        "start": 5.422333,
+        "end": 5.581916
+      },
+      {
+        "word": "open",
+        "start": 5.595208,
+        "end": 5.914374
+      },
+      {
+        "word": "source",
+        "start": 5.927666,
+        "end": 6.526082
+      }
+    ]
+  },
+  {
+    "id": "end",
+    "text": "FLOAT. The island Windows was missing.",
+    "duration": 4.464,
+    "words": [
+      {
+        "word": "FLOAT",
+        "start": 0.1,
+        "end": 0.738291
+      },
+      {
+        "word": "The",
+        "start": 1.659041,
+        "end": 1.871791
+      },
+      {
+        "word": "island",
+        "start": 1.885125,
+        "end": 2.323958
+      },
+      {
+        "word": "Windows",
+        "start": 2.33725,
+        "end": 2.815958
+      },
+      {
+        "word": "was",
+        "start": 2.82925,
+        "end": 3.015416
+      },
+      {
+        "word": "missing",
+        "start": 3.028708,
+        "end": 3.547333
+      }
+    ]
+  }
+]
