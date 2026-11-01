@@ -45,7 +45,7 @@ const TABS: Record<BarTab, { label: string; Icon: React.ComponentType<{ size?: n
   home: { label: "Home", Icon: House },
   tray: { label: "Tray", Icon: Inbox },
   tasks: { label: "Tasks", Icon: CircleCheck },
-  timer: { label: "Timer", Icon: Timer },
+  timer: { label: "Focus & Timer", Icon: Timer },
   notifications: { label: "Notifications", Icon: Bell },
   controls: { label: "Controls", Icon: SlidersHorizontal },
 };

@@ -451,6 +451,7 @@ export type SettingsPage =
   | "sound"
   | "quiethours"
   | "batterysaver"
+  | "notifications"
   // Windows' connect flyout (Win+K), for connecting a paired device.
   | "connect-devices";
 
@@ -502,6 +503,8 @@ export interface CalendarEvent {
   end: number;
   allDay: boolean;
   location: string | null;
+  /** Teams / Zoom / Meet / Webex link for a Join button. */
+  joinUrl: string | null;
 }
 
 /** Upcoming events from the user's private ICS link (network). */

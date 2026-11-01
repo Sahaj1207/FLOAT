@@ -1,5 +1,6 @@
 import { MediaSession } from "../platform/media";
 import { TimerState } from "./timerStore";
+import { FocusState } from "./focusStore";
 
 /**
  * Live activities are the things the island can show. At most two are
@@ -10,6 +11,16 @@ export const ActivityPriority = {
   media: 10,
   // A running timer outranks music, which moves to the split bubble.
   timer: 30,
+  // A meeting coming up soon, below a running focus session.
+  meeting: 31,
+  // A focus session outranks music and timers.
+  session: 32,
+  // What came in while you focused.
+  focusSummary: 114,
+  // The session ran out and needs a choice (Done / +5 / Break).
+  sessionEnd: 116,
+  // The meeting is about to start (or just has).
+  meetingNow: 117,
   notification: 100,
   focus: 104,
   privacy: 105,
@@ -112,6 +123,32 @@ export interface CallActivity {
   appName?: string;
 }
 
+export interface SessionActivity {
+  kind: "session";
+  id: string;
+  priority: number;
+  state: FocusState;
+}
+
+export interface MeetingActivity {
+  kind: "meeting";
+  id: string;
+  priority: number;
+  title: string;
+  /** Unix ms. */
+  start: number;
+  joinUrl: string | null;
+}
+
+export interface FocusSummaryActivity {
+  kind: "focusSummary";
+  id: string;
+  priority: number;
+  count: number;
+  /** App names, most frequent first. */
+  apps: string[];
+}
+
 export interface FocusActivity {
   kind: "focus";
   id: string;
@@ -134,6 +171,9 @@ export interface TimerDoneActivity {
 }
 
 export type Activity =
+  | SessionActivity
+  | MeetingActivity
+  | FocusSummaryActivity
   | TimerActivity
   | TimerDoneActivity
   | NotificationActivity
@@ -158,9 +198,10 @@ export type StatusActivity =
   | ShelfActivity
   | DownloadActivity
   | CallActivity
+  | FocusSummaryActivity
   | BrightnessActivity;
 
-const STATUS_KINDS = new Set<string>(["battery", "privacy", "focus", "timerDone", "bluetooth", "shelf", "download", "call", "brightness"]);
+const STATUS_KINDS = new Set<string>(["battery", "privacy", "focus", "timerDone", "bluetooth", "shelf", "download", "call", "focusSummary", "brightness"]);
 
 export const isStatusActivity = (a: Activity | null): a is StatusActivity => a !== null && STATUS_KINDS.has(a.kind);
 

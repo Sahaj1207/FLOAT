@@ -14,7 +14,7 @@ import {
   GLASS_TINT_MAX,
 } from "../../services/settings";
 import { getAutostart, getHotkey, getSearchHotkey, setAutostart, subscribeToAutostart } from "../../platform";
-import { ChevronLeft, MousePointer2, Pill } from "lucide-react";
+import { ChevronLeft, MousePointer2, Pill, Target } from "lucide-react";
 import { UpdatesCard } from "./UpdatesCard";
 import "./FloatSettingsView.css";
 
@@ -681,6 +681,37 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = ({ onClose })
               <span className="float-setting-switch-handle" />
             </button>
           </div>
+        </div>
+
+        {/* Focus Sessions */}
+        <div className="float-setting-card">
+          <div className="float-setting-label-row">
+            <div className="float-setting-label-left">
+              <Target className="float-setting-icon" strokeWidth={2} />
+              <span className="float-setting-name">Focus Sessions</span>
+            </div>
+          </div>
+          <div className="float-setting-toggle-row">
+            <div className="float-setting-toggle-left">
+              <span className="float-setting-toggle-title">Notifications While Focusing</span>
+              <span className="float-setting-toggle-desc">Calls always come through</span>
+            </div>
+          </div>
+          <Segmented
+            label="Notifications while focusing"
+            value={settings.focusNotifications}
+            options={[
+              ["hold", "Hold", "Summary at the end"],
+              ["quiet", "Quiet", "Just the unread dot"],
+            ] as const}
+            onChange={(focusNotifications) => update({ focusNotifications })}
+          />
+          <SwitchRow
+            title="Meeting Countdown"
+            desc="Show your next meeting in the island 10 minutes before, with Join for Teams, Zoom and Meet links. A meeting starting pauses your focus session. Needs your calendar link (Widgets)"
+            checked={settings.meetingAlerts}
+            onToggle={() => update({ meetingAlerts: !settings.meetingAlerts })}
+          />
         </div>
 
         {/* Mouse & Touch */}

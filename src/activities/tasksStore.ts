@@ -46,6 +46,10 @@ export const taskList = {
   toggle(id: string) {
     set(tasks.map((t) => (t.id === id ? { ...t, done: !t.done } : t)));
   },
+  /** Mark done (never un-marks, unlike toggle). */
+  complete(id: string) {
+    set(tasks.map((t) => (t.id === id ? { ...t, done: true } : t)));
+  },
   remove(id: string) {
     set(tasks.filter((t) => t.id !== id));
   },

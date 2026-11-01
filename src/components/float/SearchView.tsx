@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Calculator, CornerDownLeft, Globe, Search, Settings as SettingsIcon } from "lucide-react";
+import { Calculator, CornerDownLeft, Globe, Search, Settings as SettingsIcon, Target } from "lucide-react";
+import { focus } from "../../activities/focusStore";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import {
   getSearchIcon,
@@ -97,7 +98,16 @@ const KIND_LABEL: Record<SearchKind, string> = {
 
 // --- The view ----------------------------------------------------------------------
 
+/** "focus", "focus 50", "focus write report 25m" -> a session to start. */
+function focusCommand(query: string): { title: string; minutes: number } | null {
+  const m = query.trim().match(/^focus\b\s*(.*?)\s*(?:(\d{1,3})\s*(?:m|min|mins|minutes)?)?$/i);
+  if (!m) return null;
+  const minutes = m[2] ? Math.min(240, Math.max(1, parseInt(m[2], 10))) : 25;
+  return { title: m[1].trim(), minutes };
+}
+
 type Row =
+  | { type: "focus"; title: string; minutes: number }
   | { type: "answer"; expression: string; value: string; kind: "math" | "convert" }
   | { type: "result"; result: SearchResult }
   | { type: "web"; query: string };
@@ -178,6 +188,8 @@ export const SearchView: React.FC<SearchViewProps> = ({ initialQuery = "", onDon
     const q = query.trim();
     if (!q) return recents.map((result) => ({ type: "result" as const, result }));
     const list: Row[] = [];
+    const session = focusCommand(q);
+    if (session) list.push({ type: "focus", ...session });
     if (answer) list.push({ type: "answer", ...answer });
     list.push(...results.map((result) => ({ type: "result" as const, result })));
     list.push({ type: "web", query: q });
@@ -197,6 +209,11 @@ export const SearchView: React.FC<SearchViewProps> = ({ initialQuery = "", onDon
   const activate = useCallback(
     (row: Row | undefined, reveal = false) => {
       if (!row) return;
+      if (row.type === "focus") {
+        focus.start(row.title, row.minutes);
+        onDone();
+        return;
+      }
       if (row.type === "answer") {
         copyText(row.value);
         setCopied(true);
@@ -271,6 +288,20 @@ export const SearchView: React.FC<SearchViewProps> = ({ initialQuery = "", onDon
             },
             "data-no-drag": "true",
           };
+          if (row.type === "focus") {
+            return (
+              <div key={key} {...common}>
+                <span className="search-icon-tile focus">
+                  <Target size={14} strokeWidth={2.2} />
+                </span>
+                <span className="search-text">
+                  <span className="search-name">Start a {row.minutes}-minute focus session</span>
+                  {row.title && <span className="search-detail">{row.title}</span>}
+                </span>
+                {isSelected && <CornerDownLeft className="search-enter" size={13} />}
+              </div>
+            );
+          }
           if (row.type === "answer") {
             return (
               <div key={key} {...common}>

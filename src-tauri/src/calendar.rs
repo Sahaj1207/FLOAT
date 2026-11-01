@@ -26,12 +26,17 @@ pub struct CalendarEvent {
     end: i64,
     all_day: bool,
     location: Option<String>,
+    /// Teams / Zoom / Meet / Webex link found in the event, for a Join button.
+    join_url: Option<String>,
 }
 
 #[derive(Default)]
 struct RawEvent {
     summary: String,
     location: Option<String>,
+    description: String,
+    /// Some calendars (Google) put the meeting link in its own property.
+    conference: Option<String>,
     dtstart: Option<String>, // full line, e.g. "DTSTART;TZID=Europe/Paris:20260101T090000"
     dtend_value: Option<String>,
     rrule: Vec<String>, // RRULE / EXDATE / RDATE lines
@@ -46,6 +51,7 @@ static CACHE: Mutex<Option<(String, Instant, Vec<RawParsed>)>> = Mutex::new(None
 struct RawParsed {
     title: String,
     location: Option<String>,
+    join_url: Option<String>,
     set: RRuleSet,
     duration: ChronoDuration,
     all_day: bool,
@@ -101,6 +107,8 @@ fn parse_events(ics: &str) -> Vec<RawParsed> {
         match key.as_str() {
             "SUMMARY" => event.summary = unescape(value),
             "LOCATION" => event.location = Some(unescape(value)).filter(|l| !l.trim().is_empty()),
+            "DESCRIPTION" => event.description = unescape(value),
+            "URL" | "X-GOOGLE-CONFERENCE" | "CONFERENCE" => event.conference = Some(value.to_string()),
             "DTSTART" => event.dtstart = Some(line.clone()),
             "DTEND" => event.dtend_value = Some(value.to_string()),
             "RRULE" | "EXDATE" | "RDATE" => event.rrule.push(line.clone()),
@@ -136,13 +144,40 @@ fn finish(event: RawEvent) -> Option<RawParsed> {
     // back to the same wall-clock time as local (floating) time.
     let set = build(&dtstart).or_else(|| build(&format!("DTSTART:{}", start_value.trim_end_matches('Z'))))?;
 
+    let join_url = [event.conference.as_deref(), event.location.as_deref(), Some(event.description.as_str())]
+        .into_iter()
+        .flatten()
+        .find_map(meeting_link);
     Some(RawParsed {
         title: if event.summary.trim().is_empty() { "Busy".into() } else { event.summary },
         location: event.location,
+        join_url,
         set,
         duration,
         all_day,
     })
+}
+
+/// Hosts of online-meeting links worth a Join button.
+const MEETING_HOSTS: [&str; 6] = [
+    "teams.microsoft.com",
+    "teams.live.com",
+    "zoom.us",
+    "meet.google.com",
+    "webex.com",
+    "whereby.com",
+];
+
+/// The first online-meeting https link in `text`, if any.
+fn meeting_link(text: &str) -> Option<String> {
+    text.split(|c: char| c.is_whitespace() || "<>\"'()[]".contains(c))
+        .filter(|w| w.starts_with("https://"))
+        .map(|w| w.trim_end_matches(|c: char| ".,;".contains(c)))
+        .find(|w| {
+            let host = w["https://".len()..].split('/').next().unwrap_or("").to_ascii_lowercase();
+            MEETING_HOSTS.iter().any(|h| host == *h || host.ends_with(&format!(".{h}")))
+        })
+        .map(str::to_string)
 }
 
 fn upcoming(events: &[RawParsed], now: DateTime<Utc>) -> Vec<CalendarEvent> {
@@ -163,6 +198,7 @@ fn upcoming(events: &[RawParsed], now: DateTime<Utc>) -> Vec<CalendarEvent> {
                 end: end.timestamp_millis(),
                 all_day: event.all_day,
                 location: event.location.clone(),
+                join_url: event.join_url.clone(),
             });
         }
     }
@@ -249,5 +285,14 @@ mod tests {
         let events = parse_events(ICS);
         let now = Utc.with_ymd_and_hms(2026, 1, 7, 9, 5, 0).unwrap();
         assert_eq!(upcoming(&events, now)[0].title, "Standup");
+    }
+
+    #[test]
+    fn finds_meeting_links() {
+        let teams = "Join: https://teams.microsoft.com/l/meetup-join/19%3a/0?context=x\\nMore";
+        assert!(meeting_link(teams).unwrap().starts_with("https://teams.microsoft.com/l/meetup-join/"));
+        assert_eq!(meeting_link("https://us02web.zoom.us/j/123.").as_deref(), Some("https://us02web.zoom.us/j/123"));
+        assert_eq!(meeting_link("see https://example.com/zoom.us"), None);
+        assert_eq!(meeting_link("Room 4"), None);
     }
 }

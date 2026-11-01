@@ -117,6 +117,10 @@
   background: var(--orange);
 }
 
+.search-icon-tile.focus {
+  background: var(--focus);
+}
+
 .search-icon-tile.web {
   background: var(--tint);
 }

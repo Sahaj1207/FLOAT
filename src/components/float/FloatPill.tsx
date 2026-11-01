@@ -6,7 +6,9 @@ import { OrbNotificationState } from "./FloatOrb";
 import { AppIcon } from "./AppIcon";
 import { VolumeHud } from "./VolumeHud";
 import { IdleNotch } from "./IdleNotch";
-import { StatusActivity, TimerActivity, VolumeActivity } from "../../activities/types";
+import { MeetingActivity, SessionActivity, StatusActivity, TimerActivity, VolumeActivity } from "../../activities/types";
+import { FocusPill } from "./Focus";
+import { MeetingPill } from "./Meeting";
 import { TimerPill } from "./Timer";
 import { DropZone } from "./Shelf";
 import { StatusHud } from "./StatusHud";
@@ -24,6 +26,9 @@ interface FloatPillProps {
   volume?: VolumeActivity | null;
   status?: StatusActivity | null;
   timer?: TimerActivity | null;
+  session?: SessionActivity | null;
+  meeting?: MeetingActivity | null;
+  onDismissMeeting?: () => void;
   /** Files are being dragged over the notch (count), or null. */
   dropCount?: number | null;
   onVolumeChange?: (state: { level: number; muted: boolean }) => void;
@@ -41,6 +46,9 @@ export const FloatPill: React.FC<FloatPillProps> = ({
   volume = null,
   status = null,
   timer = null,
+  session = null,
+  meeting = null,
+  onDismissMeeting = () => {},
   dropCount = null,
   onVolumeChange = () => {},
 }) => {
@@ -51,6 +59,10 @@ export const FloatPill: React.FC<FloatPillProps> = ({
     ? "volume"
     : status
     ? `status-${status.kind}`
+    : session
+    ? "session"
+    : meeting
+    ? "meeting"
     : timer
     ? "timer"
     : isNotificationActive && notification?.hasNotification
@@ -83,6 +95,10 @@ export const FloatPill: React.FC<FloatPillProps> = ({
           <VolumeHud activity={volume} onChange={onVolumeChange} />
         ) : status ? (
           <StatusHud activity={status} />
+        ) : session ? (
+          <FocusPill state={session.state} />
+        ) : meeting ? (
+          <MeetingPill activity={meeting} onDismiss={onDismissMeeting} />
         ) : timer ? (
           <TimerPill state={timer.state} />
         ) : isNotificationActive && notification?.hasNotification ? (

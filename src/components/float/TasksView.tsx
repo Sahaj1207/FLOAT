@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, X } from "lucide-react";
+import { Check, Target, X } from "lucide-react";
+import { focus } from "../../activities/focusStore";
 import { taskList, useTasks } from "../../activities/tasksStore";
 import "./TasksView.css";
 
@@ -77,6 +78,21 @@ export const TasksView: React.FC = () => {
                 {task.done && <Check size={11} strokeWidth={3.2} />}
               </button>
               <span className="task-title">{task.title}</span>
+              {!task.done && (
+                <button
+                  type="button"
+                  className="task-remove task-focus"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    focus.start(task.title, 25, task.id);
+                  }}
+                  data-no-drag="true"
+                  aria-label="Focus on this for 25 minutes"
+                  title="Focus on this for 25 minutes"
+                >
+                  <Target size={12} strokeWidth={2.4} />
+                </button>
+              )}
               <button
                 type="button"
                 className="task-remove"

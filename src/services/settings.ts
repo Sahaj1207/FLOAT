@@ -9,6 +9,9 @@ export type VisualStyle = "auto" | "glass" | "black";
 // notch: fused to the screen edge like the older MacBook notch.
 export type IslandShape = "pill" | "notch";
 export type HoverDelay = "short" | "normal" | "long";
+// During a focus session: hold banners and summarise at the end, or just
+// skip banners (the unread dot still shows).
+export type FocusNotifications = "hold" | "quiet";
 
 export interface FloatSettings {
   transparency: number; // glass tint: how dark the glass is, 0.10 to 0.90, default 0.45
@@ -36,6 +39,8 @@ export interface FloatSettings {
   middleClickPlayPause: boolean; // middle-click on the island plays / pauses, default true
   downloadAlerts: boolean;       // show finished downloads and Nearby Share files, default true
   musicWaves: boolean;           // glowing waves behind the player that move with the music, default true
+  focusNotifications: FocusNotifications; // "hold" | "quiet", default "hold"
+  meetingAlerts: boolean;        // show the next meeting in the island 10 min before, default true
 }
 
 export const PILL_LENGTH_MIN = 220;
@@ -67,6 +72,8 @@ export const DEFAULT_FLOAT_SETTINGS: FloatSettings = {
   middleClickPlayPause: true,
   downloadAlerts: true,
   musicWaves: true,
+  focusNotifications: "hold",
+  meetingAlerts: true,
 };
 
 const SETTINGS_STORAGE_KEY = "float_settings_v1";
@@ -186,6 +193,8 @@ export function loadSettings(): FloatSettings {
       middleClickPlayPause: bool(parsed.middleClickPlayPause, DEFAULT_FLOAT_SETTINGS.middleClickPlayPause),
       downloadAlerts: bool(parsed.downloadAlerts, DEFAULT_FLOAT_SETTINGS.downloadAlerts),
       musicWaves: bool(parsed.musicWaves, DEFAULT_FLOAT_SETTINGS.musicWaves),
+      focusNotifications: pick(parsed.focusNotifications, ["hold", "quiet"] as const, DEFAULT_FLOAT_SETTINGS.focusNotifications),
+      meetingAlerts: bool(parsed.meetingAlerts, DEFAULT_FLOAT_SETTINGS.meetingAlerts),
       weatherEnabled: bool(parsed.weatherEnabled, DEFAULT_FLOAT_SETTINGS.weatherEnabled),
       weatherCity: text(parsed.weatherCity, 80),
       weatherFahrenheit: bool(parsed.weatherFahrenheit, DEFAULT_FLOAT_SETTINGS.weatherFahrenheit),

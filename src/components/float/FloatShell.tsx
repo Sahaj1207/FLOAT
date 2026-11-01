@@ -50,6 +50,8 @@ import { loadSettings, saveSettings, subscribeToSettings, FloatSettings } from "
 import { useActivities } from "../../activities/useActivities";
 import { Activity, ActivityPriority, isStatusActivity } from "../../activities/types";
 import { timer, useTimerState } from "../../activities/timerStore";
+import { focus, focusFinished, useFocusState } from "../../activities/focusStore";
+import { useNextEvent } from "./Widgets";
 import { playChime } from "./Timer";
 import { shelf } from "./Shelf";
 import { islandPath } from "../../island/shape";
@@ -200,11 +202,77 @@ const FloatShell: React.FC = () => {
 
   // A running or paused timer / stopwatch is an ongoing activity.
   const timerState = useTimerState();
-  const ongoing = useMemo<Activity[]>(
-    () => (timerState.active ? [{ kind: "timer", id: "timer", priority: ActivityPriority.timer, state: timerState }] : []),
-    [timerState]
-  );
+  const session = useFocusState();
+  const sessionRef = useRef(session);
+  sessionRef.current = session;
+  const sessionDone = focusFinished(session);
+
+  // --- Next meeting: in the island from 10 min before until 5 min after it starts.
+  const nextEvent = useNextEvent();
+  const [clock, setClock] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setClock(Date.now()), 15_000);
+    return () => clearInterval(id);
+  }, []);
+  const [dismissedMeeting, setDismissedMeeting] = useState<string | null>(null);
+  const meetingKey = nextEvent ? `${nextEvent.title}@${nextEvent.start}` : null;
+  const meetingLive =
+    !!nextEvent &&
+    !nextEvent.allDay &&
+    loadSettings().meetingAlerts &&
+    meetingKey !== dismissedMeeting &&
+    nextEvent.start - clock <= 10 * 60_000 &&
+    clock < nextEvent.start + 5 * 60_000;
+  const meetingSoon = meetingLive && nextEvent!.start - clock <= 2 * 60_000;
+
+  // A meeting starting pauses a running focus session (once per meeting).
+  const pausedForRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!meetingLive || !nextEvent || clock < nextEvent.start || pausedForRef.current === meetingKey) return;
+    pausedForRef.current = meetingKey;
+    if (sessionRef.current.phase === "focus" && !sessionRef.current.paused) focus.pause("meeting");
+  }, [meetingLive, nextEvent, clock, meetingKey]);
+
+  const ongoing = useMemo<Activity[]>(() => {
+    const list: Activity[] = [];
+    if (session.phase !== "idle") {
+      list.push({
+        kind: "session",
+        id: "session",
+        priority: sessionDone ? ActivityPriority.sessionEnd : ActivityPriority.session,
+        state: session,
+      });
+    }
+    if (meetingLive && nextEvent) {
+      list.push({
+        kind: "meeting",
+        id: "meeting",
+        priority: meetingSoon ? ActivityPriority.meetingNow : ActivityPriority.meeting,
+        title: nextEvent.title,
+        start: nextEvent.start,
+        joinUrl: nextEvent.joinUrl,
+      });
+    }
+    if (timerState.active) list.push({ kind: "timer", id: "timer", priority: ActivityPriority.timer, state: timerState });
+    return list;
+  }, [timerState, session, sessionDone, meetingLive, meetingSoon, nextEvent]);
   const { primary, secondary, show, dismissKind } = useActivities(activeMedia, ongoing);
+
+  // A focus phase or break running out: a chime; the island shows the choice.
+  useEffect(() => focus.onPhaseEnd(() => playChime()), []);
+
+  // Notifications held during focus, summarised when it ends.
+  const heldRef = useRef<string[]>([]);
+  const focusActive = session.phase === "focus" && !sessionDone;
+  useEffect(() => {
+    if (focusActive || heldRef.current.length === 0) return;
+    const held = heldRef.current;
+    heldRef.current = [];
+    const counts = new Map<string, number>();
+    held.forEach((app) => counts.set(app, (counts.get(app) ?? 0) + 1));
+    const apps = [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([app]) => app);
+    show({ kind: "focusSummary", id: "focusSummary", priority: ActivityPriority.focusSummary, count: held.length, apps }, 8000);
+  }, [focusActive, show]);
 
   useEffect(
     () =>
@@ -327,6 +395,12 @@ const FloatShell: React.FC = () => {
   const handlePillClick = useCallback(() => {
     if (isDraggingRef.current) return;
     clearIdleToOrbTimer();
+    if (primaryRef.current?.kind === "focusSummary") {
+      requestTab("notifications");
+      dismissKind("focusSummary");
+    } else if (primaryRef.current?.kind === "session") {
+      requestTab("timer");
+    }
     // The double-click (pill -> orb) gesture only exists in the orb modes.
     // In Island mode a click opens at once instead of waiting it out.
     if (settingsRef.current.idleBehavior === "alwaysPill") {
@@ -358,7 +432,7 @@ const FloatShell: React.FC = () => {
         }
       }, DOUBLE_TAP_WINDOW_MS);
     }
-  }, [clearClickTimer, clearIdleToOrbTimer, transitionTo]);
+  }, [clearClickTimer, clearIdleToOrbTimer, transitionTo, requestTab, dismissKind]);
 
   const handleOrbClick = useCallback(() => {
     if (isDraggingRef.current) return;
@@ -657,7 +731,12 @@ const FloatShell: React.FC = () => {
             CALL_MAX_MS
           );
         } else if (payload.isNew && cfg.notificationPresence) {
-          if (cfg.notificationPreview) {
+          const s = sessionRef.current;
+          const focusing = s.phase === "focus" && !focusFinished(s);
+          if (focusing && cfg.focusNotifications === "hold") {
+            heldRef.current.push(payload.appName || "An app");
+          }
+          if (cfg.notificationPreview && !focusing) {
             const openedPreview = visualModeRef.current === "orb";
             if (openedPreview) {
               setNotificationPreviewOpen(true);
@@ -1428,6 +1507,9 @@ const FloatShell: React.FC = () => {
             volume={primary?.kind === "volume" ? primary : null}
             status={isStatusActivity(primary) ? primary : null}
             timer={primary?.kind === "timer" ? primary : null}
+            session={primary?.kind === "session" ? primary : null}
+            meeting={primary?.kind === "meeting" ? primary : null}
+            onDismissMeeting={() => setDismissedMeeting(meetingKey)}
             dropCount={showDrop ? fileDrag : null}
             onVolumeChange={showVolume}
           />

@@ -1,0 +1,404 @@
+/* Focus Sessions. Purple for focus, green for breaks, like Apple's Focus and
+   Clock. Every control has the same press feedback as the rest of FLOAT. */
+
+/* ---- Ring ---- */
+.focus-ring {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.focus-ring svg {
+  position: absolute;
+  inset: 0;
+  transform: rotate(-90deg);
+}
+
+.focus-ring circle {
+  fill: none;
+}
+
+.focus-ring-track {
+  stroke: var(--fill-2);
+}
+
+.focus-ring-arc {
+  stroke: var(--focus);
+  stroke-linecap: round;
+  /* Glides between the half-second ticks instead of stepping. */
+  transition: stroke-dashoffset 0.5s linear, stroke 0.3s ease;
+}
+
+.focus-ring.break .focus-ring-arc {
+  stroke: var(--green);
+}
+
+.focus-ring-inner {
+  position: relative;
+}
+
+.focus-ring-time {
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-1);
+}
+
+/* ---- Round play / pause ---- */
+.focus-round {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--focus) 22%, transparent);
+  color: var(--focus);
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.12s cubic-bezier(0.2, 0.8, 0.25, 1);
+}
+
+.focus-round:hover {
+  background: color-mix(in srgb, var(--focus) 34%, transparent);
+}
+
+.focus-round:active {
+  transform: scale(0.9);
+}
+
+.focus-round.break {
+  background: color-mix(in srgb, var(--green) 20%, transparent);
+  color: var(--green);
+}
+
+.focus-round svg {
+  width: 45%;
+  height: 45%;
+}
+
+.focus-round.sm {
+  width: 22px;
+  height: 22px;
+}
+
+.focus-round.sm svg {
+  width: 52%;
+  height: 52%;
+}
+
+/* ---- Island pill ---- */
+.focus-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.focus-pill-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--focus);
+}
+
+.focus-pill-icon.break {
+  color: var(--green);
+}
+
+.focus-pill-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.focus-pill-time {
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--focus);
+}
+
+.focus-pill-time.break {
+  color: var(--green);
+}
+
+.focus-pill-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.focus-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 22px;
+  padding: 0 9px;
+  border: none;
+  border-radius: 11px;
+  background: var(--fill-2);
+  color: var(--text-1);
+  font: inherit;
+  font-size: var(--t-caption);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.12s cubic-bezier(0.2, 0.8, 0.25, 1);
+}
+
+.focus-chip:hover {
+  background: var(--fill-3);
+}
+
+.focus-chip:active {
+  transform: scale(0.92);
+}
+
+.focus-chip.primary {
+  background: var(--focus);
+  color: #fff;
+}
+
+.focus-chip.primary:hover {
+  background: color-mix(in srgb, var(--focus) 85%, #fff);
+}
+
+:root[data-input="touch"] .focus-chip {
+  height: 28px;
+  padding: 0 12px;
+}
+
+/* ---- Panel ---- */
+.focus-view {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  gap: var(--s-2);
+}
+
+.focus-stage {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  align-items: center;
+}
+
+.focus-setup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  width: 100%;
+}
+
+.focus-field {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  height: 36px;
+  padding: 0 var(--s-3);
+  border-radius: var(--r-control);
+  background: var(--fill-1);
+  color: var(--focus);
+  corner-shape: superellipse(1.35);
+  cursor: text;
+  transition: background 0.15s ease;
+}
+
+.focus-field:focus-within {
+  background: var(--fill-2);
+}
+
+.focus-field input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: none;
+  color: var(--text-1);
+  font: inherit;
+  font-size: var(--t-headline);
+  letter-spacing: -0.01em;
+  user-select: text;
+}
+
+.focus-field input::placeholder {
+  color: var(--text-3);
+}
+
+.focus-suggestions {
+  display: flex;
+  gap: var(--s-1);
+  min-width: 0;
+}
+
+.focus-suggestion {
+  max-width: 33%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 4px 10px;
+  color: var(--text-2);
+}
+
+.focus-suggestion.selected {
+  background: color-mix(in srgb, var(--focus) 26%, transparent);
+  color: var(--text-1);
+}
+
+.focus-setup-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.focus-custom {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  font-size: var(--t-footnote);
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
+.focus-custom input {
+  width: 34px;
+  height: 26px;
+  border: none;
+  border-radius: 7px;
+  outline: none;
+  background: var(--fill-2);
+  color: var(--text-1);
+  font: inherit;
+  font-size: var(--t-body);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  user-select: text;
+}
+
+.focus-start {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  margin-left: auto;
+  padding: 0 14px;
+  border: none;
+  border-radius: 15px;
+  background: var(--focus);
+  color: #fff;
+  font: inherit;
+  font-size: var(--t-footnote);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.12s cubic-bezier(0.2, 0.8, 0.25, 1), opacity 0.15s ease;
+}
+
+.focus-start:hover {
+  background: color-mix(in srgb, var(--focus) 85%, #fff);
+}
+
+.focus-start:active {
+  transform: scale(0.95);
+}
+
+.focus-start:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.focus-running {
+  display: flex;
+  align-items: center;
+  gap: var(--s-5);
+  width: 100%;
+}
+
+.focus-running-side {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.focus-running-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--t-title);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--text-1);
+}
+
+.focus-running-status {
+  font-size: var(--t-footnote);
+  color: var(--text-2);
+}
+
+.focus-running-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-top: var(--s-2);
+}
+
+.focus-running-actions .focus-start {
+  margin-left: 0;
+}
+
+.focus-running-actions .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.focus-footer {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  flex-shrink: 0;
+}
+
+.focus-footer .view-action {
+  font-size: var(--t-caption);
+  color: var(--text-3);
+}
+
+.focus-footer .view-action:hover {
+  color: var(--text-2);
+}
+
+.focus-today {
+  display: flex;
+  gap: var(--s-4);
+  font-size: var(--t-caption);
+  color: var(--text-2);
+}
+
+.focus-today strong {
+  font-weight: 600;
+  color: var(--text-1);
+  font-variant-numeric: tabular-nums;
+}
+
+.focus-streak {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--orange);
+}

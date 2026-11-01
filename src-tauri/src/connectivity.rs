@@ -183,7 +183,7 @@ pub async fn set_radio(app: AppHandle, kind: String, on: bool) -> Result<Connect
 /// Open a Windows Settings page. Only known pages are allowed.
 #[tauri::command]
 pub fn open_settings_page(page: String) -> Result<(), String> {
-    const PAGES: [&str; 5] = ["network-wifi", "bluetooth", "sound", "quiethours", "batterysaver"];
+    const PAGES: [&str; 6] = ["network-wifi", "bluetooth", "sound", "quiethours", "batterysaver", "notifications"];
     // "connect-devices" is the Windows connect flyout (Win+K): the supported
     // way to connect an already-paired Bluetooth audio device.
     let uri = if page == "connect-devices" {

@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import { Pause, Play, RotateCcw } from "lucide-react";
 import { timer, TimerMode, useTimerState } from "../../activities/timerStore";
 import { TimerReadout } from "./Timer";
+import { FocusView } from "./Focus";
+import { useFocusState } from "../../activities/focusStore";
 import "./TimerView.css";
 
 const PRESETS = [1, 5, 10, 15, 25, 45];
@@ -25,12 +27,16 @@ const digits = (value: string, max: number) => {
 };
 
 /** Timer / stopwatch: one big readout. Type any duration, or tap a preset. */
+type Mode = "focus" | TimerMode;
+
 export const TimerView: React.FC = () => {
   const state = useTimerState();
-  const [mode, setMode] = useState<TimerMode>(state.active ? state.mode : "timer");
+  const focusing = useFocusState().phase !== "idle";
+  // Opens on whatever is running, else on Focus.
+  const [mode, setMode] = useState<Mode>(focusing || !state.active ? "focus" : state.mode);
   const [custom, setCustom] = useState(loadCustom);
   const minRef = useRef<HTMLInputElement>(null);
-  const shown = state.active ? state.mode : mode;
+  const shown: Mode = mode === "focus" ? "focus" : state.active ? state.mode : mode;
 
   useEffect(() => {
     try {
@@ -49,26 +55,29 @@ export const TimerView: React.FC = () => {
     <div className="view timer-view">
       <div className="view-header">
         <div className="segmented" role="tablist" aria-label="Mode">
-          {(["timer", "stopwatch"] as const).map((m) => (
+          {(["focus", "timer", "stopwatch"] as const).map((m) => (
             <button
               key={m}
               type="button"
               role="tab"
               aria-selected={shown === m}
               className={shown === m ? "active" : ""}
-              disabled={state.active && state.mode !== m}
+              disabled={m !== "focus" && state.active && state.mode !== m}
               onClick={(e) => {
                 e.stopPropagation();
                 setMode(m);
               }}
               data-no-drag="true"
             >
-              {m === "timer" ? "Timer" : "Stopwatch"}
+              {m === "focus" ? "Focus" : m === "timer" ? "Timer" : "Stopwatch"}
             </button>
           ))}
         </div>
       </div>
 
+      {shown === "focus" ? (
+        <FocusView />
+      ) : (
       <div className="timer-stage">
         {state.active ? (
           <>
@@ -190,6 +199,7 @@ export const TimerView: React.FC = () => {
           </>
         )}
       </div>
+      )}
     </div>
   );
 };

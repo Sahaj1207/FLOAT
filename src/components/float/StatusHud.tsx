@@ -3,7 +3,7 @@ import { BatteryActivity, DownloadActivity, StatusActivity } from "../../activit
 import { TimerIcon } from "./Timer";
 import { TrayIcon } from "./Shelf";
 import { formatTimer } from "../../activities/timerStore";
-import { ArrowDownToLine, Bluetooth, FolderOpen, Moon, Phone, Share2, Sun, Zap } from "lucide-react";
+import { ArrowDownToLine, BellDot, Bluetooth, FolderOpen, Moon, Phone, Share2, Sun, Zap } from "lucide-react";
 import { openDownload } from "../../platform";
 import { AppIcon } from "./AppIcon";
 import "./StatusHud.css";
@@ -59,6 +59,16 @@ export const StatusHud: React.FC<{ activity: StatusActivity }> = ({ activity }) 
       );
     case "download":
       return <DownloadHud activity={activity} />;
+    case "focusSummary":
+      return (
+        <div className="status-hud">
+          <BellDot className="status-hud-icon focus" strokeWidth={2.2} />
+          <span className="status-hud-label">
+            {activity.count} {activity.count === 1 ? "notification" : "notifications"} while you focused
+          </span>
+          <span className="status-hud-detail">{activity.apps.slice(0, 2).join(", ")}</span>
+        </div>
+      );
     case "call":
       return (
         <div className="status-hud">
