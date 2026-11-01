@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.3.0
+
+Everyday control, and Clipboard superpowers.
+
+- **Paste from anywhere.** Press Ctrl+Alt+V in any app: the island shows your pinned snippets and clipboard history. Type to filter, then Enter (or 1–9) pastes straight into the app you were in. Ctrl+P pins or unpins.
+- **Pinned snippets.** Pin text you paste often (an email address, a signature) and it stays at the top for good, even after a restart. Pin from the paste picker or the pin on any Clipboard tile.
+- **Mic mute.** Ctrl+Alt+M mutes or unmutes your microphone; a small red mic sits on the island while it's muted, whichever app muted it.
+- **Earbud battery.** A few seconds after earbuds or a headset connect, the island shows their battery. Controls › Bluetooth shows it too.
+- **Quick Notes.** A scratchpad beside your tasks (Tasks | Notes): type and it's saved, flip through older notes, copy or delete.
+- **Search your own things.** Search now finds your clipboard history, pinned snippets, Tray files, tasks and notes.
+- **Commands in search.** Type lock, sleep, restart, shut down, sign out, dark mode, light mode, empty recycle bin or mute mic. Restart, shut down and sign out ask for a second Enter.
+- **Check for Updates…** in the FLOAT icon's menu (taskbar corner).
+
 ## 2.2.2
 
 - **New version? You'll know.** Once a day FLOAT asks GitHub for the latest version number, and when there's a new one the island shows it with **Update** and **Later**. Update downloads and installs it right there; Later hides it for that version. Turn it off in Settings › Updates › Check Automatically.
