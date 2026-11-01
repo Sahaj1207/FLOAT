@@ -89,6 +89,8 @@ export interface BluetoothActivity {
   priority: number;
   device: string;
   connected: boolean;
+  /** Battery %, once the device reports it. */
+  battery?: number | null;
 }
 
 export interface BrightnessActivity {

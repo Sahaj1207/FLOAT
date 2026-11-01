@@ -29,6 +29,7 @@ import {
   subscribeToPrivacy,
   getPrivacyState,
   subscribeToBluetoothDevice,
+  getBluetoothBattery,
   subscribeToFileDrag,
   subscribeToBrightness,
   subscribeToDownloads,
@@ -1451,6 +1452,21 @@ const FloatShell: React.FC = () => {
         { kind: "bluetooth", id: "bluetooth", priority: ActivityPriority.bluetooth, device: name, connected },
         STATUS_HUD_MS
       );
+      // Headsets report their battery a few seconds after connecting.
+      if (connected) {
+        const ask = (tries: number) =>
+          getBluetoothBattery(name).then((battery) => {
+            if (battery != null) {
+              show(
+                { kind: "bluetooth", id: "bluetooth", priority: ActivityPriority.bluetooth, device: name, connected, battery },
+                STATUS_HUD_MS + 1000
+              );
+            } else if (tries > 1) {
+              setTimeout(() => ask(tries - 1), 2500);
+            }
+          });
+        setTimeout(() => ask(4), 2500);
+      }
     }));
 
     unlisteners.push(subscribeToPower(({ percent, charging, low }) => {

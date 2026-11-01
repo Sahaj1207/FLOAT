@@ -55,6 +55,7 @@ export const StatusHud: React.FC<{ activity: StatusActivity }> = ({ activity }) 
           <Bluetooth className="status-hud-icon bluetooth" strokeWidth={2.2} />
           <span className="status-hud-label">{activity.connected ? "Connected" : "Disconnected"}</span>
           <span className="status-hud-detail">{activity.device}</span>
+          {activity.battery != null && <BatteryBadge percent={activity.battery} />}
         </div>
       );
     case "download":
@@ -152,6 +153,19 @@ const DownloadHud: React.FC<{ activity: DownloadActivity }> = ({ activity }) => 
         Open
       </button>
     </div>
+  );
+};
+
+/** "80%" with a small battery cell, red when low. */
+const BatteryBadge: React.FC<{ percent: number }> = ({ percent }) => {
+  const low = percent <= 20;
+  return (
+    <span className={`status-hud-battery bt ${low ? "low" : ""}`}>
+      <span className="status-hud-percent">{percent}%</span>
+      <span className="status-hud-cell">
+        <span className="status-hud-cell-fill" style={{ width: `${percent}%` }} />
+      </span>
+    </span>
   );
 };
 

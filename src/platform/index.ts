@@ -515,6 +515,15 @@ export interface BluetoothDeviceInfo {
   connected: boolean;
 }
 
+/** Battery % a Bluetooth headset or phone reports, or null. */
+export async function getBluetoothBattery(name: string): Promise<number | null> {
+  try {
+    return await invoke<number | null>("bluetooth_battery", { name });
+  } catch {
+    return null;
+  }
+}
+
 /** Paired Bluetooth devices, connected first. */
 export async function getBluetoothDevices(): Promise<BluetoothDeviceInfo[]> {
   try {

@@ -12,6 +12,7 @@ mod appicon;
 mod autostart;
 mod backdrop;
 mod brightness;
+mod btbattery;
 mod calendar;
 mod clipboard;
 mod connectivity;
@@ -68,6 +69,7 @@ pub fn run() {
             tray::get_mic_hotkey,
             micmute::toggle_mic_mute,
             micmute::get_mic_muted,
+            btbattery::bluetooth_battery,
             textgrab::textgrab_start,
             textgrab::textgrab_image,
             textgrab::textgrab_recognize,

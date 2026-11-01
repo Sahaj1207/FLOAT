@@ -7,6 +7,7 @@ import {
   openSettingsPage,
   wifiConnect,
   WifiNetwork,
+  getBluetoothBattery,
 } from "../../platform";
 import "./NetworkLists.css";
 
@@ -183,6 +184,19 @@ export const WifiList: React.FC<{ onBack: () => void; onConnected: (s: Connectiv
 };
 
 /** Paired Bluetooth devices. Connecting goes through Windows' own flyout. */
+/** "Connected · 80%" once the device reports its battery. */
+const DeviceBattery: React.FC<{ name: string }> = ({ name }) => {
+  const [battery, setBattery] = useState<number | null>(null);
+  useEffect(() => {
+    let live = true;
+    getBluetoothBattery(name).then((b) => live && setBattery(b));
+    return () => {
+      live = false;
+    };
+  }, [name]);
+  return <>{battery != null ? `Connected · ${battery}%` : "Connected"}</>;
+};
+
 export const BluetoothList: React.FC<{ onBack: () => void; connected: string[] }> = ({ onBack, connected }) => {
   const [devices, setDevices] = useState<BluetoothDeviceInfo[] | null>(null);
 
@@ -232,7 +246,7 @@ export const BluetoothList: React.FC<{ onBack: () => void; connected: string[] }
           >
             <span className={`nl-dot ${d.connected ? "on" : ""}`} />
             <span className="nl-name">{d.name}</span>
-            <span className="nl-state">{d.connected ? "Connected" : "Connect…"}</span>
+            <span className="nl-state">{d.connected ? <DeviceBattery name={d.name} /> : "Connect…"}</span>
           </button>
         ))}
       </div>

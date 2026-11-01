@@ -262,3 +262,13 @@
   height: 10px;
   color: var(--red);
 }
+
+/* Earbud battery beside the device name. */
+.status-hud-battery.bt {
+  flex-shrink: 0;
+  margin-left: 6px;
+}
+
+.status-hud .status-hud-detail + .status-hud-battery.bt {
+  margin-left: 6px;
+}
