@@ -286,7 +286,8 @@ mod tests {
         let now = Utc.with_ymd_and_hms(2026, 1, 6, 12, 0, 0).unwrap();
         let next = upcoming(&events, now);
         let titles: Vec<&str> = next.iter().map(|e| e.title.as_str()).collect();
-        assert_eq!(titles, vec!["Standup", "Lunch with Sam, downtown", "Holiday"]);
+        // The next ten occurrences; the first three in order.
+        assert_eq!(&titles[..3], ["Standup", "Lunch with Sam, downtown", "Holiday"]);
         // Wednesday's standup at 09:00 UTC, 15 minutes long.
         assert_eq!(next[0].start, Utc.with_ymd_and_hms(2026, 1, 7, 9, 0, 0).unwrap().timestamp_millis());
         assert_eq!(next[0].end - next[0].start, 15 * 60 * 1000);

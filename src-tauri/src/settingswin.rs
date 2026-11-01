@@ -13,7 +13,7 @@ use windows::Win32::System::Registry::{RegGetValueW, HKEY_LOCAL_MACHINE, RRF_RT_
 const LABEL: &str = "settings";
 
 /// Windows build number (22000+ is Windows 11).
-fn windows_build() -> u32 {
+pub fn windows_build() -> u32 {
     let mut buf = [0u16; 32];
     let mut size = (buf.len() * 2) as u32;
     let status = unsafe {

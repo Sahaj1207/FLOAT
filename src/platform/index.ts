@@ -55,6 +55,15 @@ export interface BackdropShape {
   bottomRadius: number;
 }
 
+/** False on Windows 10, where FLOAT uses its solid style instead of glass. */
+export async function isGlassSupported(): Promise<boolean> {
+  try {
+    return await invoke<boolean>("glass_supported");
+  } catch {
+    return true;
+  }
+}
+
 /** Position the native blur backdrop under the island (null = no glass). */
 export function setBackdrop(shape: BackdropShape | null): void {
   invoke("set_backdrop", { shape }).catch(() => {});

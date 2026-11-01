@@ -181,7 +181,12 @@ fn crop(c: &Capture, x: i32, y: i32, w: i32, h: i32) -> Option<(Vec<u8>, i32, i3
 fn recognize(bgra: &[u8], w: i32, h: i32) -> windows::core::Result<Vec<String>> {
     let buffer = CryptographicBuffer::CreateFromByteArray(bgra)?;
     let bitmap = SoftwareBitmap::CreateCopyWithAlphaFromBuffer(&buffer, BitmapPixelFormat::Bgra8, w, h, BitmapAlphaMode::Premultiplied)?;
-    let engine = OcrEngine::TryCreateFromUserProfileLanguages()?;
+    let engine = OcrEngine::TryCreateFromUserProfileLanguages().map_err(|_| {
+        windows::core::Error::new(
+            windows::core::HRESULT(0x80004005u32 as i32),
+            "Copy Text needs a Windows language with text recognition. Add one in Settings > Time & language > Language & region".into(),
+        )
+    })?;
     let result = engine.RecognizeAsync(&bitmap)?.get()?;
     let mut lines = Vec::new();
     for line in result.Lines()? {
@@ -212,7 +217,7 @@ pub async fn textgrab_recognize(app: AppHandle, x: i32, y: i32, width: i32, heig
     let lines = tauri::async_runtime::spawn_blocking(move || recognize(&cropped.0, cropped.1, cropped.2))
         .await
         .map_err(|e| e.to_string())?
-        .map_err(|e| format!("Text recognition isn't available: {e}"))?;
+        .map_err(|e| e.message().to_string())?;
     close(&app);
     let text = lines.join("\n");
     if !text.is_empty() {

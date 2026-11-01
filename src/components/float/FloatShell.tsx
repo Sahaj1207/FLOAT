@@ -29,6 +29,7 @@ import {
   subscribeToPrivacy,
   getPrivacyState,
   subscribeToBluetoothDevice,
+  isGlassSupported,
   getBluetoothBattery,
   subscribeToFileDrag,
   subscribeToBrightness,
@@ -185,6 +186,11 @@ const FloatShell: React.FC = () => {
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
   const searchShowingRef = useRef(false);
+  // Windows 10 has no real glass; the island stays solid there.
+  const [glassSupported, setGlassSupported] = useState(true);
+  useEffect(() => {
+    isGlassSupported().then(setGlassSupported);
+  }, []);
   const pasteShowingRef = useRef(false);
 
   const visualModeRef = useRef(visualMode);
@@ -1167,7 +1173,7 @@ const FloatShell: React.FC = () => {
 
   // --- Surface: solid black or liquid glass ------------------------------
   // Auto = black while docked at the top (notch or pill), glass once it floats.
-  const glass = settings.visualStyle === "glass" || (settings.visualStyle === "auto" && !(attached && !isOrb));
+  const glass = glassSupported && (settings.visualStyle === "glass" || (settings.visualStyle === "auto" && !(attached && !isOrb)));
   const glassRef = useRef(glass);
   glassRef.current = glass;
   // Floating pills and the orb are true capsules; everything else uses

@@ -71,6 +71,7 @@ pub fn run() {
             window::reset_window_position,
             window::get_island_attached,
             backdrop::set_backdrop,
+            backdrop::glass_supported,
             window::island_drag_started,
             autostart::get_autostart,
             autostart::set_autostart,

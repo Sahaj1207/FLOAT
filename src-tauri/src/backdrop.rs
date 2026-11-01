@@ -152,8 +152,20 @@ pub fn set_island_visible(visible: bool) {
 /// Set the glass shape (None = no glass, e.g. the solid notch).
 #[tauri::command]
 pub fn set_backdrop(shape: Option<Shape>) {
+    // Windows 10 can't blur behind a desktop window this way; the island
+    // uses its solid style there instead (see glass_supported).
+    if !glass_supported() {
+        return;
+    }
     *SHAPE.lock().unwrap() = shape;
     apply();
+}
+
+/// Real glass needs Windows 11.
+#[tauri::command]
+pub fn glass_supported() -> bool {
+    static SUPPORTED: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *SUPPORTED.get_or_init(|| crate::settingswin::windows_build() >= 22000)
 }
 
 pub fn init(main_hwnd: isize) {
