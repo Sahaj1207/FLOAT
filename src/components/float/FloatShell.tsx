@@ -32,6 +32,7 @@ import {
   subscribeToFileDrag,
   subscribeToBrightness,
   subscribeToDownloads,
+  checkForUpdate,
   subscribeToTextGrabbed,
   getIslandAttached,
   subscribeToIslandAttached,
@@ -258,6 +259,72 @@ const FloatShell: React.FC = () => {
     return list;
   }, [timerState, session, sessionDone, meetingLive, meetingSoon, nextEvent]);
   const { primary, secondary, show, dismissKind } = useActivities(activeMedia, ongoing);
+
+  // --- Update available ---------------------------------------------------
+  // Once a day (and shortly after launch) ask GitHub for the latest version.
+  // A newer one is offered once in the island; Later hides it for that version.
+  const updateOfferRef = useRef<{ version: string } | null>(null);
+  const showUpdate = useCallback(
+    (version: string, ms: number) =>
+      show({ kind: "update", id: "update", priority: ActivityPriority.update, version }, ms),
+    [show]
+  );
+  useEffect(() => {
+    const KEY = "float_update_check_v1";
+    const DAY = 24 * 60 * 60_000;
+    const read = (): { at: number; dismissed: string } => {
+      try {
+        return { at: 0, dismissed: "", ...JSON.parse(localStorage.getItem(KEY) || "{}") };
+      } catch {
+        return { at: 0, dismissed: "" };
+      }
+    };
+    const check = () => {
+      if (!settingsRef.current.autoUpdateCheck) return;
+      const saved = read();
+      if (Date.now() - saved.at < DAY) return;
+      checkForUpdate()
+        .then((info) => {
+          try {
+            localStorage.setItem(KEY, JSON.stringify({ ...read(), at: Date.now() }));
+          } catch {
+            // Not saved; it checks again next time.
+          }
+          if (info.available && info.latest !== read().dismissed) {
+            updateOfferRef.current = { version: info.latest };
+            showUpdate(info.latest, 20_000);
+          }
+        })
+        .catch(() => {});
+    };
+    const first = setTimeout(check, 20_000);
+    const every = setInterval(check, 60 * 60_000);
+    return () => {
+      clearTimeout(first);
+      clearInterval(every);
+    };
+  }, [showUpdate]);
+
+  const handleUpdateLater = useCallback(() => {
+    const version = updateOfferRef.current?.version;
+    try {
+      const KEY = "float_update_check_v1";
+      const saved = JSON.parse(localStorage.getItem(KEY) || "{}");
+      localStorage.setItem(KEY, JSON.stringify({ ...saved, dismissed: version ?? "" }));
+    } catch {
+      // Not saved; the offer may come back tomorrow.
+    }
+    dismissKind("update");
+  }, [dismissKind]);
+
+  // While downloading, keep the offer on screen; then let it fade away.
+  const handleUpdateBusy = useCallback(
+    (busy: boolean) => {
+      const version = updateOfferRef.current?.version;
+      if (version) showUpdate(version, busy ? 10 * 60_000 : 6000);
+    },
+    [showUpdate]
+  );
 
   // A focus phase or break running out: a chime; the island shows the choice.
   useEffect(() => focus.onPhaseEnd(() => playChime()), []);
@@ -1518,6 +1585,9 @@ const FloatShell: React.FC = () => {
             session={primary?.kind === "session" ? primary : null}
             meeting={primary?.kind === "meeting" ? primary : null}
             onDismissMeeting={() => setDismissedMeeting(meetingKey)}
+            update={primary?.kind === "update" ? primary : null}
+            onUpdateLater={handleUpdateLater}
+            onUpdateBusy={handleUpdateBusy}
             dropCount={showDrop ? fileDrag : null}
             onVolumeChange={showVolume}
           />

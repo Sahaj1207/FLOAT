@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { checkForUpdate, installUpdate, subscribeToUpdateProgress, UpdateInfo } from "../../platform";
+import { loadSettings, saveSettings, subscribeToSettings } from "../../services/settings";
 
 type State =
   | { step: "idle" }
@@ -27,6 +28,8 @@ function summary(notes: string): string[] {
 export const UpdatesCard: React.FC = () => {
   const [state, setState] = useState<State>({ step: "idle" });
   const [version, setVersion] = useState<string | null>(null);
+  const [auto, setAuto] = useState(() => loadSettings().autoUpdateCheck);
+  useEffect(() => subscribeToSettings((s) => setAuto(s.autoUpdateCheck)), []);
 
   useEffect(() => {
     import("@tauri-apps/api/app")
@@ -73,7 +76,7 @@ export const UpdatesCard: React.FC = () => {
   let status: React.ReactNode;
   switch (state.step) {
     case "idle":
-      status = "FLOAT checks only when you ask. It asks GitHub for the latest version; nothing about you is sent";
+      status = "Check now, or let FLOAT check once a day below";
       break;
     case "checking":
       status = "Checking GitHub…";
@@ -126,6 +129,26 @@ export const UpdatesCard: React.FC = () => {
             {state.step === "error" && info ? "Try again" : "Check for updates"}
           </button>
         )}
+      </div>
+
+      <div className="float-setting-toggle-row">
+        <div className="float-setting-toggle-left">
+          <span className="float-setting-toggle-title">Check Automatically</span>
+          <span className="float-setting-toggle-desc">
+            Once a day FLOAT asks GitHub for the latest version number and offers a new version in the island. Nothing about you is sent
+          </span>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={auto}
+          className={`float-setting-switch ${auto ? "checked" : ""}`}
+          onClick={() => saveSettings({ ...loadSettings(), autoUpdateCheck: !auto })}
+          data-no-drag="true"
+          aria-label="Toggle Check Automatically"
+        >
+          <span className="float-setting-switch-handle" />
+        </button>
       </div>
 
       {state.step === "downloading" && (

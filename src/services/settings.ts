@@ -41,6 +41,7 @@ export interface FloatSettings {
   musicWaves: boolean;           // glowing waves behind the player that move with the music, default true
   focusNotifications: FocusNotifications; // "hold" | "quiet", default "hold"
   meetingAlerts: boolean;        // show the next meeting in the island 10 min before, default true
+  autoUpdateCheck: boolean;      // ask GitHub once a day for a newer version and offer it in the island, default true
 }
 
 export const PILL_LENGTH_MIN = 220;
@@ -74,6 +75,7 @@ export const DEFAULT_FLOAT_SETTINGS: FloatSettings = {
   musicWaves: true,
   focusNotifications: "hold",
   meetingAlerts: true,
+  autoUpdateCheck: true,
 };
 
 const SETTINGS_STORAGE_KEY = "float_settings_v1";
@@ -195,6 +197,7 @@ export function loadSettings(): FloatSettings {
       musicWaves: bool(parsed.musicWaves, DEFAULT_FLOAT_SETTINGS.musicWaves),
       focusNotifications: pick(parsed.focusNotifications, ["hold", "quiet"] as const, DEFAULT_FLOAT_SETTINGS.focusNotifications),
       meetingAlerts: bool(parsed.meetingAlerts, DEFAULT_FLOAT_SETTINGS.meetingAlerts),
+      autoUpdateCheck: bool(parsed.autoUpdateCheck, DEFAULT_FLOAT_SETTINGS.autoUpdateCheck),
       weatherEnabled: bool(parsed.weatherEnabled, DEFAULT_FLOAT_SETTINGS.weatherEnabled),
       weatherCity: text(parsed.weatherCity, 80),
       weatherFahrenheit: bool(parsed.weatherFahrenheit, DEFAULT_FLOAT_SETTINGS.weatherFahrenheit),

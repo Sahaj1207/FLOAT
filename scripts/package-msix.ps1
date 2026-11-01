@@ -3,7 +3,9 @@
 
 param(
     # Build and sign the package but don't uninstall/install anything.
-    [switch]$NoInstall
+    [switch]$NoInstall,
+    # Fourth MSIX version part, for a rebuild of the same app version.
+    [int]$Revision = 0
 )
 
 $ErrorActionPreference = "Stop"
@@ -60,7 +62,7 @@ $signtool = Find-WindowsSdkTool "signtool.exe"
 $rootDir = Split-Path -Parent $PSScriptRoot
 # The package version follows package.json (MSIX needs four parts).
 $appVersion = (Get-Content (Join-Path $rootDir "package.json") -Raw | ConvertFrom-Json).version
-$msixVersion = "$appVersion.0"
+$msixVersion = "$appVersion.$Revision"
 $stagingDir = Join-Path $rootDir "target\msix_staging"
 $msixPath = Join-Path $rootDir "target\FLOAT.msix"
 

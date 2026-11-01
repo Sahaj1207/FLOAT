@@ -6,7 +6,8 @@ import { OrbNotificationState } from "./FloatOrb";
 import { AppIcon } from "./AppIcon";
 import { VolumeHud } from "./VolumeHud";
 import { IdleNotch } from "./IdleNotch";
-import { MeetingActivity, SessionActivity, StatusActivity, TimerActivity, VolumeActivity } from "../../activities/types";
+import { MeetingActivity, SessionActivity, StatusActivity, TimerActivity, UpdateActivity, VolumeActivity } from "../../activities/types";
+import { UpdatePill } from "./UpdatePill";
 import { FocusPill } from "./Focus";
 import { MeetingPill } from "./Meeting";
 import { TimerPill } from "./Timer";
@@ -29,6 +30,9 @@ interface FloatPillProps {
   session?: SessionActivity | null;
   meeting?: MeetingActivity | null;
   onDismissMeeting?: () => void;
+  update?: UpdateActivity | null;
+  onUpdateLater?: () => void;
+  onUpdateBusy?: (busy: boolean) => void;
   /** Files are being dragged over the notch (count), or null. */
   dropCount?: number | null;
   onVolumeChange?: (state: { level: number; muted: boolean }) => void;
@@ -49,6 +53,9 @@ export const FloatPill: React.FC<FloatPillProps> = ({
   session = null,
   meeting = null,
   onDismissMeeting = () => {},
+  update = null,
+  onUpdateLater = () => {},
+  onUpdateBusy = () => {},
   dropCount = null,
   onVolumeChange = () => {},
 }) => {
@@ -59,6 +66,8 @@ export const FloatPill: React.FC<FloatPillProps> = ({
     ? "volume"
     : status
     ? `status-${status.kind}`
+    : update
+    ? "update"
     : session
     ? "session"
     : meeting
@@ -95,6 +104,8 @@ export const FloatPill: React.FC<FloatPillProps> = ({
           <VolumeHud activity={volume} onChange={onVolumeChange} />
         ) : status ? (
           <StatusHud activity={status} />
+        ) : update ? (
+          <UpdatePill activity={update} onLater={onUpdateLater} onBusy={onUpdateBusy} />
         ) : session ? (
           <FocusPill state={session.state} />
         ) : meeting ? (

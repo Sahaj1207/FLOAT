@@ -23,6 +23,6 @@ Only trust a certificate from a source you trust; this one only vouches for FLOA
 
 **Requirements:** Windows 10 (1809) or Windows 11. The glass effect needs Windows 11; Windows 10 shows a solid tint instead.
 
-**Updating:** in FLOAT, open Controls › Settings › Updates and choose **Check for updates**. FLOAT only contacts GitHub when you press it. If a newer version exists, **Install** downloads the same kind of installer you used, checks it against the checksum GitHub publishes, and opens it. Your settings and tasks are kept.
+**Updating:** when a new version is out, the island tells you (FLOAT checks GitHub once a day; turn this off in Settings › Updates). Choose **Update**, or check any time in Controls › Settings › Updates › **Check for updates**. If a newer version exists, **Install** downloads the same kind of installer you used, checks it against the checksum GitHub publishes, and opens it. Your settings and tasks are kept.
 
 **Uninstalling:** Settings › Apps › Installed apps › FLOAT › Uninstall.

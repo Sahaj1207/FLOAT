@@ -2,6 +2,7 @@
 
 ## 2.2.2
 
+- **New version? You'll know.** Once a day FLOAT asks GitHub for the latest version number, and when there's a new one the island shows it with **Update** and **Later**. Update downloads and installs it right there; Later hides it for that version. Turn it off in Settings › Updates › Check Automatically.
 - **Calendar link check.** Settings › Widgets › Calendar now says whether your link works ("Connected · next: Standup, Mon 9:00") or why not. Pasting Google's public address for a private calendar explains that you need the "Secret address in iCal format" instead.
 - **Smarter "next event".** Like Apple's Up Next, all-day events and long multi-day events (a trip, a course) no longer show as your next event or count down in the island; only real appointments do.
 

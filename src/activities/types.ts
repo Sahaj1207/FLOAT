@@ -27,6 +27,8 @@ export const ActivityPriority = {
   bluetooth: 108,
   shelf: 112,
   battery: 110,
+  // A newer FLOAT is out.
+  update: 111,
   download: 113,
   timerDone: 115,
   // A ringing phone beats everything but your own adjustments.
@@ -141,6 +143,13 @@ export interface MeetingActivity {
   joinUrl: string | null;
 }
 
+export interface UpdateActivity {
+  kind: "update";
+  id: string;
+  priority: number;
+  version: string;
+}
+
 export interface TextCopiedActivity {
   kind: "textCopied";
   id: string;
@@ -185,6 +194,7 @@ export type Activity =
   | MeetingActivity
   | FocusSummaryActivity
   | TextCopiedActivity
+  | UpdateActivity
   | TimerActivity
   | TimerDoneActivity
   | NotificationActivity

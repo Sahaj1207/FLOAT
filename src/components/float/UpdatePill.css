@@ -1,0 +1,84 @@
+.update-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.update-pill-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--tint);
+}
+
+.update-pill-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.update-pill-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.update-chip {
+  height: 22px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 11px;
+  background: var(--fill-2);
+  color: var(--text-1);
+  font: inherit;
+  font-size: var(--t-caption);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.12s cubic-bezier(0.2, 0.8, 0.25, 1);
+}
+
+.update-chip:hover {
+  background: var(--fill-3);
+}
+
+.update-chip:active {
+  transform: scale(0.92);
+}
+
+.update-chip.primary {
+  background: var(--tint);
+  color: #fff;
+}
+
+.update-chip.primary:hover {
+  background: #2b95ff;
+}
+
+:root[data-input="touch"] .update-chip {
+  height: 28px;
+  padding: 0 12px;
+}
+
+.update-pill-progress {
+  width: 64px;
+  height: 4px;
+  flex-shrink: 0;
+  border-radius: 2px;
+  background: var(--fill-2);
+  overflow: hidden;
+}
+
+.update-pill-progress span {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--tint);
+  transition: width 0.2s ease;
+}
