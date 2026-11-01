@@ -191,12 +191,24 @@ fn run(app: AppHandle) {
     let mut privacy = read_privacy();
     let mut privacy_at = Instant::now();
 
+    let mut mic = crate::micmute::default_mic();
+    let mut mic_muted = mic.as_ref().and_then(crate::micmute::read_muted);
+
     loop {
         std::thread::sleep(TICK);
 
         if endpoint_at.elapsed() >= ENDPOINT_REFRESH {
             endpoint = default_endpoint();
+            mic = crate::micmute::default_mic();
             endpoint_at = Instant::now();
+        }
+        // Microphone muted or unmuted (our shortcut, a call app, a headset).
+        let next_mic = mic.as_ref().and_then(crate::micmute::read_muted);
+        if next_mic != mic_muted {
+            if let Some(muted) = next_mic {
+                let _ = app.emit("mic-muted", muted);
+            }
+            mic_muted = next_mic;
         }
         if let Some(next) = endpoint.as_ref().and_then(read_volume) {
             if volume.is_some_and(|v| v != next) {

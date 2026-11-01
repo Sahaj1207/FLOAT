@@ -103,7 +103,7 @@ export async function subscribeToWindowFocus(
   }
 }
 
-export type IslandCommand = "open" | "toggle" | "search";
+export type IslandCommand = "open" | "toggle" | "search" | "updates";
 
 /** Commands from the tray icon, global hotkey, or a second app launch. */
 export async function subscribeToIslandCommand(
@@ -176,6 +176,38 @@ export async function getSearchIcon(path: string): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Microphone mute                                                    */
+/* ------------------------------------------------------------------ */
+
+export async function toggleMicMute(): Promise<boolean | null> {
+  try {
+    return await invoke<boolean | null>("toggle_mic_mute");
+  } catch {
+    return null;
+  }
+}
+
+export async function getMicMuted(): Promise<boolean | null> {
+  try {
+    return await invoke<boolean | null>("get_mic_muted");
+  } catch {
+    return null;
+  }
+}
+
+export async function getMicHotkey(): Promise<string | null> {
+  try {
+    return await invoke<string | null>("get_mic_hotkey");
+  } catch {
+    return null;
+  }
+}
+
+export async function subscribeToMicMuted(callback: (muted: boolean) => void): Promise<UnlistenFn> {
+  return await listen<boolean>("mic-muted", (event) => callback(event.payload));
 }
 
 /* ------------------------------------------------------------------ */

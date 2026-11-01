@@ -3,7 +3,7 @@ import { BatteryActivity, DownloadActivity, StatusActivity } from "../../activit
 import { TimerIcon } from "./Timer";
 import { TrayIcon } from "./Shelf";
 import { formatTimer } from "../../activities/timerStore";
-import { ArrowDownToLine, BellDot, Bluetooth, ScanText, FolderOpen, Moon, Phone, Share2, Sun, Zap } from "lucide-react";
+import { ArrowDownToLine, BellDot, Bluetooth, Mic, MicOff, ScanText, FolderOpen, Moon, Phone, Share2, Sun, Zap } from "lucide-react";
 import { openDownload } from "../../platform";
 import { AppIcon } from "./AppIcon";
 import "./StatusHud.css";
@@ -59,6 +59,17 @@ export const StatusHud: React.FC<{ activity: StatusActivity }> = ({ activity }) 
       );
     case "download":
       return <DownloadHud activity={activity} />;
+    case "mic":
+      return (
+        <div className="status-hud">
+          {activity.muted ? (
+            <MicOff className="status-hud-icon mic-off" strokeWidth={2.2} />
+          ) : (
+            <Mic className="status-hud-icon" strokeWidth={2.2} />
+          )}
+          <span className="status-hud-label">{activity.muted ? "Microphone off" : "Microphone on"}</span>
+        </div>
+      );
     case "textCopied":
       return (
         <div className="status-hud">

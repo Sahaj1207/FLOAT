@@ -19,6 +19,7 @@ mod downloads;
 mod focus;
 mod lyrics;
 mod media;
+mod micmute;
 mod notifications;
 mod search;
 mod shelf;
@@ -64,6 +65,9 @@ pub fn run() {
             tray::get_hotkey,
             tray::get_search_hotkey,
             tray::get_text_hotkey,
+            tray::get_mic_hotkey,
+            micmute::toggle_mic_mute,
+            micmute::get_mic_muted,
             textgrab::textgrab_start,
             textgrab::textgrab_image,
             textgrab::textgrab_recognize,

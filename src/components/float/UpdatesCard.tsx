@@ -4,6 +4,12 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { checkForUpdate, installUpdate, subscribeToUpdateProgress, UpdateInfo } from "../../platform";
 import { loadSettings, saveSettings, subscribeToSettings } from "../../services/settings";
 
+// Set by "Check for Updates…" in the tray menu; the card checks on mount.
+let pendingCheck = false;
+export function requestUpdateCheck() {
+  pendingCheck = true;
+}
+
 type State =
   | { step: "idle" }
   | { step: "checking" }
@@ -57,6 +63,15 @@ export const UpdatesCard: React.FC = () => {
     };
   }, []);
 
+  const cardRef = React.useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!pendingCheck) return;
+    pendingCheck = false;
+    cardRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+    check();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const check = () => {
     setState({ step: "checking" });
     checkForUpdate()
@@ -101,7 +116,7 @@ export const UpdatesCard: React.FC = () => {
   }
 
   return (
-    <div className="float-setting-card">
+    <div className="float-setting-card" ref={cardRef}>
       <div className="float-setting-label-row">
         <div className="float-setting-label-left">
           <RefreshCw className="float-setting-icon" strokeWidth={2} />

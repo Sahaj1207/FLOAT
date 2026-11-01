@@ -34,6 +34,8 @@ import {
   subscribeToDownloads,
   checkForUpdate,
   subscribeToTextGrabbed,
+  subscribeToMicMuted,
+  getMicMuted,
   getIslandAttached,
   subscribeToIslandAttached,
   islandDragStarted,
@@ -54,6 +56,8 @@ import { Activity, ActivityPriority, isStatusActivity } from "../../activities/t
 import { timer, useTimerState } from "../../activities/timerStore";
 import { focus, focusFinished, useFocusState } from "../../activities/focusStore";
 import { useNextEvent } from "./Widgets";
+import { requestUpdateCheck } from "./UpdatesCard";
+import { MicOff } from "lucide-react";
 import { playChime } from "./Timer";
 import { shelf } from "./Shelf";
 import { islandPath } from "../../island/shape";
@@ -631,6 +635,12 @@ const FloatShell: React.FC = () => {
     let unlisten: (() => void) | null = null;
     subscribeToIslandCommand((command) => {
       const expanded = visualModeRef.current === "expanded";
+      if (command === "updates") {
+        requestUpdateCheck();
+        requestTab("settings");
+        if (!expanded) transitionTo("expanded", "command-updates");
+        return;
+      }
       if (command === "search") {
         // The search key toggles: press again to put it away.
         if (expanded && searchShowingRef.current) {
@@ -1391,6 +1401,19 @@ const FloatShell: React.FC = () => {
     }
   };
 
+  // --- Microphone mute ----------------------------------------------------
+  const [micMuted, setMicMuted] = useState(false);
+  useEffect(() => {
+    getMicMuted().then((m) => setMicMuted(!!m));
+    const unlisten = subscribeToMicMuted((muted) => {
+      setMicMuted(muted);
+      show({ kind: "mic", id: "mic", priority: ActivityPriority.mic, muted }, VOLUME_HUD_MS);
+    });
+    return () => {
+      unlisten.then((fn) => fn());
+    };
+  }, [show]);
+
   // --- System status activities ------------------------------------------
   // When Nearby Share last posted a notification (its files land in Downloads).
   const lastNearbyRef = useRef(0);
@@ -1517,8 +1540,9 @@ const FloatShell: React.FC = () => {
           <path className="island-rim" />
         </g>
       </svg>
-      {(privacy.camera || privacy.microphone) && (
+      {(privacy.camera || privacy.microphone || micMuted) && (
         <span className="privacy-dots" aria-label="Camera or microphone in use">
+          {micMuted && <MicOff className="privacy-mic-off" strokeWidth={2.6} aria-label="Microphone muted" />}
           {privacy.camera && <span className="privacy-dot camera" title={`Camera: ${privacy.camera}`} />}
           {privacy.microphone && <span className="privacy-dot microphone" title={`Microphone: ${privacy.microphone}`} />}
         </span>

@@ -20,6 +20,12 @@ const TEXT_HOTKEYS: [(Modifiers, Code, &str); 2] = [
     (Modifiers::ALT.union(Modifiers::SHIFT), Code::KeyT, "Alt+Shift+T"),
 ];
 
+/// Microphone mute.
+const MIC_HOTKEYS: [(Modifiers, Code, &str); 2] = [
+    (Modifiers::CONTROL.union(Modifiers::ALT), Code::KeyM, "Ctrl+Alt+M"),
+    (Modifiers::ALT.union(Modifiers::SHIFT), Code::KeyM, "Alt+Shift+M"),
+];
+
 /// Tried in order; the first combination no other app owns wins.
 const HOTKEYS: [(Modifiers, Code, &str); 3] = [
     (Modifiers::CONTROL.union(Modifiers::ALT), Code::Space, "Ctrl+Alt+Space"),
@@ -32,6 +38,7 @@ pub struct ActiveHotkeys {
     open: Option<(Shortcut, &'static str)>,
     search: Option<(Shortcut, &'static str)>,
     text: Option<(Shortcut, &'static str)>,
+    mic: Option<(Shortcut, &'static str)>,
 }
 
 /// Sent to the frontend as `island-command`.
@@ -42,6 +49,8 @@ pub enum IslandCommand {
     Toggle,
     /// Open straight into search (or close it if it's showing).
     Search,
+    /// Open Settings > Updates and check now.
+    Updates,
 }
 
 struct TrayItems {
@@ -85,6 +94,11 @@ pub fn get_hotkey(state: tauri::State<'_, ActiveHotkeys>) -> Option<String> {
 }
 
 #[tauri::command]
+pub fn get_mic_hotkey(state: tauri::State<'_, ActiveHotkeys>) -> Option<String> {
+    state.mic.map(|(_, label)| label.to_string())
+}
+
+#[tauri::command]
 pub fn get_text_hotkey(state: tauri::State<'_, ActiveHotkeys>) -> Option<String> {
     state.text.map(|(_, label)| label.to_string())
 }
@@ -98,15 +112,17 @@ pub fn init(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let open_key = register_first(app, &HOTKEYS);
     let search = register_first(app, &SEARCH_HOTKEYS);
     let text = register_first(app, &TEXT_HOTKEYS);
+    let mic = register_first(app, &MIC_HOTKEYS);
     if open_key.is_none() {
         eprintln!("[TRAY] No global hotkey could be registered");
     }
     let hotkey = open_key.map(|(_, label)| label);
-    app.manage(ActiveHotkeys { open: open_key, search, text });
+    app.manage(ActiveHotkeys { open: open_key, search, text, mic });
 
     let visible = CheckMenuItem::with_id(app, "visible", "Show Island", true, true, None::<&str>)?;
     let open = MenuItem::with_id(app, "open", "Open Island", true, hotkey)?;
     let reset = MenuItem::with_id(app, "reset", "Reset Position", true, None::<&str>)?;
+    let updates = MenuItem::with_id(app, "updates", "Check for Updates…", true, None::<&str>)?;
     let autostart =
         CheckMenuItem::with_id(app, "autostart", "Launch at Startup", true, false, None::<&str>)?;
     let quit = MenuItem::with_id(app, "quit", "Quit FLOAT", true, None::<&str>)?;
@@ -118,6 +134,7 @@ pub fn init(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
             &PredefinedMenuItem::separator(app)?,
             &reset,
             &autostart,
+            &updates,
             &PredefinedMenuItem::separator(app)?,
             &quit,
         ],
@@ -134,6 +151,7 @@ pub fn init(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
         .show_menu_on_left_click(false)
         .on_menu_event(|app, event| match event.id.as_ref() {
             "open" => command_island(app, IslandCommand::Open),
+            "updates" => command_island(app, IslandCommand::Updates),
             "visible" => {
                 let hidden = !crate::window::is_user_hidden(app);
                 crate::window::set_user_hidden(app, hidden);
@@ -188,6 +206,11 @@ pub fn global_shortcut_plugin() -> tauri::plugin::TauriPlugin<Wry> {
             };
             if matches(|k| k.text) {
                 crate::textgrab::start(app);
+                return;
+            }
+            if matches(|k| k.mic) {
+                // Off the event loop; sysmon announces the new state.
+                std::thread::spawn(crate::micmute::toggle);
                 return;
             }
             let is_search = matches(|k| k.search);

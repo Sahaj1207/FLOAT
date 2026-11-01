@@ -250,3 +250,15 @@
 .status-hud-icon.copied {
   color: var(--tint);
 }
+
+/* Microphone mute */
+.status-hud-icon.mic-off {
+  color: var(--red);
+}
+
+/* While the mic is muted: a small red mic beside the privacy dots. */
+.privacy-mic-off {
+  width: 10px;
+  height: 10px;
+  color: var(--red);
+}
