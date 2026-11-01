@@ -19,6 +19,7 @@ mod connectivity;
 mod downloads;
 mod focus;
 mod hotkeys;
+mod launch;
 mod lyrics;
 mod media;
 mod micmute;
@@ -84,6 +85,8 @@ pub fn run() {
             hotkeys::set_shortcut,
             hotkeys::pause_shortcuts,
             settingswin::open_settings,
+            launch::launch_app,
+            launch::open_path,
             textgrab::textgrab_start,
             textgrab::textgrab_image,
             textgrab::textgrab_recognize,

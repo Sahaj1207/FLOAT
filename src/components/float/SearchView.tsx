@@ -25,6 +25,8 @@ import {
 import { useTasks, Task } from "../../activities/tasksStore";
 import { Note, noteTitle, useNotes } from "../../activities/notesStore";
 import { Snippet, useSnippets } from "../../activities/snippetsStore";
+import { CustomShortcut, useShortcuts } from "../../activities/shortcutsStore";
+import { runShortcut, ShortcutGlyph } from "./Shortcuts";
 import { focus } from "../../activities/focusStore";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import {
@@ -177,6 +179,7 @@ function matchCommands(q: string): Command[] {
 const contains = (text: string, q: string) => text.toLowerCase().includes(q.toLowerCase());
 
 type Row =
+  | { type: "shortcut"; shortcut: CustomShortcut }
   | { type: "command"; command: Command }
   | { type: "clip"; entry: ClipboardEntry }
   | { type: "snippet"; snippet: Snippet }
@@ -223,6 +226,7 @@ export const SearchView: React.FC<SearchViewProps> = ({ initialQuery = "", onDon
   const tasks = useTasks();
   const notes = useNotes();
   const snippets = useSnippets();
+  const shortcuts = useShortcuts();
   // A command waiting for its confirming second Enter.
   const [armed, setArmed] = useState<SystemCommand | null>(null);
   const [copiedClip, setCopiedClip] = useState<number | null>(null);
@@ -283,6 +287,7 @@ export const SearchView: React.FC<SearchViewProps> = ({ initialQuery = "", onDon
     if (GRAB_WORDS.test(q)) list.push({ type: "grab" });
     const session = focusCommand(q);
     if (session) list.push({ type: "focus", ...session });
+    list.push(...shortcuts.filter((s) => q.length >= 2 && contains(s.name, q)).slice(0, 2).map((shortcut) => ({ type: "shortcut" as const, shortcut })));
     list.push(...matchCommands(q).map((command) => ({ type: "command" as const, command })));
     if (answer) list.push({ type: "answer", ...answer });
     const native = results.map((result) => ({ type: "result" as const, result }));
@@ -300,7 +305,7 @@ export const SearchView: React.FC<SearchViewProps> = ({ initialQuery = "", onDon
     list.push(...native.slice(3));
     list.push({ type: "web", query: q });
     return list;
-  }, [query, recents, answer, results, clips, tray, tasks, notes, snippets]);
+  }, [query, recents, answer, results, clips, tray, tasks, notes, snippets, shortcuts]);
 
   useEffect(() => {
     setSelected(0);
@@ -319,6 +324,10 @@ export const SearchView: React.FC<SearchViewProps> = ({ initialQuery = "", onDon
   const activate = useCallback(
     (row: Row | undefined, reveal = false) => {
       if (!row) return;
+      if (row.type === "shortcut") {
+        runShortcut(row.shortcut, onDone).catch(() => {});
+        return;
+      }
       if (row.type === "command") {
         if (row.command.confirm && armed !== row.command.id) {
           setArmed(row.command.id);
@@ -427,6 +436,8 @@ export const SearchView: React.FC<SearchViewProps> = ({ initialQuery = "", onDon
               ? row.result.target
               : row.type === "command"
               ? `cmd:${row.command.id}`
+              : row.type === "shortcut"
+              ? `sc:${row.shortcut.id}`
               : row.type === "clip"
               ? `clip:${row.entry.id}`
               : row.type === "snippet"
@@ -452,6 +463,26 @@ export const SearchView: React.FC<SearchViewProps> = ({ initialQuery = "", onDon
             },
             "data-no-drag": "true",
           };
+          if (row.type === "shortcut") {
+            const s = row.shortcut;
+            return (
+              <div key={key} {...common}>
+                <span className="search-icon-tile" style={{ background: s.kind === "app" ? "transparent" : s.color, borderRadius: "50%" }}>
+                  <ShortcutGlyph shortcut={s} size={13} />
+                </span>
+                <span className="search-text">
+                  <span className="search-name">{s.name}</span>
+                  <span className="search-detail">Shortcut</span>
+                </span>
+                {isSelected && (
+                  <span className="search-hint">
+                    Run
+                    <CornerDownLeft size={12} />
+                  </span>
+                )}
+              </div>
+            );
+          }
           // Your own things and commands share one simple row.
           const simple =
             row.type === "command"

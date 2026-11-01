@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { ShortcutsRow } from "./Shortcuts";
 import {
   ConnectivityState,
   getBrightness,
@@ -128,9 +129,10 @@ const ListLink: React.FC<{ label: string; onOpen: () => void }> = ({ label, onOp
   </button>
 );
 
-export const ControlsView: React.FC<{ focusActive: boolean; onOpenSettings: () => void }> = ({
+export const ControlsView: React.FC<{ focusActive: boolean; onOpenSettings: () => void; onCollapse: () => void }> = ({
   focusActive,
   onOpenSettings,
+  onCollapse,
 }) => {
   const [state, update] = useConnectivity();
   const { toggle, busy, error } = useRadioToggle(state, update);
@@ -164,6 +166,7 @@ export const ControlsView: React.FC<{ focusActive: boolean; onOpenSettings: () =
 
   return (
     <div className="cc-view">
+      <ShortcutsRow onDone={onCollapse} />
       <div className="cc-column">
         {state?.wifi.available && (
           <div className="cc-card">

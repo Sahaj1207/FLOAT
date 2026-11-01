@@ -174,6 +174,7 @@ export const FloatSurface: React.FC<FloatSurfaceProps> = ({
         return (
           <ControlsView
             focusActive={focusActive}
+            onCollapse={onCollapse}
             onOpenSettings={() => {
               // Settings is its own window; the island steps aside.
               openSettingsWindow();
