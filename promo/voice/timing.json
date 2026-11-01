@@ -38,23 +38,23 @@
   },
   {
     "id": "ask",
-    "text": "So we asked a simple question.",
-    "duration": 2.832,
+    "text": "So I asked a simple question.",
+    "duration": 2.856,
     "words": [
       {
         "word": "So",
         "start": 0.1,
-        "end": 0.339375
+        "end": 0.365958
       },
       {
-        "word": "we",
-        "start": 0.352666,
-        "end": 0.552124
+        "word": "I",
+        "start": 0.37925,
+        "end": 0.538833
       },
       {
         "word": "asked",
-        "start": 0.565416,
-        "end": 0.871249
+        "start": 0.552125,
+        "end": 0.871291
       },
       {
         "word": "a",
@@ -64,12 +64,12 @@
       {
         "word": "simple",
         "start": 0.964375,
-        "end": 1.323416
+        "end": 1.336708
       },
       {
         "word": "question",
-        "start": 1.336708,
-        "end": 1.908499
+        "start": 1.35,
+        "end": 1.935125
       }
     ]
   },

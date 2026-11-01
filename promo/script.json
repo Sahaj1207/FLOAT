@@ -3,7 +3,7 @@
   "rate": "-6%",
   "scenes": [
     { "id": "mac", "text": "Mac users have the Dynamic Island." },
-    { "id": "ask", "text": "So we asked a simple question." },
+    { "id": "ask", "text": "So I asked a simple question." },
     { "id": "why", "text": "Why can't Windows?" },
     { "id": "meet", "text": "Meet FLOAT." },
     { "id": "work", "text": "Not a notch that copies Apple. A place where your work happens." },

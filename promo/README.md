@@ -1,6 +1,6 @@
 # FLOAT launch film
 
-A 73-second, 1080×1080 film for LinkedIn, built from FLOAT's own island shape
+A ~80-second, 1080×1080 film for LinkedIn, built from FLOAT's own island shape
 (`src/island/shape.ts`) with demo content. Narration: Microsoft neural voice
 "Ryan" via [edge-tts](https://github.com/rany2/edge-tts).
 
@@ -12,7 +12,11 @@ Rebuild:
    Preview in a browser: http://localhost:1421/promo/film.html (`?t=20` jumps, `?still&t=20` freezes)
 3. Render (needs Chrome): `cd render && npm install && node render.mjs`
    Stills only: `node render.mjs --stills 2,14,40`
-4. Add narration, music and whooshes: `node mix.mjs` → `out/float-film.mp4`
+4. Score: `node music.mjs` → `out/music.wav`, an original 110 BPM track synthesised
+   to the film's timeline (intro, riser, drop on "Meet FLOAT", groove, breakdown,
+   end hit) with UI sounds on the picture's events
+5. Mix narration over the score: `node mix.mjs` → `out/float-film.mp4`
 
-Every frame is a pure function of time (`film.ts` → `render(t)`), so renders
+Scenes start on the score's beat grid (big moments on a bar), with Apple-style
+one-word title cards before each feature. Every frame is a pure function of time (`film.ts` → `render(t)`), so renders
 are exact and repeatable.

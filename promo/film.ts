@@ -9,6 +9,31 @@ import "@fontsource-variable/inter";
 import "./film.css";
 import { islandPath } from "../src/island/shape";
 import timing from "./voice/timing.json";
+import { createElement, type ComponentType } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import {
+  Bell,
+  BellDot,
+  CalendarClock,
+  CircleCheck,
+  Clipboard,
+  ClipboardPaste,
+  House,
+  Inbox,
+  Monitor,
+  MoonStar,
+  Pin,
+  ScanText,
+  Search,
+  SlidersHorizontal,
+  Sun,
+  Timer,
+  Video,
+} from "lucide-react";
+
+/** A lucide icon (the same set the app uses) as inline SVG markup. */
+const icon = (C: ComponentType<Record<string, unknown>>, size = 14, color = "currentColor", stroke = 2) =>
+  renderToStaticMarkup(createElement(C, { size, color, strokeWidth: stroke, style: { flexShrink: 0, display: "block" } }));
 
 // ---------------------------------------------------------------------------
 // Timeline: scenes follow the narration, with breathing room where the
@@ -28,21 +53,64 @@ interface Scene {
   end: number;
 }
 
-const GAP = 0.4;
-const HOLD: Record<string, number> = { mac: 0.4, why: 1.0, meet: 1.4, work: 0.6, focus: 0.9, text: 1.0, paste: 1.1, search: 1.2, craft: 0.5, private: 0.4, end: 3.2 };
-let cursor = 0.9;
+// The music runs at BPM; scenes start on its beat grid, the big moments on
+// a bar, so cuts land on the rhythm like an Apple film.
+export const BPM = 110;
+const BEAT = 60 / BPM;
+const BAR = BEAT * 4;
+const snap = (t: number, unit: number) => Math.ceil(t / unit - 1e-6) * unit;
+
+const GAP = 0.3;
+const HOLD: Record<string, number> = { mac: 0.3, why: 0.6, meet: 1.0, work: 0.5, focus: 0.7, text: 0.8, paste: 0.9, search: 1.0, craft: 0.4, private: 0.3, end: 3.4 };
+// A one-word title card, on the beat, before each feature.
+export const TITLES: Record<string, { word: string; colors: [string, string] }> = {
+  focus: { word: "Focus.", colors: ["#c4b5fd", "#8b5cf6"] },
+  text: { word: "Copy.", colors: ["#7dd3fc", "#2563eb"] },
+  paste: { word: "Paste.", colors: ["#fde68a", "#f59e0b"] },
+  search: { word: "Search.", colors: ["#f0f0f5", "#9ca3af"] },
+};
+const TITLE_LEN = BEAT * 2;
+const ON_BAR = new Set(["meet", "craft", "end"]);
+let cursor = BAR;
 const SCENES: Scene[] = (timing as Omit<Scene, "start" | "end">[]).map((s) => {
-  const start = cursor;
+  const pre = TITLES[s.id] ? TITLE_LEN : 0;
+  const start = snap(cursor + pre, ON_BAR.has(s.id) || pre ? BAR / 2 : BEAT);
   const end = start + s.duration + (HOLD[s.id] ?? 0.3);
   cursor = end + GAP;
   return { ...s, start, end };
 });
 export const TOTAL = cursor + 0.2;
 const S = Object.fromEntries(SCENES.map((s) => [s.id, s])) as Record<string, Scene>;
-(window as unknown as { __timeline: unknown }).__timeline = { total: TOTAL, scenes: SCENES.map(({ id, start, end }) => ({ id, start, end })) };
+// Sound cues for the score (music.mjs): filled in below once times are known.
+const EVENTS: { t: number; kind: string }[] = [];
+(window as unknown as { __timeline: unknown }).__timeline = { total: TOTAL, bpm: BPM, scenes: SCENES.map(({ id, start, end }) => ({ id, start, end })), events: EVENTS };
 
 /** Time of word `i` of a scene (absolute seconds). */
 const wordAt = (id: string, i: number) => S[id].start + (S[id].words[i]?.start ?? 0);
+
+// Moments the picture and the score share.
+const T_SELECT = wordAt("text", 1);
+const T_PASTE = wordAt("paste", 4) + 0.2;
+const T_DARK = wordAt("search", 7);
+const TYPE_FROM = S.search.start + 0.5;
+const TYPE_TO = wordAt("search", 6);
+const titleStart = (id: string) => S[id].start - TITLE_LEN;
+const ev = (t: number, kind: string) => EVENTS.push({ t, kind });
+ev(S.meet.start, "riser");
+ev(S.meet.start, "impact");
+Object.keys(TITLES).forEach((id) => ev(titleStart(id), "hit"));
+ev(S.focus.start + 0.15, "click");
+ev(wordAt("focus", 12), "pop");
+ev(T_SELECT + 0.9, "click");
+ev(wordAt("text", 4) + 0.45, "pop");
+ev(S.paste.start + 0.7, "tick");
+ev(T_PASTE, "click");
+for (let k = 1; k <= 9; k++) ev(TYPE_FROM + ((k - 0.5) / 9) * (TYPE_TO - TYPE_FROM), "type");
+ev(T_DARK, "click");
+ev(S.craft.start, "whoosh");
+ev(wordAt("craft", 4) - 0.1, "boing");
+ev(S.end.start, "impact");
+ev(wordAt("end", 0), "tink");
 
 // ---------------------------------------------------------------------------
 // Easing
@@ -127,28 +195,29 @@ stage.innerHTML = `
         <div id="islandClip">
           <div id="iMedia" class="isl"><span class="art"></span><span>Midnight Drive</span><span class="bars" id="mediaBars"></span></div>
           <div id="iFocus" class="isl"><svg class="ring" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8.5" fill="none" stroke="rgba(255,255,255,.16)" stroke-width="2.5"/><circle id="ringArc" cx="10" cy="10" r="8.5" fill="none" stroke="#a78bfa" stroke-width="2.5" stroke-linecap="round" transform="rotate(-90 10 10)" stroke-dasharray="53.4"/></svg><span>Write the report</span><span id="focusTime" style="margin-left:auto;color:#a78bfa;font-variant-numeric:tabular-nums">24:12</span></div>
-          <div id="iHeld" class="isl"><span style="color:#a78bfa">●</span><span>3 notifications held</span><span style="margin-left:auto;color:rgba(235,235,245,.6);font-weight:500">until you're done</span></div>
-          <div id="iMeet" class="isl"><span style="color:#ff453a">◷</span><span>Standup</span><span style="margin-left:auto;color:#ff453a;font-variant-numeric:tabular-nums">in 4 min</span><span class="chip" style="background:#30d158;color:#fff">Join</span></div>
-          <div id="iCopied" class="isl"><span style="color:#0a84ff">⎘</span><span>Copied text</span><span style="margin-left:auto;color:rgba(235,235,245,.6);font-weight:500">Launch FLOAT 2.3 on Friday!</span></div>
+          <div id="iHeld" class="isl">${icon(BellDot, 16, "#a78bfa", 2.2)}<span>3 notifications held</span><span style="margin-left:auto;color:rgba(235,235,245,.6);font-weight:500">until you're done</span></div>
+          <div id="iMeet" class="isl">${icon(CalendarClock, 16, "#ff453a", 2.2)}<span>Standup</span><span style="margin-left:auto;color:#ff453a;font-variant-numeric:tabular-nums">in 4 min</span><span class="chip" style="background:#30d158;color:#fff;gap:4px">${icon(Video, 12, "#fff", 2.4)}Join</span></div>
+          <div id="iCopied" class="isl">${icon(ScanText, 16, "#0a84ff", 2.2)}<span>Copied text</span><span style="margin-left:auto;color:rgba(235,235,245,.6);font-weight:500">Launch FLOAT 2.3 on Friday!</span></div>
           <div id="iPanel" class="panel">
-            <div class="tabs"><i></i><i></i><i></i><i></i><span style="flex:1"></span><i></i><i></i><i></i></div>
+            <div class="tabs"><span class="tab on">${icon(House, 16)}</span><span class="tab">${icon(Inbox, 16)}</span><span class="tab">${icon(CircleCheck, 16)}</span><span class="tab">${icon(Timer, 16)}</span><span style="flex:1"></span><span class="tab">${icon(Search, 16)}</span><span class="tab">${icon(Bell, 16)}</span><span class="tab">${icon(SlidersHorizontal, 16)}</span></div>
             <div style="display:flex;gap:18px;margin-top:22px;align-items:center">
               <div style="width:96px;height:96px;border-radius:16px;background:linear-gradient(135deg,#ff6b9a,#7a5cff 60%,#23d5ff)"></div>
               <div><div style="font-size:20px;font-weight:600">Midnight Drive</div><div style="font-size:14px;color:rgba(235,235,245,.6);margin-top:4px">Neon Avenue</div>
               <div style="margin-top:14px;width:300px;height:4px;border-radius:2px;background:rgba(255,255,255,.14)"><div id="panelProgress" style="height:100%;border-radius:2px;background:#ff7ab8;width:30%"></div></div></div>
             </div>
-            <div style="position:absolute;left:20px;bottom:14px;font-size:12px;color:rgba(235,235,245,.6)"><b style="color:#fff">9:41</b> · ☀ 24° · Next: Standup in 1 h</div>
+            <div style="position:absolute;left:20px;bottom:14px;font-size:12px;color:rgba(235,235,245,.6)"><span style="display:inline-flex;align-items:center;gap:6px"><b style="color:#fff">9:41</b> · ${icon(Sun, 12, "#ffd60a")} 24° · Next: Standup in 1 h</span></div>
           </div>
+          <div id="sheen" style="position:absolute;inset:0;pointer-events:none;background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.28) 50%,transparent 62%);background-size:320% 100%;mix-blend-mode:screen"></div>
           <div id="iSearch" class="panel" style="padding-top:44px">
-            <div class="field"><span style="opacity:.6">⌕</span><span id="searchText"></span><span class="caret"></span></div>
-            <div class="row" id="rowDark" style="background:rgba(255,255,255,.1)"><span class="tile" style="background:#48484a">☾</span><div><b>Dark mode</b><small>Switch Windows to dark</small></div></div>
-            <div class="row"><span class="tile" style="background:#0a84ff">◐</span><div><b>Display</b><small>Settings</small></div></div>
+            <div class="field"><span style="opacity:.6">${icon(Search, 16)}</span><span id="searchText"></span><span class="caret"></span></div>
+            <div class="row" id="rowDark" style="background:rgba(255,255,255,.1)"><span class="tile" style="background:#48484a">${icon(MoonStar, 14, "#fff", 2.2)}</span><div><b>Dark mode</b><small>Switch Windows to dark</small></div></div>
+            <div class="row"><span class="tile" style="background:#0a84ff">${icon(Monitor, 14, "#fff", 2.2)}</span><div><b>Display</b><small>Settings</small></div></div>
           </div>
           <div id="iPaste" class="panel" style="padding-top:44px">
-            <div class="field"><span style="opacity:.6">⎘</span><span style="color:rgba(235,235,245,.3)">Paste from clipboard history or a pinned snippet</span></div>
+            <div class="field"><span style="opacity:.6">${icon(ClipboardPaste, 16)}</span><span style="color:rgba(235,235,245,.3)">Paste from clipboard history or a pinned snippet</span></div>
             <div style="font-size:11px;font-weight:600;color:rgba(235,235,245,.3);padding:2px 10px">Pinned</div>
-            <div class="row" id="rowPin"><span class="tile" style="background:#ffd60a;color:#1c1c1e">⚲</span><div><b>hello@float.app</b><small>Pinned · 1</small></div></div>
-            <div class="row" id="rowClip"><span class="tile" style="background:#5e5ce6">⎘</span><div><b>Launch FLOAT 2.3 on Friday!</b><small>Just now · 2</small></div></div>
+            <div class="row" id="rowPin"><span class="tile" style="background:#ffd60a">${icon(Pin, 13, "#1c1c1e", 2.4)}</span><div><b>hello@float.app</b><small>Pinned · 1</small></div></div>
+            <div class="row" id="rowClip"><span class="tile" style="background:#5e5ce6">${icon(Clipboard, 13, "#fff", 2.2)}</span><div><b>Launch FLOAT 2.3 on Friday!</b><small>Just now · 2</small></div></div>
           </div>
         </div>
       </div></div>
@@ -336,16 +405,22 @@ function render(t: number, frame: number) {
     t,
     1.0
   );
+  const driftS = 1 + 0.014 * Math.sin(t * 0.31);
+  const driftX = (Math.sin(t * 0.43) * 8) / cam[0];
+  const driftY = (Math.cos(t * 0.37) * 6) / cam[0];
   set($("world"), {
     opacity: worldOn,
-    transform: `translate(540px, 540px) scale(${cam[0]}) translate(${-cam[1]}px, ${-cam[2]}px)`,
-    filter: `blur(${S.why.start <= t && t < S.meet.start ? 10 * window01(t, S.why.start, S.meet.start, 0.4) : 0}px)`,
+    transform: `translate(540px, 540px) scale(${cam[0] * driftS}) translate(${-cam[1] - driftX}px, ${-cam[2] - driftY}px)`,
+    filter: `blur(${Math.max(
+      S.why.start <= t && t < S.meet.start ? 10 * window01(t, S.why.start, S.meet.start, 0.4) : 0,
+      ...Object.keys(TITLES).map((id) => 16 * window01(t, titleStart(id) - 0.1, S[id].start + 0.15, 0.2))
+    )}px) brightness(${1 - 0.45 * Math.max(...Object.keys(TITLES).map((id) => window01(t, titleStart(id) - 0.1, S[id].start + 0.15, 0.2)))})`,
   });
 
   // Windows appear for their scenes.
-  const photo = window01(t, S.text.start - 0.2, S.paste.start + 0.2, 0.4);
+  const photo = window01(t, S.text.start - 0.2, titleStart("paste") + 0.05, 0.3);
   set($("photoWin"), { opacity: photo, transform: `scale(${0.94 + 0.06 * easeOut(photo)})` });
-  const doc = window01(t, S.paste.start - 0.3, S.search.start + 0.3, 0.4);
+  const doc = window01(t, S.paste.start - 0.3, titleStart("search") + 0.05, 0.3);
   set($("docWin"), { opacity: doc, transform: `scale(${0.94 + 0.06 * easeOut(doc)})` });
 
   // Copy Text selection over the whiteboard words.
@@ -402,6 +477,9 @@ function render(t: number, frame: number) {
     set($(id), { opacity: x, filter: `blur(${(1 - x) * 8}px)`, transform: `scale(${0.94 + 0.06 * x})` });
   }
   drawBars(mediaBars, t, 16);
+  const sweeps = [S.meet.start + 0.35, S.focus.start + 0.2, wordAt("work", 7) + 0.3];
+  const sweep = sweeps.map((a) => prog(t, a, a + 0.9)).find((x) => x > 0 && x < 1) ?? 0;
+  set($("sheen"), { opacity: sweep > 0 ? 1 : 0, backgroundPosition: `${110 - sweep * 120}% 0` });
   const focusRemaining = 24 * 60 + 12 - Math.max(0, t - S.focus.start) * 7;
   ($("focusTime") as HTMLElement).textContent = `${Math.floor(focusRemaining / 60)}:${String(Math.floor(focusRemaining % 60)).padStart(2, "0")}`;
   $("ringArc").setAttribute("stroke-dashoffset", String(53.4 * (0.35 - 0.08 * prog(t, S.focus.start, S.focus.end))));
@@ -409,7 +487,14 @@ function render(t: number, frame: number) {
 
   // --- Big kinetic type ------------------------------------------------------
   const big = $("big");
-  if (t >= S.why.start - 0.1 && t < S.meet.start + 0.3) {
+  const title = Object.entries(TITLES).find(([id]) => t >= titleStart(id) - 0.05 && t < S[id].start + 0.2);
+  if (title) {
+    const [id, { word, colors }] = title;
+    const a = titleStart(id);
+    const x = easeOut(prog(t, a, a + 0.32));
+    const out = prog(t, S[id].start - 0.12, S[id].start + 0.2);
+    big.innerHTML = `<div style="font-size:190px;line-height:1;opacity:${x * (1 - out)};transform:scale(${1.12 - 0.12 * x + 0.06 * out});filter:blur(${(1 - x) * 18 + out * 22}px);background:linear-gradient(120deg,${colors[0]},${colors[1]});-webkit-background-clip:text;color:transparent;padding:0 20px">${word}</div>`;
+  } else if (t >= S.why.start - 0.1 && t < S.meet.start + 0.3) {
     const out = 1 - prog(t, S.meet.start - 0.2, S.meet.start + 0.2);
     const words = ["Why", "can't", "Windows?"];
     big.innerHTML = `<div style="font-size:118px;line-height:1.05">${words
