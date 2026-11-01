@@ -103,7 +103,7 @@ export async function subscribeToWindowFocus(
   }
 }
 
-export type IslandCommand = "open" | "toggle" | "search" | "updates" | "paste";
+export type IslandCommand = "open" | "toggle" | "search" | "paste";
 
 /** Commands from the tray icon, global hotkey, or a second app launch. */
 export async function subscribeToIslandCommand(
@@ -175,6 +175,43 @@ export async function getSearchIcon(path: string): Promise<string | null> {
     return await invoke<string | null>("search_icon", { path });
   } catch {
     return null;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Keyboard shortcuts and the Settings window                         */
+/* ------------------------------------------------------------------ */
+
+export type ShortcutAction = "open" | "search" | "text" | "paste" | "mic";
+
+export async function getShortcuts(): Promise<{ action: ShortcutAction; label: string | null }[]> {
+  try {
+    return await invoke("get_shortcuts");
+  } catch {
+    return [];
+  }
+}
+
+/** "Ctrl+Alt+V", "default", or null (off). Resolves to the label in use; rejects with why not. */
+export async function setShortcut(action: ShortcutAction, accelerator: string | null): Promise<string | null> {
+  return await invoke<string | null>("set_shortcut", { action, accelerator });
+}
+
+/** Unregister every shortcut while Settings records a new one. */
+export async function pauseShortcuts(paused: boolean): Promise<void> {
+  try {
+    await invoke("pause_shortcuts", { paused });
+  } catch {
+    // Not in a Tauri context
+  }
+}
+
+/** Open the Settings window, optionally at a section ("updates", "keyboard"...). */
+export async function openSettingsWindow(section?: string): Promise<void> {
+  try {
+    await invoke("open_settings", { section: section ?? null });
+  } catch {
+    // Not in a Tauri context
   }
 }
 

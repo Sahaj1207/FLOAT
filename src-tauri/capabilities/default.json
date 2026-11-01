@@ -4,7 +4,8 @@
   "description": "Capability for the main window",
   "windows": [
     "main",
-    "textgrab"
+    "textgrab",
+    "settings"
   ],
   "permissions": [
     "core:default",
@@ -18,6 +19,10 @@
     "core:window:allow-start-dragging",
     "core:window:allow-current-monitor",
     "core:window:allow-show",
-    "core:window:allow-close"
+    "core:window:allow-close",
+    "core:window:allow-minimize",
+    "core:window:allow-toggle-maximize",
+    "core:window:allow-is-maximized",
+    "core:window:allow-unminimize"
   ]
 }

@@ -2,13 +2,12 @@ import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bell, CircleCheck, House, Inbox, Search, SlidersHorizontal, Timer } from "lucide-react";
 import { MediaSession, MultiSessionState } from "../../platform/media";
-import { getPasteHotkey, getSearchHotkey, NotificationItem } from "../../platform";
+import { getPasteHotkey, getSearchHotkey, NotificationItem, openSettingsWindow } from "../../platform";
 import { HomeView } from "./HomeView";
 import { TrayView } from "./TrayView";
 import { TasksView } from "./TasksView";
 import { TimerView } from "./TimerView";
 import { FloatNotificationsView } from "./FloatNotificationsView";
-import { FloatSettingsView } from "./FloatSettingsView";
 import { ControlsView } from "./ControlCenter";
 import { SearchView } from "./SearchView";
 import { PasteView } from "./PasteView";
@@ -36,10 +35,9 @@ export interface SurfaceRequest {
   query?: string;
 }
 
-/** "settings" has no icon of its own; it opens from Controls. */
-export type SurfaceTab = "paste" | "search" | "home" | "tray" | "tasks" | "timer" | "notifications" | "controls" | "settings";
+export type SurfaceTab = "paste" | "search" | "home" | "tray" | "tasks" | "timer" | "notifications" | "controls";
 
-type BarTab = Exclude<SurfaceTab, "settings" | "paste">;
+type BarTab = Exclude<SurfaceTab, "paste">;
 
 const TABS: Record<BarTab, { label: string; Icon: React.ComponentType<{ size?: number; strokeWidth?: number }> }> = {
   search: { label: "Search", Icon: Search },
@@ -110,7 +108,7 @@ export const FloatSurface: React.FC<FloatSurfaceProps> = ({
   const tabButton = (tab: BarTab) => {
     const { label, Icon } = TABS[tab];
     // Settings lives under Controls, so keep that icon lit there too.
-    const active = activeTab === tab || (tab === "controls" && activeTab === "settings");
+    const active = activeTab === tab;
     return (
       <button
         key={tab}
@@ -173,9 +171,16 @@ export const FloatSurface: React.FC<FloatSurfaceProps> = ({
           />
         );
       case "controls":
-        return <ControlsView focusActive={focusActive} onOpenSettings={() => setActiveTab("settings")} />;
-      case "settings":
-        return <FloatSettingsView onClose={() => setActiveTab("controls")} />;
+        return (
+          <ControlsView
+            focusActive={focusActive}
+            onOpenSettings={() => {
+              // Settings is its own window; the island steps aside.
+              openSettingsWindow();
+              onCollapse();
+            }}
+          />
+        );
     }
   })();
 

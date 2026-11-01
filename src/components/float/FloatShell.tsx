@@ -57,7 +57,6 @@ import { Activity, ActivityPriority, isStatusActivity } from "../../activities/t
 import { timer, useTimerState } from "../../activities/timerStore";
 import { focus, focusFinished, useFocusState } from "../../activities/focusStore";
 import { useNextEvent } from "./Widgets";
-import { requestUpdateCheck } from "./UpdatesCard";
 import { MicOff } from "lucide-react";
 import { playChime } from "./Timer";
 import { shelf } from "./Shelf";
@@ -645,12 +644,6 @@ const FloatShell: React.FC = () => {
         }
         requestTab("paste");
         if (!expanded) transitionTo("expanded", "command-paste");
-        return;
-      }
-      if (command === "updates") {
-        requestUpdateCheck();
-        requestTab("settings");
-        if (!expanded) transitionTo("expanded", "command-updates");
         return;
       }
       if (command === "search") {

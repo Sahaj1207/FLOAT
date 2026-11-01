@@ -1,52 +1,11 @@
-//! System tray icon, global hotkey and the commands they send to the island.
+//! System tray icon, and what it and the global shortcuts send to the island.
 
 use serde::Serialize;
 use tauri::menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Emitter, Manager, Wry};
-use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
-
-/// Registered after the open hotkey, so adding search never moves the
-/// shortcut people already use. Without one, typing in the open island
-/// still jumps to search.
-const SEARCH_HOTKEYS: [(Modifiers, Code, &str); 2] = [
-    (Modifiers::ALT, Code::Space, "Alt+Space"),
-    (Modifiers::ALT.union(Modifiers::SHIFT), Code::Space, "Alt+Shift+Space"),
-];
-
-/// Copy Text from Anything.
-const TEXT_HOTKEYS: [(Modifiers, Code, &str); 2] = [
-    (Modifiers::CONTROL.union(Modifiers::ALT), Code::KeyT, "Ctrl+Alt+T"),
-    (Modifiers::ALT.union(Modifiers::SHIFT), Code::KeyT, "Alt+Shift+T"),
-];
-
-/// Paste picker (clipboard history and pinned snippets).
-const PASTE_HOTKEYS: [(Modifiers, Code, &str); 2] = [
-    (Modifiers::CONTROL.union(Modifiers::ALT), Code::KeyV, "Ctrl+Alt+V"),
-    (Modifiers::ALT.union(Modifiers::SHIFT), Code::KeyV, "Alt+Shift+V"),
-];
-
-/// Microphone mute.
-const MIC_HOTKEYS: [(Modifiers, Code, &str); 2] = [
-    (Modifiers::CONTROL.union(Modifiers::ALT), Code::KeyM, "Ctrl+Alt+M"),
-    (Modifiers::ALT.union(Modifiers::SHIFT), Code::KeyM, "Alt+Shift+M"),
-];
-
-/// Tried in order; the first combination no other app owns wins.
-const HOTKEYS: [(Modifiers, Code, &str); 3] = [
-    (Modifiers::CONTROL.union(Modifiers::ALT), Code::Space, "Ctrl+Alt+Space"),
-    (Modifiers::ALT.union(Modifiers::SHIFT), Code::Space, "Alt+Shift+Space"),
-    (Modifiers::CONTROL.union(Modifiers::ALT), Code::KeyI, "Ctrl+Alt+I"),
-];
-
-/// The hotkeys that were actually registered, if any.
-pub struct ActiveHotkeys {
-    open: Option<(Shortcut, &'static str)>,
-    search: Option<(Shortcut, &'static str)>,
-    text: Option<(Shortcut, &'static str)>,
-    mic: Option<(Shortcut, &'static str)>,
-    paste: Option<(Shortcut, &'static str)>,
-}
+use crate::hotkeys::{self, Action};
+use tauri_plugin_global_shortcut::ShortcutState;
 
 /// Sent to the frontend as `island-command`.
 #[derive(Clone, Copy, Serialize)]
@@ -56,8 +15,6 @@ pub enum IslandCommand {
     Toggle,
     /// Open straight into search (or close it if it's showing).
     Search,
-    /// Open Settings > Updates and check now.
-    Updates,
     /// Open the paste picker.
     Paste,
 }
@@ -86,56 +43,39 @@ pub fn sync_autostart(app: &AppHandle, enabled: bool) {
     }
 }
 
-fn register_first(app: &tauri::App, choices: &[(Modifiers, Code, &'static str)]) -> Option<(Shortcut, &'static str)> {
-    for &(mods, code, label) in choices {
-        let shortcut = Shortcut::new(Some(mods), code);
-        match app.global_shortcut().register(shortcut) {
-            Ok(()) => return Some((shortcut, label)),
-            Err(e) => dlog!("[TRAY] {} unavailable: {}", label, e),
-        }
-    }
-    None
+// The frontend asks for each shortcut's label to show it.
+#[tauri::command]
+pub fn get_hotkey(app: AppHandle) -> Option<String> {
+    hotkeys::label_for(&app, Action::Open)
 }
 
 #[tauri::command]
-pub fn get_hotkey(state: tauri::State<'_, ActiveHotkeys>) -> Option<String> {
-    state.open.map(|(_, label)| label.to_string())
+pub fn get_paste_hotkey(app: AppHandle) -> Option<String> {
+    hotkeys::label_for(&app, Action::Paste)
 }
 
 #[tauri::command]
-pub fn get_paste_hotkey(state: tauri::State<'_, ActiveHotkeys>) -> Option<String> {
-    state.paste.map(|(_, label)| label.to_string())
+pub fn get_mic_hotkey(app: AppHandle) -> Option<String> {
+    hotkeys::label_for(&app, Action::Mic)
 }
 
 #[tauri::command]
-pub fn get_mic_hotkey(state: tauri::State<'_, ActiveHotkeys>) -> Option<String> {
-    state.mic.map(|(_, label)| label.to_string())
+pub fn get_text_hotkey(app: AppHandle) -> Option<String> {
+    hotkeys::label_for(&app, Action::Text)
 }
 
 #[tauri::command]
-pub fn get_text_hotkey(state: tauri::State<'_, ActiveHotkeys>) -> Option<String> {
-    state.text.map(|(_, label)| label.to_string())
-}
-
-#[tauri::command]
-pub fn get_search_hotkey(state: tauri::State<'_, ActiveHotkeys>) -> Option<String> {
-    state.search.map(|(_, label)| label.to_string())
+pub fn get_search_hotkey(app: AppHandle) -> Option<String> {
+    hotkeys::label_for(&app, Action::Search)
 }
 
 pub fn init(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
-    let open_key = register_first(app, &HOTKEYS);
-    let search = register_first(app, &SEARCH_HOTKEYS);
-    let text = register_first(app, &TEXT_HOTKEYS);
-    let mic = register_first(app, &MIC_HOTKEYS);
-    let paste = register_first(app, &PASTE_HOTKEYS);
-    if open_key.is_none() {
-        eprintln!("[TRAY] No global hotkey could be registered");
-    }
-    let hotkey = open_key.map(|(_, label)| label);
-    app.manage(ActiveHotkeys { open: open_key, search, text, mic, paste });
+    hotkeys::init(app);
+    let hotkey = hotkeys::label_for(app.handle(), Action::Open);
 
     let visible = CheckMenuItem::with_id(app, "visible", "Show Island", true, true, None::<&str>)?;
-    let open = MenuItem::with_id(app, "open", "Open Island", true, hotkey)?;
+    let open = MenuItem::with_id(app, "open", "Open Island", true, hotkey.as_deref())?;
+    let settings = MenuItem::with_id(app, "settings", "Settings…", true, None::<&str>)?;
     let reset = MenuItem::with_id(app, "reset", "Reset Position", true, None::<&str>)?;
     let updates = MenuItem::with_id(app, "updates", "Check for Updates…", true, None::<&str>)?;
     let autostart =
@@ -147,9 +87,11 @@ pub fn init(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
             &open,
             &visible,
             &PredefinedMenuItem::separator(app)?,
+            &settings,
+            &updates,
+            &PredefinedMenuItem::separator(app)?,
             &reset,
             &autostart,
-            &updates,
             &PredefinedMenuItem::separator(app)?,
             &quit,
         ],
@@ -166,7 +108,8 @@ pub fn init(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
         .show_menu_on_left_click(false)
         .on_menu_event(|app, event| match event.id.as_ref() {
             "open" => command_island(app, IslandCommand::Open),
-            "updates" => command_island(app, IslandCommand::Updates),
+            "settings" => crate::settingswin::open(app, None),
+            "updates" => crate::settingswin::open(app, Some("updates-check")),
             "visible" => {
                 let hidden = !crate::window::is_user_hidden(app);
                 crate::window::set_user_hidden(app, hidden);
@@ -215,27 +158,21 @@ pub fn global_shortcut_plugin() -> tauri::plugin::TauriPlugin<Wry> {
             if event.state() != ShortcutState::Pressed {
                 return;
             }
-            let keys = app.try_state::<ActiveHotkeys>();
-            let matches = |pick: fn(&ActiveHotkeys) -> Option<(Shortcut, &'static str)>| {
-                keys.as_ref().and_then(|k| pick(k)).map_or(false, |(key, _)| key == *shortcut)
-            };
-            if matches(|k| k.text) {
-                crate::textgrab::start(app);
-                return;
-            }
-            if matches(|k| k.paste) {
-                // Before the island takes focus: that's where we'll paste.
-                crate::paste::remember_foreground(app);
-                command_island(app, IslandCommand::Paste);
-                return;
-            }
-            if matches(|k| k.mic) {
+            match hotkeys::action_for(app, shortcut) {
+                Some(Action::Text) => crate::textgrab::start(app),
+                Some(Action::Paste) => {
+                    // Before the island takes focus: that's where we'll paste.
+                    crate::paste::remember_foreground(app);
+                    command_island(app, IslandCommand::Paste);
+                }
                 // Off the event loop; sysmon announces the new state.
-                std::thread::spawn(crate::micmute::toggle);
-                return;
+                Some(Action::Mic) => {
+                    std::thread::spawn(crate::micmute::toggle);
+                }
+                Some(Action::Search) => command_island(app, IslandCommand::Search),
+                Some(Action::Open) => command_island(app, IslandCommand::Toggle),
+                None => {}
             }
-            let is_search = matches(|k| k.search);
-            command_island(app, if is_search { IslandCommand::Search } else { IslandCommand::Toggle });
         })
         .build()
 }

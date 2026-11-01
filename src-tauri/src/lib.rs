@@ -18,12 +18,14 @@ mod clipboard;
 mod connectivity;
 mod downloads;
 mod focus;
+mod hotkeys;
 mod lyrics;
 mod media;
 mod micmute;
 mod notifications;
 mod paste;
 mod search;
+mod settingswin;
 mod shelf;
 mod sysmon;
 mod syscmd;
@@ -49,6 +51,8 @@ pub fn run() {
             // `float.exe --copy-text` starts Copy Text (for custom shortcuts).
             if args.iter().any(|a| a == "--copy-text") {
                 textgrab::start(app);
+            } else if args.iter().any(|a| a == "--settings") {
+                settingswin::open(app, None);
             } else {
                 tray::command_island(app, tray::IslandCommand::Open);
             }
@@ -76,6 +80,10 @@ pub fn run() {
             paste::paste_history_entry,
             paste::paste_text,
             tray::get_paste_hotkey,
+            hotkeys::get_shortcuts,
+            hotkeys::set_shortcut,
+            hotkeys::pause_shortcuts,
+            settingswin::open_settings,
             textgrab::textgrab_start,
             textgrab::textgrab_image,
             textgrab::textgrab_recognize,

@@ -2,13 +2,15 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import { TextGrab } from "./components/textgrab/TextGrab";
+import { SettingsApp } from "./settings/SettingsApp";
 import "@fontsource-variable/inter";
 import "./index.css";
 import { invoke } from "@tauri-apps/api/core";
-import { loadSettings, applySettingsToDOM, applySettingsToNative } from "./services/settings";
+import { loadSettings, applySettingsToDOM, applySettingsToNative, applySavedShortcuts } from "./services/settings";
 
-// The Copy Text overlay is its own window loading this same page.
+// Copy Text's overlay and Settings are their own windows, loading this same page.
 const isTextGrab = window.location.hash === "#textgrab";
+const isSettings = window.location.hash.startsWith("#settings");
 
 // FLOAT is an app, not a web page: the web engine's own shortcuts (print,
 // save, find, reload, zoom, caret browsing...) must never fire. Editing keys
@@ -32,7 +34,11 @@ window.addEventListener("wheel", (e) => e.ctrlKey && e.preventDefault(), { passi
 
 // Apply initial user settings to DOM
 applySettingsToDOM(loadSettings());
-if (!isTextGrab) applySettingsToNative(loadSettings());
+// Native settings are applied once, by the island window.
+if (!isTextGrab && !isSettings) {
+  applySettingsToNative(loadSettings());
+  applySavedShortcuts(loadSettings());
+}
 
 // Redirect frontend logs to Rust stdout in development only. In release
 // builds every console call would otherwise cost an IPC round-trip.
@@ -67,6 +73,6 @@ if (import.meta.env.DEV) {
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    {isTextGrab ? <TextGrab /> : <App />}
+    {isTextGrab ? <TextGrab /> : isSettings ? <SettingsApp /> : <App />}
   </React.StrictMode>
 );

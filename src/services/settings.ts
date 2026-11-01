@@ -1,4 +1,5 @@
-import { setClipboardHistoryEnabled, setDownloadAlerts, setHideInFullscreen } from "../platform";
+import { setClipboardHistoryEnabled, setDownloadAlerts, setHideInFullscreen, setShortcut, ShortcutAction } from "../platform";
+import { emit, listen } from "@tauri-apps/api/event";
 
 export type AnimationIntensity = "subtle" | "balanced" | "expressive";
 export type IdleBehavior = "alwaysOrb" | "remember" | "alwaysPill";
@@ -42,6 +43,9 @@ export interface FloatSettings {
   focusNotifications: FocusNotifications; // "hold" | "quiet", default "hold"
   meetingAlerts: boolean;        // show the next meeting in the island 10 min before, default true
   autoUpdateCheck: boolean;      // ask GitHub once a day for a newer version and offer it in the island, default true
+  // Keyboard shortcuts the user changed: an accelerator, or null for off.
+  // Missing means FLOAT's default.
+  shortcuts: Partial<Record<ShortcutAction, string | null>>;
 }
 
 export const PILL_LENGTH_MIN = 220;
@@ -76,6 +80,7 @@ export const DEFAULT_FLOAT_SETTINGS: FloatSettings = {
   focusNotifications: "hold",
   meetingAlerts: true,
   autoUpdateCheck: true,
+  shortcuts: {},
 };
 
 const SETTINGS_STORAGE_KEY = "float_settings_v1";
@@ -96,6 +101,22 @@ export function subscribeToSettings(listener: SettingsListener): () => void {
   return () => {
     listeners.delete(listener);
   };
+}
+
+// Settings saved in another window (Settings <-> island) apply here too.
+const WINDOW_ID = Math.random().toString(36).slice(2);
+listen<string>("float-settings-changed", (event) => {
+  if (event.payload === WINDOW_ID) return;
+  const next = loadSettings();
+  applySettingsToDOM(next);
+  listeners.forEach((l) => l(next));
+}).catch(() => {});
+
+/** Apply saved shortcut changes at startup (the island window only). */
+export function applySavedShortcuts(settings: FloatSettings): void {
+  for (const [action, accelerator] of Object.entries(settings.shortcuts)) {
+    setShortcut(action as ShortcutAction, accelerator ?? null).catch(() => {});
+  }
 }
 
 export function loadSettings(): FloatSettings {
@@ -198,6 +219,7 @@ export function loadSettings(): FloatSettings {
       focusNotifications: pick(parsed.focusNotifications, ["hold", "quiet"] as const, DEFAULT_FLOAT_SETTINGS.focusNotifications),
       meetingAlerts: bool(parsed.meetingAlerts, DEFAULT_FLOAT_SETTINGS.meetingAlerts),
       autoUpdateCheck: bool(parsed.autoUpdateCheck, DEFAULT_FLOAT_SETTINGS.autoUpdateCheck),
+      shortcuts: parsed.shortcuts && typeof parsed.shortcuts === "object" ? parsed.shortcuts : {},
       weatherEnabled: bool(parsed.weatherEnabled, DEFAULT_FLOAT_SETTINGS.weatherEnabled),
       weatherCity: text(parsed.weatherCity, 80),
       weatherFahrenheit: bool(parsed.weatherFahrenheit, DEFAULT_FLOAT_SETTINGS.weatherFahrenheit),
@@ -228,6 +250,8 @@ export function saveSettings(settings: FloatSettings): void {
     applySettingsToDOM(settings);
     applySettingsToNative(settings);
     listeners.forEach((l) => l(settings));
+    // The island and the Settings window are separate windows: tell the other.
+    emit("float-settings-changed", WINDOW_ID).catch(() => {});
   } catch (e) {
     console.error("Failed to save FLOAT settings:", e);
   }

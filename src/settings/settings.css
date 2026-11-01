@@ -1,0 +1,706 @@
+/* FLOAT Settings: a macOS System Settings-style window. Light or dark
+   follows Windows; on Windows 11 the sidebar is Mica (the desktop colours
+   show through, like macOS vibrancy). */
+
+html:has(.sw),
+body:has(.sw),
+#root:has(.sw) {
+  margin: 0;
+  padding: 0 !important;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: transparent;
+}
+
+.sw {
+  --accent: #007aff;
+  --accent-soft: rgba(0, 122, 255, 0.14);
+  --label: rgba(0, 0, 0, 0.88);
+  --label-2: rgba(60, 60, 67, 0.62);
+  --label-3: rgba(60, 60, 67, 0.36);
+  --sidebar: rgba(236, 236, 240, 0.72);
+  --sidebar-solid: #e9e9ee;
+  --content: #f5f5f7;
+  --group: #ffffff;
+  --group-line: rgba(0, 0, 0, 0.07);
+  --separator: rgba(60, 60, 67, 0.13);
+  --control: #ffffff;
+  --control-line: rgba(0, 0, 0, 0.14);
+  --hover: rgba(0, 0, 0, 0.05);
+  --field: rgba(0, 0, 0, 0.055);
+  --knob: #ffffff;
+  --track: rgba(120, 120, 128, 0.2);
+  --menu: rgba(246, 246, 248, 0.92);
+  --shadow: 0 10px 40px rgba(0, 0, 0, 0.18), 0 0 0 0.5px rgba(0, 0, 0, 0.18);
+
+  position: fixed;
+  inset: 0;
+  display: flex;
+  font-family: "Inter Variable", "Segoe UI Variable Text", system-ui, sans-serif;
+  font-size: 13px;
+  letter-spacing: -0.005em;
+  color: var(--label);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  cursor: default;
+}
+
+@media (prefers-color-scheme: dark) {
+  .sw {
+    --accent: #0a84ff;
+    --accent-soft: rgba(10, 132, 255, 0.22);
+    --label: rgba(255, 255, 255, 0.92);
+    --label-2: rgba(235, 235, 245, 0.6);
+    --label-3: rgba(235, 235, 245, 0.3);
+    --sidebar: rgba(40, 40, 44, 0.62);
+    --sidebar-solid: #2b2b2e;
+    --content: #1e1e20;
+    --group: rgba(255, 255, 255, 0.055);
+    --group-line: rgba(255, 255, 255, 0.06);
+    --separator: rgba(255, 255, 255, 0.08);
+    --control: rgba(255, 255, 255, 0.12);
+    --control-line: rgba(255, 255, 255, 0.08);
+    --hover: rgba(255, 255, 255, 0.07);
+    --field: rgba(255, 255, 255, 0.08);
+    --knob: #f2f2f4;
+    --track: rgba(120, 120, 128, 0.36);
+    --menu: rgba(44, 44, 48, 0.94);
+    --shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 0 0.5px rgba(255, 255, 255, 0.14);
+  }
+}
+
+/* Without Mica the sidebar is opaque. */
+.sw.solid .sw-sidebar {
+  background: var(--sidebar-solid);
+}
+
+.sw button {
+  font: inherit;
+  color: inherit;
+}
+
+/* ---- Sidebar ---- */
+.sw-sidebar {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 236px;
+  flex-shrink: 0;
+  background: var(--sidebar);
+  border-right: 0.5px solid var(--separator);
+}
+
+.sw-titlebar {
+  display: flex;
+  align-items: center;
+  height: 52px;
+  padding: 0 18px;
+  flex-shrink: 0;
+}
+
+.lights {
+  display: flex;
+  gap: 8px;
+}
+
+.light {
+  position: relative;
+  width: 12px;
+  height: 12px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.18);
+  cursor: default;
+}
+
+.light.close {
+  background: #ff5f57;
+}
+.light.min {
+  background: #febc2e;
+}
+.light.max {
+  background: #28c840;
+}
+
+.sw.blurred .light {
+  background: rgba(128, 128, 136, 0.35);
+}
+
+/* Glyphs appear when the pointer is over the group, as on macOS. */
+.light svg {
+  position: absolute;
+  inset: 0;
+  width: 12px;
+  height: 12px;
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+
+.lights:hover .light svg {
+  opacity: 1;
+}
+
+.sw.blurred .lights:hover .light.close {
+  background: #ff5f57;
+}
+.sw.blurred .lights:hover .light.min {
+  background: #febc2e;
+}
+.sw.blurred .lights:hover .light.max {
+  background: #28c840;
+}
+
+.light:active {
+  filter: brightness(0.85);
+}
+
+.sw-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 12px 10px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 8px;
+  background: var(--field);
+  color: var(--label-2);
+}
+
+.sw-search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: none;
+  font: inherit;
+  color: var(--label);
+  user-select: text;
+}
+
+.sw-search input::placeholder {
+  color: var(--label-3);
+}
+
+.sw-search:focus-within {
+  box-shadow: 0 0 0 3px var(--accent-soft), 0 0 0 1px var(--accent);
+}
+
+.sw-nav {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 10px 12px;
+  scrollbar-width: none;
+}
+
+.sw-nav-group {
+  margin-bottom: 12px;
+}
+
+.sw-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  height: 30px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 7px;
+  background: none;
+  text-align: left;
+  font-size: 13px;
+  transition: background 0.12s ease;
+}
+
+.sw-item:hover {
+  background: var(--hover);
+}
+
+.sw-item.on {
+  background: var(--accent);
+  color: #fff;
+}
+
+.sw-item.dim {
+  opacity: 0.35;
+}
+
+.sw-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  color: #fff;
+  box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.1);
+}
+
+/* ---- Content ---- */
+.sw-main {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--content);
+}
+
+.sw-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 52px;
+  padding: 0 16px;
+  flex-shrink: 0;
+}
+
+.sw-toolbar h1 {
+  margin: 0 0 0 6px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.sw-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--label-2);
+}
+
+.sw-nav-btn:hover:not(:disabled) {
+  background: var(--hover);
+}
+
+.sw-nav-btn:disabled {
+  opacity: 0.3;
+}
+
+.sw-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 28px 28px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--track) transparent;
+}
+
+.sw-page {
+  max-width: 620px;
+  margin: 0 auto;
+  animation: sw-page-in 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes sw-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* Hero at the top of a page, like System Settings. */
+.sw-hero {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 6px 0 20px;
+}
+
+.sw-hero .sw-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+}
+
+.sw-hero h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.sw-hero p {
+  margin: 3px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--label-2);
+}
+
+/* ---- Groups and rows ---- */
+.sw-group-title {
+  margin: 18px 4px 7px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.sw-group {
+  border-radius: 10px;
+  background: var(--group);
+  box-shadow: 0 0 0 0.5px var(--group-line), 0 1px 2px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+}
+
+.sw-group-foot {
+  margin: 7px 4px 0;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--label-2);
+}
+
+.sw-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 8px 12px;
+  box-sizing: border-box;
+}
+
+.sw-row + .sw-row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 12px;
+  right: 0;
+  height: 0.5px;
+  background: var(--separator);
+}
+
+.sw-row-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sw-row-label {
+  font-size: 13px;
+}
+
+.sw-row-desc {
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--label-2);
+}
+
+.sw-row.flash {
+  animation: sw-flash 1.4s ease;
+}
+
+@keyframes sw-flash {
+  15%,
+  55% {
+    background: var(--accent-soft);
+  }
+}
+
+.sw-row.disabled .sw-row-text {
+  opacity: 0.45;
+}
+
+/* ---- Controls ---- */
+.sw-switch {
+  position: relative;
+  width: 34px;
+  height: 20px;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  background: var(--track);
+  transition: background 0.2s ease;
+}
+
+.sw-switch.on {
+  background: var(--accent);
+}
+
+.sw-switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25), 0 0 0 0.5px rgba(0, 0, 0, 0.06);
+  transition: transform 0.22s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+
+.sw-switch.on::after {
+  transform: translateX(14px);
+}
+
+.sw-switch:active::after {
+  width: 19px;
+}
+
+.sw-switch.on:active::after {
+  transform: translateX(11px);
+}
+
+.sw-switch:disabled {
+  opacity: 0.4;
+}
+
+.sw-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 11px;
+  border: none;
+  border-radius: 6px;
+  background: var(--control);
+  box-shadow: 0 0 0 0.5px var(--control-line), 0 1px 1.5px rgba(0, 0, 0, 0.06);
+  font-size: 13px;
+  white-space: nowrap;
+  transition: filter 0.1s ease;
+}
+
+.sw-btn:active {
+  filter: brightness(0.92);
+}
+
+.sw-btn.primary {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: none;
+}
+
+.sw-btn.danger {
+  color: #ff3b30;
+}
+
+.sw-btn:disabled {
+  opacity: 0.45;
+}
+
+/* Pop-up button and its menu */
+.sw-popup {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.sw-popup-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 24px;
+  padding: 0 6px 0 10px;
+  border: none;
+  border-radius: 6px;
+  background: var(--control);
+  box-shadow: 0 0 0 0.5px var(--control-line), 0 1px 1.5px rgba(0, 0, 0, 0.06);
+  font-size: 13px;
+}
+
+.sw-popup-btn .chev {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  background: var(--accent);
+  color: #fff;
+}
+
+.sw-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 50;
+  min-width: 100%;
+  padding: 5px;
+  border-radius: 8px;
+  background: var(--menu);
+  backdrop-filter: blur(30px) saturate(1.8);
+  box-shadow: var(--shadow);
+  animation: sw-menu-in 0.12s ease-out;
+}
+
+@keyframes sw-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px) scale(0.98);
+  }
+}
+
+.sw-menu button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  height: 24px;
+  padding: 0 10px 0 6px;
+  border: none;
+  border-radius: 5px;
+  background: none;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.sw-menu button .check {
+  width: 14px;
+  display: flex;
+}
+
+.sw-menu button:hover,
+.sw-menu button.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Segmented control */
+.sw-seg {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: 2px;
+  border-radius: 7px;
+  background: var(--field);
+}
+
+.sw-seg button {
+  height: 22px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 5px;
+  background: none;
+  font-size: 12.5px;
+  transition: background 0.15s ease;
+}
+
+.sw-seg button.on {
+  background: var(--control);
+  box-shadow: 0 0 0 0.5px var(--control-line), 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Slider */
+.sw-slider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  width: 220px;
+  font-size: 11px;
+  color: var(--label-2);
+}
+
+.sw-slider input {
+  flex: 1;
+  height: 4px;
+  appearance: none;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--accent) var(--fill), var(--track) var(--fill));
+  outline: none;
+}
+
+.sw-slider input::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--knob);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3), 0 0 0 0.5px rgba(0, 0, 0, 0.08);
+  transition: transform 0.12s ease;
+}
+
+.sw-slider input:active::-webkit-slider-thumb {
+  transform: scale(1.08);
+}
+
+/* Text field */
+.sw-field {
+  width: 260px;
+  height: 24px;
+  padding: 0 8px;
+  box-sizing: border-box;
+  border: none;
+  border-radius: 6px;
+  outline: none;
+  background: var(--control);
+  box-shadow: 0 0 0 0.5px var(--control-line), inset 0 1px 1.5px rgba(0, 0, 0, 0.05);
+  font: inherit;
+  color: var(--label);
+  user-select: text;
+}
+
+.sw-field:focus {
+  box-shadow: 0 0 0 3px var(--accent-soft), 0 0 0 1px var(--accent);
+}
+
+.sw-field::placeholder {
+  color: var(--label-3);
+}
+
+/* Shortcut recorder */
+.sw-keys {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 128px;
+  height: 26px;
+  padding: 0 6px;
+  border: none;
+  border-radius: 6px;
+  background: var(--control);
+  box-shadow: 0 0 0 0.5px var(--control-line);
+  justify-content: center;
+}
+
+.sw-keys.recording {
+  box-shadow: 0 0 0 3px var(--accent-soft), 0 0 0 1px var(--accent);
+  color: var(--label-2);
+}
+
+.kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 4px;
+  background: var(--field);
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.08);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+.sw-status {
+  font-size: 11.5px;
+  color: var(--label-2);
+}
+
+.sw-status.ok::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: #34c759;
+}
+
+.sw-status.error {
+  color: #ff3b30;
+}
+
+.sw-empty {
+  padding: 40px 0;
+  text-align: center;
+  color: var(--label-2);
+}
