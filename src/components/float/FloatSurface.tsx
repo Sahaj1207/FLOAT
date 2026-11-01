@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bell, CircleCheck, House, Inbox, Search, SlidersHorizontal, Timer } from "lucide-react";
 import { MediaSession, MultiSessionState } from "../../platform/media";
-import { getSearchHotkey, NotificationItem } from "../../platform";
+import { getPasteHotkey, getSearchHotkey, NotificationItem } from "../../platform";
 import { HomeView } from "./HomeView";
 import { TrayView } from "./TrayView";
 import { TasksView } from "./TasksView";
@@ -11,6 +11,7 @@ import { FloatNotificationsView } from "./FloatNotificationsView";
 import { FloatSettingsView } from "./FloatSettingsView";
 import { ControlsView } from "./ControlCenter";
 import { SearchView } from "./SearchView";
+import { PasteView } from "./PasteView";
 import { shouldShowWelcome, Welcome } from "./Welcome";
 import "./ui.css";
 import "./FloatSurface.css";
@@ -36,9 +37,9 @@ export interface SurfaceRequest {
 }
 
 /** "settings" has no icon of its own; it opens from Controls. */
-export type SurfaceTab = "search" | "home" | "tray" | "tasks" | "timer" | "notifications" | "controls" | "settings";
+export type SurfaceTab = "paste" | "search" | "home" | "tray" | "tasks" | "timer" | "notifications" | "controls" | "settings";
 
-type BarTab = Exclude<SurfaceTab, "settings">;
+type BarTab = Exclude<SurfaceTab, "settings" | "paste">;
 
 const TABS: Record<BarTab, { label: string; Icon: React.ComponentType<{ size?: number; strokeWidth?: number }> }> = {
   search: { label: "Search", Icon: Search },
@@ -70,13 +71,15 @@ export const FloatSurface: React.FC<FloatSurfaceProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<SurfaceTab>(request?.tab ?? "home");
   const [searchSeed, setSearchSeed] = useState(request?.query ?? "");
-  const [welcome, setWelcome] = useState(() => shouldShowWelcome() && request?.tab !== "search");
+  const [welcome, setWelcome] = useState(() => shouldShowWelcome() && request?.tab !== "search" && request?.tab !== "paste");
   const [searchHotkey, setSearchHotkey] = useState<string | null>(null);
   // Search opening a task or note in its tab.
   const [tasksOpen, setTasksOpen] = useState<{ mode: "tasks" | "notes"; noteId?: string } | null>(null);
 
+  const [pasteHotkey, setPasteHotkey] = useState<string | null>(null);
   useEffect(() => {
     getSearchHotkey().then(setSearchHotkey);
+    getPasteHotkey().then(setPasteHotkey);
   }, []);
 
   useEffect(() => {
@@ -93,7 +96,7 @@ export const FloatSurface: React.FC<FloatSurfaceProps> = ({
   // Type-to-search: typing on any tab without a text field jumps to search.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (activeTab === "search" || welcome || e.ctrlKey || e.altKey || e.metaKey) return;
+      if (activeTab === "search" || activeTab === "paste" || welcome || e.ctrlKey || e.altKey || e.metaKey) return;
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (e.key.length !== 1 || e.key === " ") return;
       e.preventDefault();
@@ -131,6 +134,8 @@ export const FloatSurface: React.FC<FloatSurfaceProps> = ({
   const body = (() => {
     if (welcome) return <Welcome onDone={() => setWelcome(false)} />;
     switch (activeTab) {
+      case "paste":
+        return <PasteView onDone={onCollapse} onExit={onCollapse} hotkey={pasteHotkey} />;
       case "search":
         return (
           <SearchView

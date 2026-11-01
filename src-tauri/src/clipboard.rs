@@ -324,6 +324,10 @@ pub fn get_clipboard_history(state: tauri::State<'_, ClipboardState>) -> Vec<Ent
 /// Put a history entry back on the clipboard (it moves to the top).
 #[tauri::command]
 pub fn copy_clipboard_entry(id: u64, state: tauri::State<'_, ClipboardState>) -> Result<(), String> {
+    copy_entry(&state, id)
+}
+
+pub fn copy_entry(state: &ClipboardState, id: u64) -> Result<(), String> {
     let content = state
         .entries
         .lock()

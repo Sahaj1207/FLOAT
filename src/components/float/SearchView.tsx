@@ -11,6 +11,7 @@ import {
   MicOff,
   Moon,
   MoonStar,
+  Pin,
   Power,
   RotateCw,
   ScanText,
@@ -23,6 +24,7 @@ import {
 } from "lucide-react";
 import { useTasks, Task } from "../../activities/tasksStore";
 import { Note, noteTitle, useNotes } from "../../activities/notesStore";
+import { Snippet, useSnippets } from "../../activities/snippetsStore";
 import { focus } from "../../activities/focusStore";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import {
@@ -177,6 +179,7 @@ const contains = (text: string, q: string) => text.toLowerCase().includes(q.toLo
 type Row =
   | { type: "command"; command: Command }
   | { type: "clip"; entry: ClipboardEntry }
+  | { type: "snippet"; snippet: Snippet }
   | { type: "tray"; item: ShelfItem }
   | { type: "task"; task: Task }
   | { type: "note"; note: Note }
@@ -219,6 +222,7 @@ export const SearchView: React.FC<SearchViewProps> = ({ initialQuery = "", onDon
   const [tray, setTray] = useState<ShelfItem[]>([]);
   const tasks = useTasks();
   const notes = useNotes();
+  const snippets = useSnippets();
   // A command waiting for its confirming second Enter.
   const [armed, setArmed] = useState<SystemCommand | null>(null);
   const [copiedClip, setCopiedClip] = useState<number | null>(null);
@@ -286,6 +290,7 @@ export const SearchView: React.FC<SearchViewProps> = ({ initialQuery = "", onDon
     list.push(...native.slice(0, 3));
     if (q.length >= 2) {
       list.push(
+        ...snippets.filter((s) => contains(s.text, q)).slice(0, 2).map((snippet) => ({ type: "snippet" as const, snippet })),
         ...clips.filter((c) => c.kind === "text" && c.text && contains(c.text, q)).slice(0, 2).map((entry) => ({ type: "clip" as const, entry })),
         ...tray.filter((t) => contains(t.name, q)).slice(0, 2).map((item) => ({ type: "tray" as const, item })),
         ...tasks.filter((t) => contains(t.title, q)).slice(0, 2).map((task) => ({ type: "task" as const, task })),
@@ -295,7 +300,7 @@ export const SearchView: React.FC<SearchViewProps> = ({ initialQuery = "", onDon
     list.push(...native.slice(3));
     list.push({ type: "web", query: q });
     return list;
-  }, [query, recents, answer, results, clips, tray, tasks, notes]);
+  }, [query, recents, answer, results, clips, tray, tasks, notes, snippets]);
 
   useEffect(() => {
     setSelected(0);
@@ -321,6 +326,11 @@ export const SearchView: React.FC<SearchViewProps> = ({ initialQuery = "", onDon
         }
         runSystemCommand(row.command.id).catch(() => {});
         onDone();
+        return;
+      }
+      if (row.type === "snippet") {
+        copyText(row.snippet.text);
+        setCopiedClip(-row.snippet.createdAt);
         return;
       }
       if (row.type === "clip") {
@@ -419,6 +429,8 @@ export const SearchView: React.FC<SearchViewProps> = ({ initialQuery = "", onDon
               ? `cmd:${row.command.id}`
               : row.type === "clip"
               ? `clip:${row.entry.id}`
+              : row.type === "snippet"
+              ? `snip:${row.snippet.id}`
               : row.type === "tray"
               ? `tray:${row.item.path}`
               : row.type === "task"
@@ -450,6 +462,8 @@ export const SearchView: React.FC<SearchViewProps> = ({ initialQuery = "", onDon
                 }
               : row.type === "clip"
               ? { Icon: Clipboard, tile: "clip", name: row.entry.text!.replace(/\s+/g, " ").slice(0, 120), detail: "Clipboard history", hint: copiedClip === row.entry.id ? "Copied" : "Copy" }
+              : row.type === "snippet"
+              ? { Icon: Pin, tile: "pin", name: row.snippet.text.replace(/\s+/g, " ").slice(0, 120), detail: "Pinned snippet", hint: copiedClip === -row.snippet.createdAt ? "Copied" : "Copy" }
               : row.type === "tray"
               ? { Icon: Inbox, tile: "tray", name: row.item.name, detail: "In the Tray", hint: "Open" }
               : row.type === "task"

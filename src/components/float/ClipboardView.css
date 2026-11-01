@@ -143,3 +143,50 @@
   width: 10px;
   height: 10px;
 }
+
+/* Pinned snippets lead the list, with a yellow edge. */
+.clip-item.pinned {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--yellow) 45%, transparent);
+}
+
+.clip-pin {
+  position: absolute;
+  top: 5px;
+  right: 27px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-1);
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 0.15s ease, background 0.15s ease, transform 0.12s ease;
+}
+
+.clip-item:hover .clip-pin,
+.clip-pin.on {
+  opacity: 1;
+}
+
+.clip-pin.on {
+  right: 5px;
+  background: none;
+  color: var(--yellow);
+}
+
+.clip-pin:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.clip-pin:active {
+  transform: scale(0.88);
+}
+
+:root[data-input="touch"] .clip-pin {
+  opacity: 1;
+}

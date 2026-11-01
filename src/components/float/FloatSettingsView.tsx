@@ -13,7 +13,7 @@ import {
   GLASS_TINT_MIN,
   GLASS_TINT_MAX,
 } from "../../services/settings";
-import { getCalendarEvents, getAutostart, getHotkey, getSearchHotkey, getTextHotkey, setAutostart, subscribeToAutostart } from "../../platform";
+import { getCalendarEvents, getAutostart, getHotkey, getMicHotkey, getPasteHotkey, getSearchHotkey, getTextHotkey, setAutostart, subscribeToAutostart } from "../../platform";
 import { ChevronLeft, MousePointer2, Pill, Target } from "lucide-react";
 import { UpdatesCard } from "./UpdatesCard";
 import { isAppointment } from "./Widgets";
@@ -219,9 +219,13 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = ({ onClose })
   const [hotkey, setHotkey] = useState<string | null>(null);
   const [searchHotkey, setSearchHotkey] = useState<string | null>(null);
   const [textHotkey, setTextHotkey] = useState<string | null>(null);
+  const [pasteHotkey, setPasteHotkey] = useState<string | null>(null);
+  const [micHotkey, setMicHotkey] = useState<string | null>(null);
   useEffect(() => {
     getSearchHotkey().then(setSearchHotkey);
     getTextHotkey().then(setTextHotkey);
+    getPasteHotkey().then(setPasteHotkey);
+    getMicHotkey().then(setMicHotkey);
   }, []);
   useEffect(() => {
     let isMounted = true;
@@ -794,6 +798,8 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = ({ onClose })
             Touchscreen: tap to open, flick down to open, flick up to close. Touch and hold, then drag, to move the island.
             {searchHotkey ? ` ${searchHotkey} opens search.` : ""}
             {textHotkey ? ` ${textHotkey} copies text from anything on screen.` : ""}
+            {pasteHotkey ? ` ${pasteHotkey} pastes from clipboard history or a pinned snippet.` : ""}
+            {micHotkey ? ` ${micHotkey} mutes the microphone.` : ""}
           </p>
         </div>
 

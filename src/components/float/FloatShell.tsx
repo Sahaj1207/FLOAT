@@ -186,6 +186,7 @@ const FloatShell: React.FC = () => {
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
   const searchShowingRef = useRef(false);
+  const pasteShowingRef = useRef(false);
 
   const visualModeRef = useRef(visualMode);
   visualModeRef.current = visualMode;
@@ -636,6 +637,16 @@ const FloatShell: React.FC = () => {
     let unlisten: (() => void) | null = null;
     subscribeToIslandCommand((command) => {
       const expanded = visualModeRef.current === "expanded";
+      if (command === "paste") {
+        // The paste key toggles too.
+        if (expanded && pasteShowingRef.current) {
+          collapse();
+          return;
+        }
+        requestTab("paste");
+        if (!expanded) transitionTo("expanded", "command-paste");
+        return;
+      }
       if (command === "updates") {
         requestUpdateCheck();
         requestTab("settings");
@@ -1579,6 +1590,7 @@ const FloatShell: React.FC = () => {
             request={surfaceRequest}
             onTabChange={(tab) => {
               searchShowingRef.current = tab === "search";
+              pasteShowingRef.current = tab === "paste";
             }}
           />
         ) : isOrb ? (

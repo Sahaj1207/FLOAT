@@ -20,6 +20,12 @@ const TEXT_HOTKEYS: [(Modifiers, Code, &str); 2] = [
     (Modifiers::ALT.union(Modifiers::SHIFT), Code::KeyT, "Alt+Shift+T"),
 ];
 
+/// Paste picker (clipboard history and pinned snippets).
+const PASTE_HOTKEYS: [(Modifiers, Code, &str); 2] = [
+    (Modifiers::CONTROL.union(Modifiers::ALT), Code::KeyV, "Ctrl+Alt+V"),
+    (Modifiers::ALT.union(Modifiers::SHIFT), Code::KeyV, "Alt+Shift+V"),
+];
+
 /// Microphone mute.
 const MIC_HOTKEYS: [(Modifiers, Code, &str); 2] = [
     (Modifiers::CONTROL.union(Modifiers::ALT), Code::KeyM, "Ctrl+Alt+M"),
@@ -39,6 +45,7 @@ pub struct ActiveHotkeys {
     search: Option<(Shortcut, &'static str)>,
     text: Option<(Shortcut, &'static str)>,
     mic: Option<(Shortcut, &'static str)>,
+    paste: Option<(Shortcut, &'static str)>,
 }
 
 /// Sent to the frontend as `island-command`.
@@ -51,6 +58,8 @@ pub enum IslandCommand {
     Search,
     /// Open Settings > Updates and check now.
     Updates,
+    /// Open the paste picker.
+    Paste,
 }
 
 struct TrayItems {
@@ -94,6 +103,11 @@ pub fn get_hotkey(state: tauri::State<'_, ActiveHotkeys>) -> Option<String> {
 }
 
 #[tauri::command]
+pub fn get_paste_hotkey(state: tauri::State<'_, ActiveHotkeys>) -> Option<String> {
+    state.paste.map(|(_, label)| label.to_string())
+}
+
+#[tauri::command]
 pub fn get_mic_hotkey(state: tauri::State<'_, ActiveHotkeys>) -> Option<String> {
     state.mic.map(|(_, label)| label.to_string())
 }
@@ -113,11 +127,12 @@ pub fn init(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let search = register_first(app, &SEARCH_HOTKEYS);
     let text = register_first(app, &TEXT_HOTKEYS);
     let mic = register_first(app, &MIC_HOTKEYS);
+    let paste = register_first(app, &PASTE_HOTKEYS);
     if open_key.is_none() {
         eprintln!("[TRAY] No global hotkey could be registered");
     }
     let hotkey = open_key.map(|(_, label)| label);
-    app.manage(ActiveHotkeys { open: open_key, search, text, mic });
+    app.manage(ActiveHotkeys { open: open_key, search, text, mic, paste });
 
     let visible = CheckMenuItem::with_id(app, "visible", "Show Island", true, true, None::<&str>)?;
     let open = MenuItem::with_id(app, "open", "Open Island", true, hotkey)?;
@@ -206,6 +221,12 @@ pub fn global_shortcut_plugin() -> tauri::plugin::TauriPlugin<Wry> {
             };
             if matches(|k| k.text) {
                 crate::textgrab::start(app);
+                return;
+            }
+            if matches(|k| k.paste) {
+                // Before the island takes focus: that's where we'll paste.
+                crate::paste::remember_foreground(app);
+                command_island(app, IslandCommand::Paste);
                 return;
             }
             if matches(|k| k.mic) {

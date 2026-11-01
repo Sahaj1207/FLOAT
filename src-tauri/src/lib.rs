@@ -22,6 +22,7 @@ mod lyrics;
 mod media;
 mod micmute;
 mod notifications;
+mod paste;
 mod search;
 mod shelf;
 mod sysmon;
@@ -72,6 +73,9 @@ pub fn run() {
             micmute::get_mic_muted,
             btbattery::bluetooth_battery,
             syscmd::system_command,
+            paste::paste_history_entry,
+            paste::paste_text,
+            tray::get_paste_hotkey,
             textgrab::textgrab_start,
             textgrab::textgrab_image,
             textgrab::textgrab_recognize,

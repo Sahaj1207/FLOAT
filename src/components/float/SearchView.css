@@ -145,6 +145,11 @@
   background: #c9a227;
 }
 
+.search-icon-tile.pin {
+  background: var(--yellow);
+  color: #1c1c1e;
+}
+
 .search-icon-tile.web {
   background: var(--tint);
 }

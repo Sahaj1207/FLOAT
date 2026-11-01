@@ -103,7 +103,7 @@ export async function subscribeToWindowFocus(
   }
 }
 
-export type IslandCommand = "open" | "toggle" | "search" | "updates";
+export type IslandCommand = "open" | "toggle" | "search" | "updates" | "paste";
 
 /** Commands from the tray icon, global hotkey, or a second app launch. */
 export async function subscribeToIslandCommand(
@@ -173,6 +173,36 @@ export async function openSearchResult(target: string, reveal = false): Promise<
 export async function getSearchIcon(path: string): Promise<string | null> {
   try {
     return await invoke<string | null>("search_icon", { path });
+  } catch {
+    return null;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Paste into the previous app                                        */
+/* ------------------------------------------------------------------ */
+
+/** Paste a clipboard-history item where the cursor was. False: nowhere to paste. */
+export async function pasteHistoryEntry(id: number): Promise<boolean> {
+  try {
+    return await invoke<boolean>("paste_history_entry", { id });
+  } catch {
+    return false;
+  }
+}
+
+/** Paste text (a pinned snippet) where the cursor was. */
+export async function pasteText(text: string): Promise<boolean> {
+  try {
+    return await invoke<boolean>("paste_text", { text });
+  } catch {
+    return false;
+  }
+}
+
+export async function getPasteHotkey(): Promise<string | null> {
+  try {
+    return await invoke<string | null>("get_paste_hotkey");
   } catch {
     return null;
   }
