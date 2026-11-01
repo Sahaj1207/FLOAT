@@ -54,6 +54,8 @@ pub fn run() {
                 textgrab::start(app);
             } else if args.iter().any(|a| a == "--settings") {
                 settingswin::open(app, None);
+            } else if args.iter().any(|a| a == "--controls") {
+                tray::command_island(app, tray::IslandCommand::Controls);
             } else {
                 tray::command_island(app, tray::IslandCommand::Open);
             }

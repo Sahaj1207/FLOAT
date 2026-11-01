@@ -103,7 +103,7 @@ export async function subscribeToWindowFocus(
   }
 }
 
-export type IslandCommand = "open" | "toggle" | "search" | "paste";
+export type IslandCommand = "open" | "toggle" | "search" | "paste" | "controls";
 
 /** Commands from the tray icon, global hotkey, or a second app launch. */
 export async function subscribeToIslandCommand(

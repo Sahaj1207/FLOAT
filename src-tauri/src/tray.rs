@@ -17,6 +17,8 @@ pub enum IslandCommand {
     Search,
     /// Open the paste picker.
     Paste,
+    /// Open on the Controls tab (`float.exe --controls`).
+    Controls,
 }
 
 struct TrayItems {
