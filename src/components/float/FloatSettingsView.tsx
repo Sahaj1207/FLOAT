@@ -13,7 +13,7 @@ import {
   GLASS_TINT_MIN,
   GLASS_TINT_MAX,
 } from "../../services/settings";
-import { getAutostart, getHotkey, getSearchHotkey, getTextHotkey, setAutostart, subscribeToAutostart } from "../../platform";
+import { getCalendarEvents, getAutostart, getHotkey, getSearchHotkey, getTextHotkey, setAutostart, subscribeToAutostart } from "../../platform";
 import { ChevronLeft, MousePointer2, Pill, Target } from "lucide-react";
 import { UpdatesCard } from "./UpdatesCard";
 import "./FloatSettingsView.css";
@@ -56,6 +56,34 @@ const CommitInput: React.FC<{
       data-no-drag="true"
     />
   );
+};
+
+/** Whether the calendar link works: "Connected · next: …" or why not. */
+const CalendarStatus: React.FC<{ url: string }> = ({ url }) => {
+  const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
+  useEffect(() => {
+    setStatus(null);
+    if (!url.trim()) return;
+    let cancelled = false;
+    setStatus({ ok: true, text: "Checking the link…" });
+    getCalendarEvents(url)
+      .then((events) => {
+        if (cancelled) return;
+        const next = events.find((e) => !e.allDay) ?? events[0];
+        setStatus({
+          ok: true,
+          text: next
+            ? `Connected · next: ${next.title}, ${new Date(next.start).toLocaleString(undefined, { weekday: "short", hour: "numeric", minute: "2-digit" })}`
+            : "Connected · no events in the next 30 days",
+        });
+      })
+      .catch((e) => !cancelled && setStatus({ ok: false, text: String(e) }));
+    return () => {
+      cancelled = true;
+    };
+  }, [url]);
+  if (!status) return null;
+  return <span className={`float-setting-status ${status.ok ? "ok" : "error"}`}>{status.text}</span>;
 };
 
 const SwitchRow: React.FC<{ title: string; desc: string; checked: boolean; onToggle: () => void }> = ({
@@ -835,6 +863,7 @@ export const FloatSettingsView: React.FC<FloatSettingsViewProps> = ({ onClose })
               onCommit={(calendarUrl) => update({ calendarUrl })}
             />
           </div>
+          <CalendarStatus url={settings.calendarUrl} />
         </div>
 
         {/* System */}

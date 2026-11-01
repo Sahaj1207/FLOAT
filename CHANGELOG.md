@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.1
+
+- **Calendar link check.** Settings › Widgets › Calendar now says whether your link works ("Connected · next: Standup, Mon 9:00") or why not. Pasting Google's public address for a private calendar explains that you need the "Secret address in iCal format" instead.
+
 ## 2.2.0
 
 Two productivity features, after Apple's Focus and Live Text.

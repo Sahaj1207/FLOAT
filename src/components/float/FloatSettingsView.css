@@ -549,3 +549,27 @@
   margin: 4px 0 0;
   font-size: var(--t-caption);
 }
+
+/* Result of checking a link (calendar). */
+.float-setting-status {
+  display: block;
+  margin-top: 4px;
+  font-size: var(--t-caption);
+  line-height: 1.4;
+  color: var(--text-2);
+}
+
+.float-setting-status.ok::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  vertical-align: 1px;
+}
+
+.float-setting-status.error {
+  color: var(--orange);
+}

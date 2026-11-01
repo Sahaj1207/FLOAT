@@ -207,6 +207,21 @@ fn upcoming(events: &[RawParsed], now: DateTime<Utc>) -> Vec<CalendarEvent> {
     out
 }
 
+/// A readable reason a calendar link failed.
+fn explain(url: &str, e: ureq::Error) -> String {
+    match e {
+        // Google's "public address" only works for calendars shared publicly.
+        ureq::Error::StatusCode(404) if url.contains("calendar.google.com") && url.contains("/public/") => {
+            "This is the calendar's public address, and the calendar isn't public. In Google Calendar, copy \"Secret address in iCal format\" instead".into()
+        }
+        ureq::Error::StatusCode(401 | 403 | 404) => {
+            "The calendar server didn't accept this link. Copy the private (secret) iCal address again".into()
+        }
+        ureq::Error::StatusCode(code) => format!("The calendar server answered with an error ({code})"),
+        other => format!("Couldn't reach the calendar: {other}"),
+    }
+}
+
 fn fetch(url: &str) -> Result<String, String> {
     // Calendar apps hand out webcal:// links; they are plain HTTPS.
     let url = url.trim().replacen("webcal://", "https://", 1);
@@ -221,7 +236,7 @@ fn fetch(url: &str) -> Result<String, String> {
     let body = agent
         .get(&url)
         .call()
-        .map_err(|e| e.to_string())?
+        .map_err(|e| explain(&url, e))?
         .body_mut()
         .with_config()
         .limit(8 * 1024 * 1024)
@@ -294,5 +309,12 @@ mod tests {
         assert_eq!(meeting_link("https://us02web.zoom.us/j/123.").as_deref(), Some("https://us02web.zoom.us/j/123"));
         assert_eq!(meeting_link("see https://example.com/zoom.us"), None);
         assert_eq!(meeting_link("Room 4"), None);
+    }
+
+    #[test]
+    fn explains_a_public_google_link() {
+        let public = "https://calendar.google.com/calendar/ical/me%40gmail.com/public/basic.ics";
+        assert!(explain(public, ureq::Error::StatusCode(404)).contains("Secret address in iCal format"));
+        assert!(explain("https://outlook.office365.com/x.ics", ureq::Error::StatusCode(404)).contains("private"));
     }
 }
