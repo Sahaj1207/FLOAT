@@ -75,6 +75,9 @@ button.cc-badge {
 }
 
 .cc-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
   align-self: flex-start;
   padding: 0;
   border: none;
@@ -88,6 +91,59 @@ button.cc-badge {
 
 .cc-link:hover {
   color: var(--float-text-primary);
+}
+
+/* Lines up under the card's title, past the icon. */
+.cc-link.indented {
+  margin-left: 37px;
+}
+
+/* On/off switch (iOS style), owned by Controls. */
+.float-setting-switch {
+  position: relative;
+  width: 34px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-left: auto;
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  background: rgba(120, 120, 128, 0.36);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.float-setting-switch.checked {
+  background: var(--tint);
+}
+
+.float-setting-switch-handle {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: transform 0.22s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+
+.float-setting-switch.checked .float-setting-switch-handle {
+  transform: translateX(14px);
+}
+
+.float-setting-switch:active .float-setting-switch-handle {
+  width: 19px;
+}
+
+.float-setting-switch.checked:active .float-setting-switch-handle {
+  transform: translateX(11px);
+}
+
+.float-setting-switch.disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 
 .cc-device-list {

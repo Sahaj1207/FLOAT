@@ -19,7 +19,7 @@ import { useConnectivity } from "./useConnectivity";
 import { SunIcon } from "./StatusHud";
 import { BluetoothList, WifiList } from "./NetworkLists";
 import { StatsStrip } from "./Widgets";
-import { Bluetooth, Moon, Settings, Volume2, VolumeX } from "lucide-react";
+import { Bluetooth, ChevronRight, Moon, Settings, Volume2, VolumeX } from "lucide-react";
 import "./ControlCenter.css";
 
 /* ---- Icons ---------------------------------------------------------------- */
@@ -63,8 +63,7 @@ function useRadioToggle(state: ConnectivityState | null, update: (s: Connectivit
   return { toggle, busy, error };
 }
 
-const wifiCaption = (s: ConnectivityState) =>
-  !s.wifi.on ? "Off" : s.wifi.ssid ?? (s.wired ? `${s.wired}` : "Not connected");
+const wifiCaption = (s: ConnectivityState) => (!s.wifi.on ? "Off" : s.wifi.ssid ?? (s.wired ? "Wired" : "Not connected"));
 
 const bluetoothCaption = (s: ConnectivityState) =>
   !s.bluetooth.on
@@ -111,13 +110,14 @@ const SettingsLink: React.FC<{ page: Parameters<typeof openSettingsPage>[0]; lab
     data-no-drag="true"
   >
     {label}
+    <ChevronRight size={12} strokeWidth={2.4} />
   </button>
 );
 
 const ListLink: React.FC<{ label: string; onOpen: () => void }> = ({ label, onOpen }) => (
   <button
     type="button"
-    className="cc-link"
+    className="cc-link indented"
     onClick={(e) => {
       e.stopPropagation();
       onOpen();
@@ -125,6 +125,7 @@ const ListLink: React.FC<{ label: string; onOpen: () => void }> = ({ label, onOp
     data-no-drag="true"
   >
     {label}
+    <ChevronRight size={12} strokeWidth={2.4} />
   </button>
 );
 
@@ -177,7 +178,7 @@ export const ControlsView: React.FC<{ focusActive: boolean; onOpenSettings: () =
               </div>
               <Switch on={state.wifi.on} onToggle={() => toggle("wifi")} label="Wi-Fi" disabled={busy === "wifi"} />
             </div>
-            <ListLink label="Networks…" onOpen={() => setList("wifi")} />
+            <ListLink label="Networks" onOpen={() => setList("wifi")} />
           </div>
         )}
         {state?.bluetooth.available && (
@@ -204,7 +205,7 @@ export const ControlsView: React.FC<{ focusActive: boolean; onOpenSettings: () =
                 ))}
               </ul>
             )}
-            <ListLink label="Devices…" onOpen={() => setList("bluetooth")} />
+            <ListLink label="Devices" onOpen={() => setList("bluetooth")} />
           </div>
         )}
         {error && <span className="cc-error">{error}</span>}
@@ -297,7 +298,7 @@ export const ControlsView: React.FC<{ focusActive: boolean; onOpenSettings: () =
           </button>
         </div>
         <div className="cc-footer">
-          <SettingsLink page="sound" label="Sound settings…" />
+          <SettingsLink page="sound" label="Sound settings" />
           <button
             type="button"
             className="chip cc-settings"

@@ -636,6 +636,11 @@ const FloatShell: React.FC = () => {
     let unlisten: (() => void) | null = null;
     subscribeToIslandCommand((command) => {
       const expanded = visualModeRef.current === "expanded";
+      if (command === "controls") {
+        requestTab("controls");
+        if (!expanded) transitionTo("expanded", "command-controls");
+        return;
+      }
       if (command === "paste") {
         // The paste key toggles too.
         if (expanded && pasteShowingRef.current) {
