@@ -642,8 +642,23 @@ const UpdatesPage: React.FC = () => {
   );
 };
 
+/** A shareable report: versions, settings switches, recent errors. No personal content. */
+async function copyDiagnostics(): Promise<void> {
+  const s = loadSettings();
+  const ui = [
+    `Screen: ${screen.width}x${screen.height} @ ${Math.round(devicePixelRatio * 100)}%, language ${navigator.language}`,
+    `Island: ${s.islandShape}, ${s.visualStyle}, idle ${s.idleBehavior}, hover ${s.openOnHover ? s.hoverDelay : "off"}`,
+    `Notifications: ${s.notificationPresence ? "on" : "off"}, focus ${s.focusNotifications}`,
+    `Online features: weather ${s.weatherEnabled ? "on" : "off"}, calendar ${s.calendarUrl ? "linked" : "none"}, lyrics ${s.syncedLyrics ? "on" : "off"}, update check ${s.autoUpdateCheck ? "on" : "off"}`,
+    `Changed shortcuts: ${Object.keys(s.shortcuts).join(", ") || "none"}`,
+  ].join("\n");
+  const report = await invoke<string>("diagnostics", { ui });
+  await navigator.clipboard.writeText(report);
+}
+
 const AboutPage: React.FC = () => {
   const [version, setVersion] = useState("");
+  const [copied, setCopied] = useState<"idle" | "ok" | "error">("idle");
   useEffect(() => {
     import("@tauri-apps/api/app").then(({ getVersion }) => getVersion()).then(setVersion).catch(() => {});
   }, []);
@@ -668,6 +683,38 @@ const AboutPage: React.FC = () => {
         <Row id="a-feedback" label="Feedback and bugs">
           <button type="button" className="sw-btn" onClick={link("https://github.com/Sahaj1207/FLOAT/issues")}>
             Report…
+          </button>
+        </Row>
+      </Group>
+      <Group title="Troubleshooting" foot="The report has FLOAT's version, your Windows version and displays, which settings are on, and recent errors. Never your notes, tasks, clipboard or calendar link, and your Windows user name is hidden. FLOAT doesn't send it anywhere; you paste it where you choose.">
+        <Row
+          id="a-diagnostics"
+          label="Copy diagnostics"
+          desc={
+            copied === "ok" ? (
+              <span className="sw-status ok">Copied. Paste it into an email or a GitHub issue</span>
+            ) : copied === "error" ? (
+              <span className="sw-status error">Couldn't build the report</span>
+            ) : (
+              "A short report to include when something goes wrong"
+            )
+          }
+        >
+          <button
+            type="button"
+            className="sw-btn"
+            onClick={() =>
+              copyDiagnostics()
+                .then(() => setCopied("ok"))
+                .catch(() => setCopied("error"))
+            }
+          >
+            Copy
+          </button>
+        </Row>
+        <Row id="a-log" label="Log file" desc="Errors FLOAT has run into, kept on this PC">
+          <button type="button" className="sw-btn" onClick={() => invoke("reveal_logs").catch(() => {})}>
+            Show in Explorer
           </button>
         </Row>
       </Group>
@@ -699,7 +746,7 @@ export const SECTIONS: Section[][] = [
   [
     { id: "privacy", title: "Privacy", blurb: "What stays on your PC, and what doesn't.", Icon: Hand, tile: ["#5ea9ff", "#1f6fff"], Page: PrivacyPage, rows: [["p-weather", "Weather privacy"], ["p-lyrics", "Synced lyrics"], ["p-updates", "Update check"], ["p-calendar", "Calendar privacy"]] },
     { id: "updates", title: "Updates", blurb: "New versions of FLOAT.", Icon: RefreshCw, tile: ["#8e8e93", "#5f5f66"], Page: UpdatesPage, rows: [["u-now", "Check for updates", "version"], ["u-auto", "Check automatically"]] },
-    { id: "about", title: "About", blurb: "Version, source and feedback.", Icon: Info, tile: ["#5ea9ff", "#1f6fff"], Page: AboutPage, rows: [["a-whatsnew", "What's new", "release notes"], ["a-source", "Source code", "github"], ["a-feedback", "Feedback", "bug report"]] },
+    { id: "about", title: "About", blurb: "Version, source and feedback.", Icon: Info, tile: ["#5ea9ff", "#1f6fff"], Page: AboutPage, rows: [["a-whatsnew", "What's new", "release notes"], ["a-source", "Source code", "github"], ["a-feedback", "Feedback", "bug report"], ["a-diagnostics", "Copy diagnostics", "troubleshooting log error report"], ["a-log", "Log file", "errors crash"]] },
   ],
 ];
 

@@ -75,7 +75,7 @@ pub fn open(app: &AppHandle, section: Option<&str>) {
             }
             // The page shows itself once painted, so nothing flashes.
         }
-        Err(e) => eprintln!("[SETTINGS] window failed: {e}"),
+        Err(e) => crate::elog!("[SETTINGS] window failed: {e}"),
     }
 }
 

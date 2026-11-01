@@ -194,7 +194,7 @@ pub fn init(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     // Spawn listener initialization in a background tokio task
     tauri::async_runtime::spawn(async move {
         if let Err(e) = setup_notification_listener(app_handle).await {
-            eprintln!("[NOTIFICATIONS] Initialization error: {:?}", e);
+            crate::elog!("[NOTIFICATIONS] Initialization error: {:?}", e);
         }
     });
 
@@ -207,7 +207,7 @@ async fn setup_notification_listener(app: AppHandle) -> Result<(), Box<dyn std::
     let listener = match UserNotificationListener::Current() {
         Ok(l) => l,
         Err(e) => {
-            eprintln!("[NOTIFICATIONS] UserNotificationListener not supported or unavailable: {:?}", e);
+            crate::elog!("[NOTIFICATIONS] UserNotificationListener not supported or unavailable: {:?}", e);
             return Ok(());
         }
     };
@@ -222,12 +222,12 @@ async fn setup_notification_listener(app: AppHandle) -> Result<(), Box<dyn std::
             Ok(op) => match op.await {
                 Ok(status) => status,
                 Err(e) => {
-                    eprintln!("[NOTIFICATIONS] RequestAccessAsync error: {:?}", e);
+                    crate::elog!("[NOTIFICATIONS] RequestAccessAsync error: {:?}", e);
                     UserNotificationListenerAccessStatus::Denied
                 }
             },
             Err(e) => {
-                eprintln!("[NOTIFICATIONS] Failed to start RequestAccessAsync: {:?}", e);
+                crate::elog!("[NOTIFICATIONS] Failed to start RequestAccessAsync: {:?}", e);
                 UserNotificationListenerAccessStatus::Denied
             }
         }

@@ -77,7 +77,7 @@ pub fn init(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     
     tauri::async_runtime::spawn(async move {
         if let Err(e) = run_media_listener(app_handle, active_id, selected_id, sessions, gsmtc_map).await {
-            eprintln!("[MEDIA ERROR] Listener crashed: {}", e);
+            crate::elog!("[MEDIA ERROR] Listener crashed: {}", e);
         }
     });
 

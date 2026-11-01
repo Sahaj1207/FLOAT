@@ -98,7 +98,7 @@ pub fn start(app: &AppHandle) {
         return;
     }
     let Some(capture) = capture_monitor() else {
-        eprintln!("[TEXTGRAB] screen capture failed");
+        crate::elog!("[TEXTGRAB] screen capture failed");
         return;
     };
     let (x, y, w, h) = (capture.x, capture.y, capture.width, capture.height);
@@ -120,7 +120,7 @@ pub fn start(app: &AppHandle) {
             let _ = window.set_size(PhysicalSize::new(w as u32, h as u32));
             // Shown by the page once the still image is painted, so there's no flash.
         }
-        Err(e) => eprintln!("[TEXTGRAB] window failed: {e}"),
+        Err(e) => crate::elog!("[TEXTGRAB] window failed: {e}"),
     }
 }
 

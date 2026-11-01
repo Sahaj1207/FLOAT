@@ -17,6 +17,7 @@ mod calendar;
 mod clipboard;
 mod connectivity;
 mod datastore;
+mod diag;
 mod downloads;
 mod focus;
 mod hotkeys;
@@ -88,6 +89,9 @@ pub fn run() {
             hotkeys::set_shortcut,
             hotkeys::pause_shortcuts,
             settingswin::open_settings,
+            diag::log_js_error,
+            diag::diagnostics,
+            diag::reveal_logs,
             datastore::store_load,
             datastore::store_save,
             datastore::store_paths,
@@ -152,32 +156,33 @@ pub fn run() {
             appicon::get_app_icon
         ])
         .setup(|app| {
+            diag::init(app);
             shelf::init(app);
             search::init();
             downloads::init(app);
             if let Err(e) = window::init(app) {
-                eprintln!("Failed to init window: {}", e);
+                crate::elog!("Failed to init window: {}", e);
             }
             if let Err(e) = tray::init(app) {
-                eprintln!("Failed to init tray: {}", e);
+                crate::elog!("Failed to init tray: {}", e);
             }
             if let Err(e) = sysmon::init(app) {
-                eprintln!("Failed to init system monitor: {}", e);
+                crate::elog!("Failed to init system monitor: {}", e);
             }
             if let Err(e) = brightness::init(app) {
-                eprintln!("Failed to init brightness: {}", e);
+                crate::elog!("Failed to init brightness: {}", e);
             }
             if let Err(e) = clipboard::init(app) {
-                eprintln!("Failed to init clipboard history: {}", e);
+                crate::elog!("Failed to init clipboard history: {}", e);
             }
             if let Err(e) = connectivity::init(app) {
-                eprintln!("Failed to init connectivity: {}", e);
+                crate::elog!("Failed to init connectivity: {}", e);
             }
             if let Err(e) = media::init(app) {
-                eprintln!("Failed to init media: {}", e);
+                crate::elog!("Failed to init media: {}", e);
             }
             if let Err(e) = notifications::init(app) {
-                eprintln!("Failed to init notifications: {}", e);
+                crate::elog!("Failed to init notifications: {}", e);
             }
             Ok(())
         })

@@ -108,7 +108,7 @@ pub fn init(app: &tauri::App) {
         }
     }
     if !inner.active.contains_key(&Action::Open) {
-        eprintln!("[HOTKEYS] No shortcut could be registered to open the island");
+        crate::elog!("[HOTKEYS] No shortcut could be registered to open the island");
     }
     app.manage(Hotkeys(Mutex::new(inner)));
 }

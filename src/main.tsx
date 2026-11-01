@@ -53,6 +53,16 @@ window.addEventListener("beforeunload", flushToDisk);
 // A restore in Settings: every window starts again from the restored files.
 listen("float-data-restored", () => location.reload()).catch(() => {});
 
+// Uncaught errors go to FLOAT's local log (Settings > About > Copy
+// diagnostics), at most a few dozen per run.
+let loggedErrors = 0;
+const logError = (message: string) => {
+  if (++loggedErrors > 40) return;
+  invoke("log_js_error", { message: `${isSettings ? "[settings] " : isTextGrab ? "[copy text] " : ""}${message}` }).catch(() => {});
+};
+window.addEventListener("error", (e) => logError(`${e.message} at ${e.filename?.split("/").pop()}:${e.lineno}:${e.colno}`));
+window.addEventListener("unhandledrejection", (e) => logError(`Unhandled: ${e.reason instanceof Error ? e.reason.message : String(e.reason)}`));
+
 // Redirect frontend logs to Rust stdout in development only. In release
 // builds every console call would otherwise cost an IPC round-trip.
 if (import.meta.env.DEV) {
