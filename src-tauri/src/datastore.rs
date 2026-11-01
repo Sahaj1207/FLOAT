@@ -3,9 +3,9 @@
 //!
 //! The web view's localStorage stays the fast copy the UI reads; these files
 //! are the safe copy. Saves are atomic (write a temp file, keep the previous
-//! version as .bak, swap in), and once a day the files are copied to
-//! Documents\FLOAT\Backups (seven days kept), outside the app's folders so
-//! they survive an uninstall. Export/Import bundle everything into one file.
+//! version as .bak, swap in), and once a day the files are copied to a
+//! Backups folder next to them (seven days kept). Export/Import bundle
+//! everything into one file you can keep anywhere.
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -34,7 +34,7 @@ fn data_dir(app: &AppHandle) -> Result<PathBuf, String> {
 }
 
 fn backups_dir(app: &AppHandle) -> Option<PathBuf> {
-    app.path().document_dir().ok().map(|d| d.join("FLOAT").join("Backups"))
+    app.path().app_local_data_dir().ok().map(|d| d.join("Backups"))
 }
 
 fn file(app: &AppHandle, key: &str) -> Result<PathBuf, String> {
@@ -61,8 +61,8 @@ fn today() -> String {
     chrono::Local::now().format("%Y-%m-%d").to_string()
 }
 
-/// Once a day, copy the data files to Documents\FLOAT\Backups\<date>, and
-/// keep only the last week.
+/// Once a day, copy the data files to Backups\<date>, and keep only the
+/// last week.
 fn daily_backup(app: &AppHandle) {
     let (Ok(data), Some(root)) = (data_dir(app), backups_dir(app)) else { return };
     let day = root.join(today());
@@ -124,7 +124,7 @@ pub fn store_paths(app: AppHandle) -> Result<Paths, String> {
 /// Open the data or backups folder in Explorer.
 #[tauri::command]
 pub fn store_reveal(app: AppHandle, backups: bool) -> Result<(), String> {
-    let dir = if backups { backups_dir(&app).ok_or("no Documents folder")? } else { data_dir(&app)? };
+    let dir = if backups { backups_dir(&app).ok_or("no data folder")? } else { data_dir(&app)? };
     fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     std::process::Command::new("explorer").arg(&dir).spawn().map(|_| ()).map_err(|e| e.to_string())
 }
@@ -171,7 +171,7 @@ pub fn import_data(app: AppHandle, path: String) -> Result<Vec<String>, String> 
         }
         restore = bundle.data;
     } else {
-        // A single file from Documents\FLOAT\Backups\<date>\tasks.json etc.
+        // A single file from Backups\<date>\tasks.json etc.
         let key = Path::new(&path).file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default();
         check_key(&key).map_err(|_| "That isn't a FLOAT backup".to_string())?;
         restore.insert(key, serde_json::from_str(&text).map_err(|_| "That file is damaged".to_string())?);
