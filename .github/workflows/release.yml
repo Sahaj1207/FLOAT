@@ -1,0 +1,82 @@
+# Builds the setup program on GitHub's Windows machines when a version tag
+# (v3.0.0) is pushed, and attaches it to a draft release with that name.
+# The MSIX is signed with the developer certificate, which stays off GitHub,
+# so it's still built locally (scripts/package-msix.ps1) and added to the
+# draft before it's published.
+
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to build, e.g. v3.0.0"
+        required: true
+      dry_run:
+        description: "Only build; keep the setup program as a workflow artifact"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  setup-exe:
+    runs-on: windows-latest
+    env:
+      TAG: ${{ github.event.inputs.tag || github.ref_name }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+
+      - name: Tag matches the app version
+        shell: bash
+        run: |
+          version=$(node -p "require('./package.json').version")
+          conf=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          if [ "v$version" != "$TAG" ] || [ "$conf" != "$version" ]; then
+            echo "::error::Tag $TAG, package.json $version and tauri.conf.json $conf must match"
+            exit 1
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - run: npm ci
+
+      - name: Native tests
+        working-directory: src-tauri
+        run: cargo test --release
+
+      - name: Build the setup program
+        run: npm run tauri build -- --bundles nsis
+
+      - name: Keep the build (test run)
+        if: github.event.inputs.dry_run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: setup-exe
+          path: src-tauri/target/release/bundle/nsis/FLOAT_*_x64-setup.exe
+
+      - name: Attach to a draft release
+        if: github.event.inputs.dry_run != 'true'
+        shell: bash
+        run: |
+          exe=$(ls src-tauri/target/release/bundle/nsis/FLOAT_*_x64-setup.exe)
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release upload "$TAG" "$exe" --clobber
+          else
+            gh release create "$TAG" "$exe" --draft --title "FLOAT ${TAG#v}" --notes "Draft: add the MSIX and the release notes, then publish."
+          fi
