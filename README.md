@@ -141,8 +141,10 @@ Pill / Orb ──( Click )──► Expanded Surface [ Media | Notifications | S
 
 Download from the [Releases](https://github.com/Sahaj1207/FLOAT/releases/latest) page:
 
-- **Setup program (recommended)**: run `FLOAT_<version>_x64-setup.exe`. If Windows SmartScreen appears, choose **More info**, then **Run anyway**.
+- **Setup program (recommended)**: run `FLOAT_<version>_x64-setup.exe`.
 - **MSIX package**: `FLOAT.msix` needs FLOAT's certificate trusted once before it will install on a new PC.
+
+> **"Windows protected your PC"?** FLOAT isn't signed with a paid certificate yet, so Windows doesn't recognise it. Click **More info → Run anyway**. The installer is built from the code in this repository, and GitHub shows each file's SHA-256 checksum so you can check your download.
 
 Step-by-step instructions for both are in [docs/INSTALL.md](docs/INSTALL.md).
 
