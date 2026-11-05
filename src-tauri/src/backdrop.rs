@@ -121,14 +121,18 @@ impl IGraphicsEffectD2D1Interop_Impl for Saturate {
     fn GetNamedPropertyMapping(&self, _name: &PCWSTR, _index: *mut u32, _mapping: *mut GRAPHICS_EFFECT_PROPERTY_MAPPING) -> windows::core::Result<()> {
         Err(E_INVALIDARG.into())
     }
+    // Composition wants every property of the effect: the matrix, the alpha
+    // mode (premultiplied) and whether to clamp the output.
     fn GetPropertyCount(&self) -> windows::core::Result<u32> {
-        Ok(1)
+        Ok(3)
     }
     fn GetProperty(&self, index: u32) -> windows::core::Result<IPropertyValue> {
-        if index != 0 {
-            return Err(E_INVALIDARG.into());
+        match index {
+            0 => PropertyValue::CreateSingleArray(&self.matrix)?.cast(),
+            1 => PropertyValue::CreateUInt32(1)?.cast(),
+            2 => PropertyValue::CreateBoolean(true)?.cast(),
+            _ => Err(E_INVALIDARG.into()),
         }
-        PropertyValue::CreateSingleArray(&self.matrix)?.cast()
     }
     fn GetSource(&self, index: u32) -> windows::core::Result<IGraphicsEffectSource> {
         if index != 0 {
@@ -145,17 +149,24 @@ impl IGraphicsEffectD2D1Interop_Impl for Saturate {
 /// Falls back to the plain blur if the effect can't be built.
 fn glass_brush(compositor: &Compositor) -> windows::core::Result<CompositionBrush> {
     let backdrop = compositor.CreateHostBackdropBrush()?;
-    let saturated = (|| -> windows::core::Result<CompositionBrush> {
-        let source: IGraphicsEffectSource = CompositionEffectSourceParameter::Create(&HSTRING::from("backdrop"))?.cast()?;
+    let step = |what: &'static str| move |e: windows::core::Error| (what, e);
+    let saturated = (|| {
+        let source: IGraphicsEffectSource = CompositionEffectSourceParameter::Create(&HSTRING::from("backdrop"))
+            .and_then(|p| p.cast())
+            .map_err(step("source"))?;
         let effect: IGraphicsEffect = Saturate::new(source, SATURATION).into();
-        let brush = compositor.CreateEffectFactory(&effect)?.CreateBrush()?;
-        brush.SetSourceParameter(&HSTRING::from("backdrop"), &backdrop)?;
-        brush.cast()
+        let factory = compositor.CreateEffectFactory(&effect).map_err(step("factory"))?;
+        let brush = factory.CreateBrush().map_err(step("brush"))?;
+        brush.SetSourceParameter(&HSTRING::from("backdrop"), &backdrop).map_err(step("backdrop"))?;
+        brush.cast::<CompositionBrush>().map_err(step("cast"))
     })();
     match saturated {
-        Ok(brush) => Ok(brush),
-        Err(e) => {
-            crate::elog!("[BACKDROP] saturation effect unavailable, using plain blur: {}", e.message());
+        Ok(brush) => {
+            crate::diag::write("INFO", "[BACKDROP] colour boost on");
+            Ok(brush)
+        }
+        Err((what, e)) => {
+            crate::elog!("[BACKDROP] colour boost unavailable ({what}), using plain blur: {}", e.message());
             backdrop.cast()
         }
     }
