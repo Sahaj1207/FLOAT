@@ -4,9 +4,9 @@ A Dynamic Island for Windows.
 
 FLOAT is a lightweight MacBook-style notch for Windows. It hangs from the top of your screen and brings media controls, a live audio visualizer, Windows notifications, a volume HUD and quick settings into one place.
 
-## FLOAT v3.0.0
+## FLOAT v3.1.0
 
-A new Settings window, your data saved with daily backups and export, a What's new card after updates, Copy diagnostics, and a lighter, sturdier island. Plus, from 2.3: Clipboard superpowers (paste history and pinned snippets anywhere with Ctrl+Alt+V), mic mute, earbud battery, Quick Notes and commands in search. Plus, from 2.2: Focus Sessions that turn the island into your current task, a meeting countdown with Join, and Copy Text from Anything (Live Text for Windows). Plus, from 2.1: search apps, files and settings right from the island, a detached pill shape, download and call activities, mouse and touch controls, and updates from inside the app. See [CHANGELOG.md](CHANGELOG.md) for everything that changed.
+The time (and date) on the idle island, and FLOAT's own icon. Plus, from 3.0: a new Settings window, your data saved with daily backups and export, a What's new card after updates, Copy diagnostics, and a lighter, sturdier island. Plus, from 2.3: Clipboard superpowers (paste history and pinned snippets anywhere with Ctrl+Alt+V), mic mute, earbud battery, Quick Notes and commands in search. Plus, from 2.2: Focus Sessions that turn the island into your current task, a meeting countdown with Join, and Copy Text from Anything (Live Text for Windows). Plus, from 2.1: search apps, files and settings right from the island, a detached pill shape, download and call activities, mouse and touch controls, and updates from inside the app. See [CHANGELOG.md](CHANGELOG.md) for everything that changed.
 
 ---
 
@@ -272,7 +272,7 @@ FLOAT/
 
 ## 📦 Project Status
 
-**FLOAT v3.0.0** is the latest release. It adds a Settings window, data backups with export and import, What's new after updates and Copy diagnostics, on top of 2.3's Clipboard superpowers, mic mute, earbud battery, Quick Notes and commands in search, 2.2's Focus Sessions, the meeting countdown and Copy Text from Anything, and 2.1's search, island shape, downloads and calls, mouse and touch settings, and in-app updates (Settings › Updates). Install the MSIX for the full experience: launch at startup, instant notifications and Wi-Fi/Bluetooth toggles need the packaged app.
+**FLOAT v3.1.0** is the latest release: the time on the idle island and a new icon, on top of 3.0, which added a Settings window, data backups with export and import, What's new after updates and Copy diagnostics, on top of 2.3's Clipboard superpowers, mic mute, earbud battery, Quick Notes and commands in search, 2.2's Focus Sessions, the meeting countdown and Copy Text from Anything, and 2.1's search, island shape, downloads and calls, mouse and touch settings, and in-app updates (Settings › Updates). Install the MSIX for the full experience: launch at startup, instant notifications and Wi-Fi/Bluetooth toggles need the packaged app.
 
 Glass needs Windows 11; on Windows 10 the island falls back to a solid tint.
 

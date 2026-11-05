@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.1.0
+
+- **The time on the island.** Settings › Island › Show the time: when nothing is happening, the island shows the time on its left, or the time and the date taking turns. Off by default; music, timers and alerts take over as usual.
+- **FLOAT's own icon.** A new app icon, the black island with music waves on a dusk gradient, in the taskbar, Start, the tray and the installers.
+- **Settings menus show every option.** Pop-up menus near the bottom of a section were cut off; they now float above the window and open upward when there's no room below.
+
 ## 3.0.0
 
 Ready for everyone: a proper Settings window, your data kept safe, and a lighter, sturdier FLOAT.

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   ClipboardList,
+  Clock,
   HardDrive,
   LifeBuoy,
   MousePointer2,
@@ -23,6 +24,10 @@ type Tip = { Icon: React.ElementType; title: string; text: string };
 
 /** What's new, per feature release. Patch releases have no entry, so they don't show it. */
 const WHATS_NEW: Record<string, Tip[]> = {
+  "3.1": [
+    { Icon: Clock, title: "The time on the island", text: "Settings › Island › Show the time: the time, or the time and date taking turns." },
+    { Icon: Sparkles, title: "A new icon", text: "FLOAT now has its own icon in the taskbar, Start and the tray." },
+  ],
   "3.0": [
     { Icon: Settings, title: "A new Settings window", text: "Everything in one place, from Controls or the tray menu." },
     { Icon: HardDrive, title: "Your data, backed up", text: "Kept on disk with daily backups. Export moves it all to a new PC." },
