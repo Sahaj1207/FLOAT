@@ -6,6 +6,7 @@ Ready for everyone: a proper Settings window, your data kept safe, and a lighter
 
 - **A new Settings window.** Every option in one place, in the style of macOS System Settings, with a sidebar and search. Open it from Controls, from FLOAT's icon in the taskbar corner, or with `float.exe --settings`.
 - **Your data, backed up.** Tasks, notes, snippets, focus history and settings are now saved as files on your PC, with the previous version kept and a daily backup of the last 7 days. Settings › General › Your Data can export everything to one file and import it on another PC. Nothing leaves your PC.
+- **Glass, closer to Apple's.** The floating island's glass is clearer and more colourful: Windows' blur gets a saturation boost, the tint is lighter, light catches the top-left and bottom-right corners, and the rim glows softly like the edge of a lens. Settings › Appearance › Glass tint still makes it darker.
 - **What's new.** After a feature update the island opens once on what changed. New installs get refreshed welcome tips, including the paste picker and Copy Text.
 - **Easier to report problems.** FLOAT keeps a small local error log. Settings › About › Copy diagnostics makes a short report to paste into an email or a GitHub issue. It never includes your notes, tasks, clipboard or calendar, and FLOAT never sends it.
 - **Lighter in the background.** Fewer wake-ups while you aren't using the island, so it's easier on your battery.

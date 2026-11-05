@@ -1554,19 +1554,37 @@ const FloatShell: React.FC = () => {
     >
       <svg className="island-outline" aria-hidden="true">
         <defs>
-          <linearGradient id="island-rim" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#fff" stopOpacity="0.5" />
-            <stop offset="0.5" stopColor="#fff" stopOpacity="0.12" />
-            <stop offset="1" stopColor="#fff" stopOpacity="0.2" />
+          {/* Glass: light catches the top-left and bottom-right corners. */}
+          <linearGradient id="island-rim" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor="#fff" stopOpacity="0.9" />
+            <stop offset="0.18" stopColor="#fff" stopOpacity="0.3" />
+            <stop offset="0.45" stopColor="#fff" stopOpacity="0.1" />
+            <stop offset="0.6" stopColor="#fff" stopOpacity="0.1" />
+            <stop offset="0.85" stopColor="#fff" stopOpacity="0.45" />
+            <stop offset="1" stopColor="#fff" stopOpacity="0.7" />
           </linearGradient>
-          <linearGradient id="island-gloss" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#fff" stopOpacity="0.13" />
-            <stop offset="0.45" stopColor="#fff" stopOpacity="0.02" />
-            <stop offset="1" stopColor="#000" stopOpacity="0.06" />
+          <radialGradient id="island-gloss" cx="0.3" cy="-0.2" r="1.1">
+            <stop offset="0" stopColor="#fff" stopOpacity="0.18" />
+            <stop offset="0.55" stopColor="#fff" stopOpacity="0" />
+          </radialGradient>
+          {/* The rim gathers light, like the edge of a lens, and the bottom sinks into shade. */}
+          <linearGradient id="island-edge" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#fff" stopOpacity="0.2" />
+            <stop offset="0.6" stopColor="#fff" stopOpacity="0.08" />
+            <stop offset="1" stopColor="#000" stopOpacity="0.3" />
           </linearGradient>
+          <filter id="island-edge-blur" x="-10%" y="-10%" width="120%" height="120%">
+            <feGaussianBlur stdDeviation="6" />
+          </filter>
         </defs>
         <g ref={outlineRef}>
+          <clipPath id="island-shape">
+            <path />
+          </clipPath>
           <path className="island-fill" />
+          <g clipPath="url(#island-shape)">
+            <path className="island-edge" />
+          </g>
           <path className="island-gloss" />
           <path className="island-rim" />
         </g>

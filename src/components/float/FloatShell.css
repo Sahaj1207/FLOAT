@@ -29,7 +29,8 @@
 }
 
 .island-gloss,
-.island-rim {
+.island-rim,
+.island-edge {
   fill: none;
   stroke: none;
 }
@@ -46,24 +47,31 @@
 }
 
 /* ---- Liquid glass ----
-   The blur comes from a native backdrop window beneath the island
-   (backdrop.rs). Here: a dark tint for legibility, a soft gloss, a lit rim
-   and a drop shadow. */
+   The blur, made more colourful, comes from a native backdrop window beneath
+   the island (backdrop.rs). Here: a light tint so the colour shows through
+   (the Glass Tint setting scales it), a sheen across the top, a soft glow
+   inside the rim, light on two corners and a drop shadow. */
 .float-shell.glass {
-  --island-fill: rgba(18, 18, 22, var(--float-glass-tint));
+  --island-fill: rgba(22, 22, 28, calc(var(--float-glass-tint) * 0.5));
 }
 
 .float-shell.glass .island-gloss {
   fill: url(#island-gloss);
 }
 
+.float-shell.glass .island-edge {
+  stroke: url(#island-edge);
+  stroke-width: 18;
+  filter: url(#island-edge-blur);
+}
+
 .float-shell.glass .island-rim {
   stroke: url(#island-rim);
-  stroke-width: 1;
+  stroke-width: 1.2;
 }
 
 .float-shell.glass .island-outline {
-  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.4));
+  filter: drop-shadow(0 16px 32px rgba(0, 0, 0, 0.32));
 }
 
 .float-shell.solid.expanded .island-outline {

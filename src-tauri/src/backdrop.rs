@@ -5,8 +5,9 @@
 //! that sits directly beneath the island and hosts a Windows.UI.Composition
 //! visual painted with the host backdrop brush (the system's blurred view of
 //! whatever is behind the window), clipped by an antialiased rounded
-//! rectangle that follows the island's shape. The web view draws the tint,
-//! highlights and content on top.
+//! rectangle that follows the island's shape. Like Apple's glass, the blur is
+//! more colourful than what's behind it: a colour matrix boosts saturation.
+//! The web view draws the tint, highlights and content on top.
 //!
 //! Nothing is captured: DWM does the blur on the GPU, so it costs no CPU and
 //! FLOAT still appears normally in screenshots and screen sharing.
@@ -15,8 +16,14 @@ use serde::Deserialize;
 use std::cell::RefCell;
 use std::sync::atomic::{AtomicBool, AtomicIsize, Ordering};
 use std::sync::Mutex;
-use windows::core::{w, ComInterface};
+use windows::core::{implement, w, ComInterface, GUID, HSTRING, PCWSTR};
 use windows::Foundation::Numerics::{Vector2, Vector3};
+use windows::Foundation::{IPropertyValue, PropertyValue};
+use windows::Graphics::Effects::{IGraphicsEffect, IGraphicsEffectSource, IGraphicsEffect_Impl, IGraphicsEffectSource_Impl};
+use windows::Win32::Foundation::E_INVALIDARG;
+use windows::Win32::System::WinRT::Graphics::Direct2D::{
+    IGraphicsEffectD2D1Interop, IGraphicsEffectD2D1Interop_Impl, GRAPHICS_EFFECT_PROPERTY_MAPPING,
+};
 use windows::Win32::Foundation::{BOOL, HWND, LPARAM, LRESULT, RECT, WPARAM};
 use windows::Win32::Graphics::Dwm::{DwmSetWindowAttribute, DWMWA_USE_HOSTBACKDROPBRUSH};
 use windows::Win32::System::LibraryLoader::GetModuleHandleW;
@@ -31,7 +38,9 @@ use windows::Win32::UI::WindowsAndMessaging::{
     WS_EX_NOACTIVATE, WS_EX_NOREDIRECTIONBITMAP, WS_EX_TOOLWINDOW, WS_EX_TOPMOST, WS_POPUP,
 };
 use windows::UI::Composition::Desktop::DesktopWindowTarget;
-use windows::UI::Composition::{CompositionRoundedRectangleGeometry, Compositor, SpriteVisual};
+use windows::UI::Composition::{
+    CompositionBrush, CompositionEffectSourceParameter, CompositionRoundedRectangleGeometry, Compositor, SpriteVisual,
+};
 
 /// The island's shape in logical px, relative to the main window's top-left.
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq)]
@@ -66,11 +75,97 @@ thread_local! {
     static GLASS: RefCell<Option<Glass>> = const { RefCell::new(None) };
 }
 
+/// How much more colourful the glass is than what's behind it (1 = unchanged).
+const SATURATION: f32 = 1.7;
+/// Direct2D's colour matrix effect.
+const CLSID_D2D1_COLOR_MATRIX: GUID = GUID::from_u128(0x921f03d6_641c_47df_852d_b4bb6153ae11);
+
+/// A Direct2D colour matrix that scales saturation, described through the
+/// interfaces composition's effect brush reads.
+#[implement(IGraphicsEffect, IGraphicsEffectSource, IGraphicsEffectD2D1Interop)]
+struct Saturate {
+    source: IGraphicsEffectSource,
+    matrix: [f32; 20],
+}
+
+impl Saturate {
+    fn new(source: IGraphicsEffectSource, amount: f32) -> Self {
+        // Rows are input R, G, B, A, offset; columns output R, G, B, A.
+        let luma = [0.2126, 0.7152, 0.0722];
+        let mut matrix = [0.0; 20];
+        for (i, w) in luma.iter().enumerate() {
+            for j in 0..3 {
+                matrix[i * 4 + j] = w * (1.0 - amount) + if i == j { amount } else { 0.0 };
+            }
+        }
+        matrix[15] = 1.0;
+        Saturate { source, matrix }
+    }
+}
+
+impl IGraphicsEffect_Impl for Saturate {
+    fn Name(&self) -> windows::core::Result<HSTRING> {
+        Ok(HSTRING::from("saturate"))
+    }
+    fn SetName(&self, _name: &HSTRING) -> windows::core::Result<()> {
+        Ok(())
+    }
+}
+
+impl IGraphicsEffectSource_Impl for Saturate {}
+
+impl IGraphicsEffectD2D1Interop_Impl for Saturate {
+    fn GetEffectId(&self) -> windows::core::Result<GUID> {
+        Ok(CLSID_D2D1_COLOR_MATRIX)
+    }
+    fn GetNamedPropertyMapping(&self, _name: &PCWSTR, _index: *mut u32, _mapping: *mut GRAPHICS_EFFECT_PROPERTY_MAPPING) -> windows::core::Result<()> {
+        Err(E_INVALIDARG.into())
+    }
+    fn GetPropertyCount(&self) -> windows::core::Result<u32> {
+        Ok(1)
+    }
+    fn GetProperty(&self, index: u32) -> windows::core::Result<IPropertyValue> {
+        if index != 0 {
+            return Err(E_INVALIDARG.into());
+        }
+        PropertyValue::CreateSingleArray(&self.matrix)?.cast()
+    }
+    fn GetSource(&self, index: u32) -> windows::core::Result<IGraphicsEffectSource> {
+        if index != 0 {
+            return Err(E_INVALIDARG.into());
+        }
+        Ok(self.source.clone())
+    }
+    fn GetSourceCount(&self) -> windows::core::Result<u32> {
+        Ok(1)
+    }
+}
+
+/// The system's blur of what's behind the window, made more colourful.
+/// Falls back to the plain blur if the effect can't be built.
+fn glass_brush(compositor: &Compositor) -> windows::core::Result<CompositionBrush> {
+    let backdrop = compositor.CreateHostBackdropBrush()?;
+    let saturated = (|| -> windows::core::Result<CompositionBrush> {
+        let source: IGraphicsEffectSource = CompositionEffectSourceParameter::Create(&HSTRING::from("backdrop"))?.cast()?;
+        let effect: IGraphicsEffect = Saturate::new(source, SATURATION).into();
+        let brush = compositor.CreateEffectFactory(&effect)?.CreateBrush()?;
+        brush.SetSourceParameter(&HSTRING::from("backdrop"), &backdrop)?;
+        brush.cast()
+    })();
+    match saturated {
+        Ok(brush) => Ok(brush),
+        Err(e) => {
+            crate::elog!("[BACKDROP] saturation effect unavailable, using plain blur: {}", e.message());
+            backdrop.cast()
+        }
+    }
+}
+
 fn create_glass(hwnd: HWND) -> windows::core::Result<Glass> {
     let compositor = Compositor::new()?;
     let target = unsafe { compositor.cast::<ICompositorDesktopInterop>()?.CreateDesktopWindowTarget(hwnd, false)? };
     let visual = compositor.CreateSpriteVisual()?;
-    visual.SetBrush(&compositor.CreateHostBackdropBrush()?)?;
+    visual.SetBrush(&glass_brush(&compositor)?)?;
     let geometry = compositor.CreateRoundedRectangleGeometry()?;
     visual.SetClip(&compositor.CreateGeometricClipWithGeometry(&geometry)?)?;
     target.SetRoot(&visual)?;
