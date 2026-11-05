@@ -25,6 +25,7 @@ permissions:
 jobs:
   setup-exe:
     runs-on: windows-latest
+    timeout-minutes: 45
     env:
       TAG: ${{ github.event.inputs.tag || github.ref_name }}
       GH_TOKEN: ${{ github.token }}
