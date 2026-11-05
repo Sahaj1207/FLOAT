@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.0.0
+
+Ready for everyone: a proper Settings window, your data kept safe, and a lighter, sturdier FLOAT.
+
+- **A new Settings window.** Every option in one place, in the style of macOS System Settings, with a sidebar and search. Open it from Controls, from FLOAT's icon in the taskbar corner, or with `float.exe --settings`.
+- **Your data, backed up.** Tasks, notes, snippets, focus history and settings are now saved as files on your PC, with the previous version kept and a daily backup of the last 7 days. Settings › General › Your Data can export everything to one file and import it on another PC. Nothing leaves your PC.
+- **What's new.** After a feature update the island opens once on what changed. New installs get refreshed welcome tips, including the paste picker and Copy Text.
+- **Easier to report problems.** FLOAT keeps a small local error log. Settings › About › Copy diagnostics makes a short report to paste into an email or a GitHub issue. It never includes your notes, tasks, clipboard or calendar, and FLOAT never sends it.
+- **Lighter in the background.** Fewer wake-ups while you aren't using the island, so it's easier on your battery.
+- **Works on more PCs.** On Windows 10 the island uses its solid style instead of broken glass. Copy Text explains how to add a text-recognition language when Windows has none.
+- **Clean installs.** The setup program closes a running FLOAT before updating, and uninstalling removes the start-with-Windows entry while keeping your data.
+- **Controls.** Links to Wi-Fi, Bluetooth and Sound settings, and "Wired" when you're on Ethernet.
+
 ## 2.3.0
 
 Everyday control, and Clipboard superpowers.

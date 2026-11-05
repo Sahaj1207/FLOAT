@@ -4,9 +4,9 @@ A Dynamic Island for Windows.
 
 FLOAT is a lightweight MacBook-style notch for Windows. It hangs from the top of your screen and brings media controls, a live audio visualizer, Windows notifications, a volume HUD and quick settings into one place.
 
-## FLOAT v2.3.0
+## FLOAT v3.0.0
 
-Clipboard superpowers (paste history and pinned snippets anywhere with Ctrl+Alt+V), mic mute, earbud battery, Quick Notes and commands in search. Plus, from 2.2: Focus Sessions that turn the island into your current task, a meeting countdown with Join, and Copy Text from Anything (Live Text for Windows). Plus, from 2.1: search apps, files and settings right from the island, a detached pill shape, download and call activities, mouse and touch controls, and updates from inside the app. See [CHANGELOG.md](CHANGELOG.md) for everything that changed.
+A new Settings window, your data saved with daily backups and export, a What's new card after updates, Copy diagnostics, and a lighter, sturdier island. Plus, from 2.3: Clipboard superpowers (paste history and pinned snippets anywhere with Ctrl+Alt+V), mic mute, earbud battery, Quick Notes and commands in search. Plus, from 2.2: Focus Sessions that turn the island into your current task, a meeting countdown with Join, and Copy Text from Anything (Live Text for Windows). Plus, from 2.1: search apps, files and settings right from the island, a detached pill shape, download and call activities, mouse and touch controls, and updates from inside the app. See [CHANGELOG.md](CHANGELOG.md) for everything that changed.
 
 ---
 
@@ -194,7 +194,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\package-msix.ps1
 - **Local Processing**: All media and notification data is processed locally on your machine using standard Windows WinRT and GSMTC APIs.
 - **No Cloud Account**: FLOAT does not require external user accounts, cloud servers, or API keys for its core functionality.
 - **Privacy Mode**: You can disable notification content previews in the Settings tab to hide message titles and bodies while retaining presence dots.
-- **Network Use**: Only three opt-in features talk to the internet, and all are off until you set them up: **Synced Lyrics** sends the playing track's title, artist, album and length to [lrclib.net](https://lrclib.net); **Weather** sends the city name you type to [open-meteo.com](https://open-meteo.com); **Calendar** downloads the private ICS link you paste.
+- **Network Use**: Once a day FLOAT asks GitHub for the latest version number (turn it off in Settings › Updates). Apart from that, only three opt-in features talk to the internet, and all are off until you set them up: **Synced Lyrics** sends the playing track's title, artist, album and length to [lrclib.net](https://lrclib.net); **Weather** sends the city name you type to [open-meteo.com](https://open-meteo.com); **Calendar** downloads the private ICS link you paste.
 - **Wi-Fi passwords** you type to join a network go straight to Windows, which stores the profile; FLOAT keeps nothing.
 - **Clipboard History** stays in memory and is never written to disk. Content that apps flag as private (password managers) is skipped, and turning the feature off clears it.
 - **File Shelf** stores only file paths, in your app data folder; files are never copied or uploaded.
@@ -260,7 +260,7 @@ FLOAT/
 
 ## 📦 Project Status
 
-**FLOAT v2.3.0** is the latest release. It adds Clipboard superpowers, mic mute, earbud battery, Quick Notes and commands in search, on top of 2.2's Focus Sessions, the meeting countdown and Copy Text from Anything, on top of 2.1's search, island shape, downloads and calls, mouse and touch settings, and in-app updates (Settings › Updates). Install the MSIX for the full experience: launch at startup, instant notifications and Wi-Fi/Bluetooth toggles need the packaged app.
+**FLOAT v3.0.0** is the latest release. It adds a Settings window, data backups with export and import, What's new after updates and Copy diagnostics, on top of 2.3's Clipboard superpowers, mic mute, earbud battery, Quick Notes and commands in search, 2.2's Focus Sessions, the meeting countdown and Copy Text from Anything, and 2.1's search, island shape, downloads and calls, mouse and touch settings, and in-app updates (Settings › Updates). Install the MSIX for the full experience: launch at startup, instant notifications and Wi-Fi/Bluetooth toggles need the packaged app.
 
 Glass needs Windows 11; on Windows 10 the island falls back to a solid tint.
 
