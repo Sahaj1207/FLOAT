@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, useRef, useState } from "react";
+import React, { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Check, ChevronsUpDown } from "lucide-react";
 
 /** The setting a search result points at, to flash it once shown. */
@@ -41,20 +42,40 @@ export const Switch: React.FC<{ on: boolean; onChange: (on: boolean) => void; di
   <button type="button" role="switch" aria-checked={on} aria-label={label} className={`sw-switch ${on ? "on" : ""}`} disabled={disabled} onClick={() => onChange(!on)} />
 );
 
-/** A macOS pop-up button: shows the value, opens a menu with a check mark. */
+/** A macOS pop-up button: shows the value, opens a menu with a check mark.
+ *  The menu floats above the whole window (a portal), so the rounded group
+ *  it sits in can't clip it; it opens upward when there's no room below. */
 export function Popup<T extends string>({ value, options, onChange, label }: { value: T; options: readonly (readonly [T, string])[]; onChange: (v: T) => void; label: string }) {
   const [open, setOpen] = useState(false);
+  const [place, setPlace] = useState<{ top: number; right: number; minWidth: number } | null>(null);
   const ref = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
-    const close = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && setOpen(false);
+    const close = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (!ref.current?.contains(t) && !menuRef.current?.contains(t)) setOpen(false);
+    };
     const esc = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    const away = () => setOpen(false);
     window.addEventListener("mousedown", close);
     window.addEventListener("keydown", esc);
+    window.addEventListener("resize", away);
+    window.addEventListener("scroll", away, true);
     return () => {
       window.removeEventListener("mousedown", close);
       window.removeEventListener("keydown", esc);
+      window.removeEventListener("resize", away);
+      window.removeEventListener("scroll", away, true);
     };
+  }, [open]);
+  useLayoutEffect(() => {
+    if (!open || !ref.current) return setPlace(null);
+    const btn = ref.current.getBoundingClientRect();
+    const height = menuRef.current?.offsetHeight ?? 0;
+    const below = btn.bottom + 4;
+    const top = below + height > window.innerHeight - 8 ? Math.max(8, btn.top - 4 - height) : below;
+    setPlace({ top, right: window.innerWidth - btn.right, minWidth: btn.width });
   }, [open]);
   const current = options.find(([v]) => v === value)?.[1] ?? value;
   return (
@@ -65,8 +86,14 @@ export function Popup<T extends string>({ value, options, onChange, label }: { v
           <ChevronsUpDown size={11} strokeWidth={2.6} />
         </span>
       </button>
-      {open && (
-        <div className="sw-menu" role="listbox">
+      {open &&
+        createPortal(
+        <div
+          className="sw-menu"
+          role="listbox"
+          ref={menuRef}
+          style={place ? { top: place.top, right: place.right, minWidth: place.minWidth } : { visibility: "hidden" }}
+        >
           {options.map(([v, text]) => (
             <button
               key={v}
@@ -82,8 +109,10 @@ export function Popup<T extends string>({ value, options, onChange, label }: { v
               {text}
             </button>
           ))}
-        </div>
-      )}
+        </div>,
+          // Inside the window's root, which carries the theme's colours.
+          ref.current?.closest(".sw") ?? document.body
+        )}
     </div>
   );
 }

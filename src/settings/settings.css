@@ -519,11 +519,8 @@ body:has(.sw),
 }
 
 .sw-menu {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 4px);
+  position: fixed;
   z-index: 50;
-  min-width: 100%;
   padding: 5px;
   border-radius: 8px;
   background: var(--menu);
