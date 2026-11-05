@@ -88,21 +88,33 @@ Pill / Orb ──( Click )──► Expanded Surface [ Media | Notifications | S
 
 ## 🖼️ Screenshots
 
-### The notch
+All screenshots use demo content.
 
-![The notch while music plays](assets/screenshots/notch-media.png)
+### The island
 
-![A notification, with music moved to the side](assets/screenshots/notch-notification.png)
+![The pill while music plays](assets/screenshots/pill-media.png)
 
-### Home
+![Home: the player, the time and your next task](assets/screenshots/panel-home.png)
 
-![Home: the player and one calm line](assets/screenshots/panel-home.png)
+### Search and Paste
 
-### Tasks and Timer
+![Search: apps, files, settings and quick sums](assets/screenshots/search.png)
+
+![Paste from clipboard history or a pinned snippet](assets/screenshots/paste.png)
+
+### Tasks, Focus and Controls
 
 ![Tasks](assets/screenshots/panel-tasks.png)
 
-![Timer](assets/screenshots/panel-timer.png)
+![Focus Sessions](assets/screenshots/panel-focus.png)
+
+![Controls: Wi-Fi, Bluetooth, volume, brightness and battery](assets/screenshots/panel-controls.png)
+
+### Settings
+
+![The Settings window](assets/screenshots/settings.png)
+
+![What's new, shown once after an update](assets/screenshots/whats-new.png)
 
 ### Floating glass
 
