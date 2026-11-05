@@ -40,6 +40,16 @@ pub fn write(level: &str, message: &str) {
     }
 }
 
+/// WebView2 tearing down its window in the middle of a window message (as
+/// it does when Windows installs an update over the running app) trips the
+/// window library's event loop on the way out. FLOAT is closing anyway, so
+/// that's logged as a shutdown, not a crash.
+fn webview_torn_down(what: &str, trace: &str) -> bool {
+    what.contains("event handler is re-entrant")
+        && trace.contains("NtUserDestroyWindow")
+        && trace.contains("CreateSharedWebViewEnvironmentInternal")
+}
+
 /// Start logging, and record crashes before the default handler runs.
 pub fn init(app: &tauri::App) {
     if let Ok(dir) = app.path().app_local_data_dir() {
@@ -58,7 +68,22 @@ pub fn init(app: &tauri::App) {
             .or_else(|| info.payload().downcast_ref::<String>().cloned())
             .unwrap_or_else(|| "unknown".into());
         let thread = std::thread::current().name().unwrap_or("unnamed").to_string();
-        write("CRASH", &format!("thread '{thread}' panicked{place}: {what}"));
+        // Function names only resolve when the build has symbols; keep the
+        // frames that are about FLOAT or the window event loop.
+        let trace = std::backtrace::Backtrace::force_capture().to_string();
+        if webview_torn_down(&what, &trace) {
+            write("INFO", "WebView2 was shut down underneath FLOAT (usually Windows installing an update); closing");
+            default(info);
+            return;
+        }
+        let frames: Vec<&str> = trace
+            .lines()
+            .map(str::trim)
+            .filter(|l| l.contains(": ") && (l.contains("float") || l.contains("tao::") || l.contains("tauri::") || l.contains("wry::")))
+            .take(24)
+            .collect();
+        let frames = if frames.is_empty() { trace.lines().take(40).collect() } else { frames };
+        write("CRASH", &format!("thread '{thread}' panicked{place}: {what}\n  {}", frames.join("\n  ")));
         default(info);
     }));
     write("INFO", &format!("FLOAT {} started", env!("CARGO_PKG_VERSION")));
