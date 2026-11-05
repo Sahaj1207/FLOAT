@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Tag to build, e.g. v3.0.0"
+        description: "Tag to build, e.g. v3.0.0 (a test run can use a branch, e.g. main)"
         required: true
       dry_run:
         description: "Only build; keep the setup program as a workflow artifact"
@@ -34,6 +34,7 @@ jobs:
           ref: ${{ github.event.inputs.tag || github.ref }}
 
       - name: Tag matches the app version
+        if: github.event.inputs.dry_run != 'true'
         shell: bash
         run: |
           version=$(node -p "require('./package.json').version")
@@ -59,9 +60,19 @@ jobs:
       # The native build embeds the built UI, so it has to exist first.
       - run: npm run build
 
+      # GitHub's machines have no Wi-Fi, Bluetooth, audio, display brightness
+      # or text-recognition language, so tests that read real hardware are
+      # skipped here (the Wi-Fi scan would wait forever). Run them locally.
       - name: Native tests
         working-directory: src-tauri
-        run: cargo test --release
+        run: >-
+          cargo test --release --
+          --skip brightness:: --skip btbattery:: --skip connectivity::
+          --skip micmute:: --skip volume:: --skip sysstats::
+          --skip sysmon::tests::reads_consent_store
+          --skip textgrab::tests::engine_is_available
+          --skip textgrab::tests::reads_rendered_text
+          --skip search::tests::finds_start_apps
 
       - name: Build the setup program
         run: npm run tauri build -- --bundles nsis
