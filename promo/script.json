@@ -10,7 +10,7 @@
     { "id": "focus", "text": "Start a focus session on any task. FLOAT holds your notifications, and pauses for your meetings." },
     { "id": "text", "text": "Copy text from anything on screen. Even images." },
     { "id": "paste", "text": "Paste your clipboard into any app." },
-    { "id": "search", "text": "Search apps, files and settings. Or just type a command." },
+    { "id": "search", "text": "Search apps, files and settings. Or do quick maths." },
     { "id": "craft", "text": "Apple's curves. Real glass. Spring motion." },
     { "id": "private", "text": "Private. Everything stays on your PC. Free, and open source." },
     { "id": "end", "text": "FLOAT. The island Windows was missing." }

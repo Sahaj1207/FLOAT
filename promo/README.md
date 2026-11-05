@@ -6,8 +6,12 @@ A ~80-second, 1080×1080 film for LinkedIn, built from FLOAT's own island shape
 
 Rebuild:
 
+0. The feature scenes are the author's screen recordings, kept out of git in
+   `clips/` (c1 music, c2 search, c5 focus, c6 glass, c7 paste, c8 Copy Text).
+   `python cut_clips.py` trims, crops and speeds them up into `clips/cut/`,
+   blurs the song's cover and title, and repairs Snipping Tool's glitch frames.
 1. Edit lines in `script.json`, then narrate them (needs `pip install edge-tts` and FFmpeg):
-   `python make_voice.py` → `voice/*.mp3` + `voice/timing.json`
+   `python make_voice.py` → `voice/*.mp3` + `voice/timing.json` (`python make_voice.py search` re-narrates one line)
 2. Start the dev server from the repo root: `npx vite --port 1421`
    Preview in a browser: http://localhost:1421/promo/film.html (`?t=20` jumps, `?still&t=20` freezes)
 3. Render (needs Chrome): `cd render && npm install && node render.mjs`

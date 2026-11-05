@@ -99,18 +99,31 @@ const ev = (t: number, kind: string) => EVENTS.push({ t, kind });
 ev(S.meet.start, "riser");
 ev(S.meet.start, "impact");
 Object.keys(TITLES).forEach((id) => ev(titleStart(id), "hit"));
-ev(S.focus.start + 0.15, "click");
-ev(wordAt("focus", 12), "pop");
-ev(T_SELECT + 0.9, "click");
-ev(wordAt("text", 4) + 0.45, "pop");
-ev(S.paste.start + 0.7, "tick");
-ev(T_PASTE, "click");
-for (let k = 1; k <= 9; k++) ev(TYPE_FROM + ((k - 0.5) / 9) * (TYPE_TO - TYPE_FROM), "type");
-ev(T_DARK, "click");
+// The features are real screen recordings (see FOOTAGE), so the score keeps
+// its musical cues and leaves out the UI clicks of the drawn version.
+void [T_SELECT, T_PASTE, T_DARK, TYPE_FROM, TYPE_TO];
 ev(S.craft.start, "whoosh");
-ev(wordAt("craft", 4) - 0.1, "boing");
 ev(S.end.start, "impact");
 ev(wordAt("end", 0), "tink");
+
+// ---------------------------------------------------------------------------
+// Footage: the author's screen recordings, cut by cut_clips.py. Each piece
+// starts at `from` and holds its last frame until the next one takes over.
+
+// `zoom` frames the island: the small pill needs more than a whole window.
+const FOOTAGE: { id: string; from: number; zoom: number }[] = [
+  { id: "work-pill", from: S.work.start - 0.1, zoom: 1.6 },
+  { id: "work-panel", from: wordAt("work", 6) - 0.15, zoom: 1.15 },
+  { id: "focus", from: S.focus.start - 0.1, zoom: 1.2 },
+  { id: "text", from: S.text.start - 0.1, zoom: 1 },
+  { id: "paste", from: S.paste.start - 0.1, zoom: 1 },
+  { id: "search-apps", from: S.search.start - 0.1, zoom: 1.15 },
+  { id: "search-maths", from: wordAt("search", 5) - 0.15, zoom: 1.15 },
+  { id: "craft-glass", from: S.craft.start - 0.1, zoom: 1 },
+  { id: "craft-spring", from: wordAt("craft", 4) - 0.15, zoom: 1 },
+];
+const FOOTAGE_FROM = FOOTAGE[0].from;
+const FOOTAGE_TO = S.craft.end + 0.2;
 
 // ---------------------------------------------------------------------------
 // Easing
@@ -223,6 +236,9 @@ stage.innerHTML = `
       </div></div>
     </div>
   </div>
+  <div id="footage" class="layer">
+    <div id="card">${FOOTAGE.map(({ id }) => `<video id="v-${id}" src="./clips/cut/${id}.mp4" muted playsinline preload="auto"></video>`).join("")}</div>
+  </div>
   <div id="craft" class="layer">
     <div id="blobs" class="layer"></div>
     <svg id="craftSvg" width="1080" height="1080" style="position:absolute;inset:0"></svg>
@@ -308,7 +324,7 @@ const blobs = Array.from($("blobs").children) as HTMLElement[];
 function captionFor(t: number) {
   const scene = SCENES.find((s) => t >= s.start - 0.05 && t < s.end + 0.15);
   const cap = $("captions");
-  if (!scene || scene.id === "why" || scene.id === "end" || scene.id === "private" || scene.id === "craft") {
+  if (!scene || scene.id === "why" || scene.id === "end" || scene.id === "private") {
     cap.innerHTML = "";
     return;
   }
@@ -354,6 +370,17 @@ function islandState(t: number): { w: number; h: number; r: number; show: number
   return { w, h, r, show };
 }
 
+// Seek a clip to a film time (the middle of the matching 30 fps frame,
+// holding the last frame once it runs out), remembering the pending seek.
+const pendingSeeks: Promise<void>[] = [];
+function seekVideo(v: HTMLVideoElement, local: number) {
+  if (!v.duration) return;
+  const target = Math.min(Math.floor(local * 30) / 30 + 0.5 / 30, v.duration - 0.5 / 30);
+  if (Math.abs(v.currentTime - target) < 1e-3) return;
+  pendingSeeks.push(new Promise((r) => v.addEventListener("seeked", () => r(), { once: true })));
+  v.currentTime = target;
+}
+
 function render(t: number, frame: number) {
   // --- Mac notch intro -----------------------------------------------------
   const macOn = 1 - prog(t, S.ask.start + 0.2, S.ask.start + 1.1);
@@ -387,7 +414,8 @@ function render(t: number, frame: number) {
   }
 
   // --- World / camera ------------------------------------------------------
-  const worldOn = prog(t, S.ask.start + 0.4, S.ask.start + 1.4) * (1 - prog(t, S.craft.start - 0.2, S.craft.start + 0.4));
+  const footageOn = window01(t, FOOTAGE_FROM - 0.2, FOOTAGE_TO, 0.45);
+  const worldOn = prog(t, S.ask.start + 0.4, S.ask.start + 1.4) * (1 - prog(t, S.craft.start - 0.2, S.craft.start + 0.4)) * (1 - footageOn);
   const islandY = 190 + 6;
   const cam = glide(
     [
@@ -415,6 +443,25 @@ function render(t: number, frame: number) {
       S.why.start <= t && t < S.meet.start ? 10 * window01(t, S.why.start, S.meet.start, 0.4) : 0,
       ...Object.keys(TITLES).map((id) => 16 * window01(t, titleStart(id) - 0.1, S[id].start + 0.15, 0.2))
     )}px) brightness(${1 - 0.45 * Math.max(...Object.keys(TITLES).map((id) => window01(t, titleStart(id) - 0.1, S[id].start + 0.15, 0.2)))})`,
+  });
+
+  // The footage card: a slow push-in on each piece, crossfading between them.
+  const titleDim = Math.max(...Object.keys(TITLES).map((id) => window01(t, titleStart(id) - 0.1, S[id].start + 0.15, 0.2)));
+  const enter = easeOut(prog(t, FOOTAGE_FROM - 0.2, FOOTAGE_FROM + 0.5));
+  set($("footage"), {
+    opacity: footageOn,
+    filter: `blur(${16 * titleDim}px) brightness(${1 - 0.45 * titleDim})`,
+    transform: `scale(${0.92 + 0.08 * enter})`,
+  });
+  FOOTAGE.forEach(({ id, from, zoom }, i) => {
+    const next = FOOTAGE[i + 1]?.from ?? FOOTAGE_TO;
+    const on = t < from ? 0 : i + 1 < FOOTAGE.length ? 1 - prog(t, next, next + 0.25) : 1;
+    const local = Math.max(0, t - from);
+    set($(`v-${id}`), {
+      opacity: t >= from ? Math.min(on, i === 0 ? 1 : prog(t, from, from + 0.25)) : 0,
+      transform: `scale(${zoom * (1 + 0.035 * clamp(local / 6))})`,
+    });
+    if (t >= from - 0.1 && t < next + 0.3) seekVideo($(`v-${id}`) as HTMLVideoElement, local);
   });
 
   // Windows appear for their scenes.
@@ -452,6 +499,7 @@ function render(t: number, frame: number) {
 
   // --- Island --------------------------------------------------------------
   const isl = islandState(t);
+  isl.show *= 1 - footageOn;
   const d = islandPath({ width: isl.w, height: isl.h, topRadius: isl.r, bottomRadius: isl.r, ear: 0, smoothing: isl.h > 60 ? 0.6 : 0 });
   set($("island"), { opacity: isl.show, transform: `translateX(${(-isl.w * ISLAND_SCALE) / 2}px) scale(${ISLAND_SCALE})` });
   ($("islandFill") as unknown as SVGPathElement).setAttribute("d", d);
@@ -509,7 +557,8 @@ function render(t: number, frame: number) {
   }
 
   // --- Craft: curves, glass, spring ------------------------------------------
-  const craftOn = window01(t, S.craft.start - 0.3, S.craft.end + 0.2, 0.45);
+  // The craft scene is footage now; its drawn version stays hidden.
+  const craftOn = 0;
   set($("craft"), { opacity: craftOn });
   if (craftOn > 0) {
     const c0 = S.craft.start;
@@ -572,8 +621,17 @@ function render(t: number, frame: number) {
 // Render hooks
 
 const FPS = 30;
-(window as unknown as { __render: (t: number) => void }).__render = (t: number) => render(t, Math.round(t * FPS));
-(window as unknown as { __ready: Promise<unknown> }).__ready = document.fonts.ready;
+(window as unknown as { __render: (t: number) => Promise<void> }).__render = async (t: number) => {
+  render(t, Math.round(t * FPS));
+  await Promise.all(pendingSeeks.splice(0));
+  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+};
+const loaded = (v: HTMLVideoElement) =>
+  v.readyState >= 2 ? Promise.resolve() : new Promise<void>((r) => v.addEventListener("loadeddata", () => r(), { once: true }));
+(window as unknown as { __ready: Promise<unknown> }).__ready = Promise.all([
+  document.fonts.ready,
+  ...FOOTAGE.map(({ id }) => loaded($(`v-${id}`) as HTMLVideoElement)),
+]);
 
 // Preview: play in real time unless driven by the renderer (?render).
 if (!location.search.includes("render")) {

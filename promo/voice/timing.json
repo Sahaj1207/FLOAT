@@ -352,8 +352,8 @@
   },
   {
     "id": "search",
-    "text": "Search apps, files and settings. Or just type a command.",
-    "duration": 5.808,
+    "text": "Search apps, files and settings. Or do quick maths.",
+    "duration": 5.616,
     "words": [
       {
         "word": "Search",
@@ -383,27 +383,22 @@
       {
         "word": "Or",
         "start": 3.440958,
-        "end": 3.573916
+        "end": 3.600541
       },
       {
-        "word": "just",
-        "start": 3.58725,
-        "end": 3.8665
+        "word": "do",
+        "start": 3.613833,
+        "end": 3.839916
       },
       {
-        "word": "type",
-        "start": 3.879791,
-        "end": 4.105874
+        "word": "quick",
+        "start": 3.853208,
+        "end": 4.132458
       },
       {
-        "word": "a",
-        "start": 4.119166,
-        "end": 4.159041
-      },
-      {
-        "word": "command",
-        "start": 4.172333,
-        "end": 4.890416
+        "word": "maths",
+        "start": 4.14575,
+        "end": 4.677666
       }
     ]
   },
