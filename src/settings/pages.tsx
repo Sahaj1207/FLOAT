@@ -209,6 +209,14 @@ const IslandPage: React.FC = () => {
             onChange={(idleBehavior) => update({ idleBehavior })}
           />
         </Row>
+        <Row id="clock" label="Show the time" desc="On the left of the island when nothing is happening">
+          <Popup
+            label="Show the time"
+            value={s.idleClock}
+            options={[["off", "Off"], ["time", "Time"], ["timeDate", "Time and date"]] as const}
+            onChange={(idleClock) => update({ idleClock })}
+          />
+        </Row>
         <Row id="width" label="Activity width" desc="How wide the island grows for music, timers and alerts">
           <Slider label="Activity width" min={PILL_LENGTH_MIN} max={PILL_LENGTH_MAX} value={s.pillLength} onChange={(pillLength) => update({ pillLength })} left="Narrow" right="Wide" />
         </Row>
@@ -730,7 +738,7 @@ const AboutPage: React.FC = () => {
 export const SECTIONS: Section[][] = [
   [
     { id: "general", title: "General", blurb: "Startup, your data and backups.", Icon: Settings2, tile: ["#9a9aa1", "#6e6e75"], Page: GeneralPage, rows: [["autostart", "Open at login", "startup boot launch"], ["fullscreen", "Hide in full screen", "games"], ["downloads", "Downloads and Nearby Share"], ["export", "Back up everything", "export backup save data"], ["import", "Restore from a backup", "import restore"], ["backups", "Daily backups", "backup folder"], ["reset", "Reset all settings", "defaults"]] },
-    { id: "island", title: "Island", blurb: "Its shape, size and motion.", Icon: IslandGlyph, tile: ["#3a3a3c", "#000000"], Page: IslandPage, rows: [["shape", "Shape", "notch pill"], ["idle", "When idle", "orb"], ["width", "Activity width", "size"], ["orb", "Orb size"], ["animation", "Animation", "spring motion"]] },
+    { id: "island", title: "Island", blurb: "Its shape, size and motion.", Icon: IslandGlyph, tile: ["#3a3a3c", "#000000"], Page: IslandPage, rows: [["shape", "Shape", "notch pill"], ["idle", "When idle", "orb"], ["clock", "Show the time", "clock date"], ["width", "Activity width", "size"], ["orb", "Orb size"], ["animation", "Animation", "spring motion"]] },
     { id: "appearance", title: "Appearance", blurb: "Black, glass and music waves.", Icon: Palette, tile: ["#5e9bff", "#2a5cff"], Page: AppearancePage, rows: [["style", "Style", "glass black auto"], ["tint", "Glass tint", "transparency"], ["waves", "Music waves", "visualizer glow"]] },
   ],
   [

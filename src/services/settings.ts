@@ -14,6 +14,9 @@ export type HoverDelay = "short" | "normal" | "long";
 // During a focus session: hold banners and summarise at the end, or just
 // skip banners (the unread dot still shows).
 export type FocusNotifications = "hold" | "quiet";
+// What the idle island shows on its left: nothing, the time, or the time
+// and the date taking turns.
+export type IdleClock = "off" | "time" | "timeDate";
 
 export interface FloatSettings {
   transparency: number; // glass tint: how dark the glass is, 0.10 to 0.90, default 0.45
@@ -42,6 +45,7 @@ export interface FloatSettings {
   downloadAlerts: boolean;       // show finished downloads and Nearby Share files, default true
   musicWaves: boolean;           // glowing waves behind the player that move with the music, default true
   focusNotifications: FocusNotifications; // "hold" | "quiet", default "hold"
+  idleClock: IdleClock;          // "off" | "time" | "timeDate", default "off"
   meetingAlerts: boolean;        // show the next meeting in the island 10 min before, default true
   autoUpdateCheck: boolean;      // ask GitHub once a day for a newer version and offer it in the island, default true
   // Keyboard shortcuts the user changed: an accelerator, or null for off.
@@ -79,6 +83,7 @@ export const DEFAULT_FLOAT_SETTINGS: FloatSettings = {
   downloadAlerts: true,
   musicWaves: true,
   focusNotifications: "hold",
+  idleClock: "off",
   meetingAlerts: true,
   autoUpdateCheck: true,
   shortcuts: {},
@@ -218,6 +223,7 @@ export function loadSettings(): FloatSettings {
       downloadAlerts: bool(parsed.downloadAlerts, DEFAULT_FLOAT_SETTINGS.downloadAlerts),
       musicWaves: bool(parsed.musicWaves, DEFAULT_FLOAT_SETTINGS.musicWaves),
       focusNotifications: pick(parsed.focusNotifications, ["hold", "quiet"] as const, DEFAULT_FLOAT_SETTINGS.focusNotifications),
+      idleClock: pick(parsed.idleClock, ["off", "time", "timeDate"] as const, DEFAULT_FLOAT_SETTINGS.idleClock),
       meetingAlerts: bool(parsed.meetingAlerts, DEFAULT_FLOAT_SETTINGS.meetingAlerts),
       autoUpdateCheck: bool(parsed.autoUpdateCheck, DEFAULT_FLOAT_SETTINGS.autoUpdateCheck),
       shortcuts: parsed.shortcuts && typeof parsed.shortcuts === "object" ? parsed.shortcuts : {},

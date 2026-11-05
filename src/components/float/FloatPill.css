@@ -137,6 +137,36 @@
   margin-left: 6px;
 }
 
+/* The time (and date, taking turns) on the left of the resting island. */
+.idle-clock {
+  position: relative;
+  flex: 1;
+  height: 16px;
+  min-width: 0;
+}
+
+.idle-clock-text {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 16px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--float-text-primary);
+  opacity: 0;
+  filter: blur(4px);
+  transform: translateY(3px);
+  transition: opacity 0.5s ease, filter 0.5s ease, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.idle-clock-text.on {
+  opacity: 1;
+  filter: blur(0);
+  transform: none;
+}
+
 .idle-notch-preview {
   display: flex;
   align-items: center;

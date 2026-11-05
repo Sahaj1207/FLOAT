@@ -6,6 +6,7 @@ import { OrbNotificationState } from "./FloatOrb";
 import { AppIcon } from "./AppIcon";
 import { VolumeHud } from "./VolumeHud";
 import { IdleNotch } from "./IdleNotch";
+import type { IdleClock } from "../../services/settings";
 import { MeetingActivity, SessionActivity, StatusActivity, TimerActivity, UpdateActivity, VolumeActivity } from "../../activities/types";
 import { UpdatePill } from "./UpdatePill";
 import { FocusPill } from "./Focus";
@@ -24,6 +25,7 @@ interface FloatPillProps {
   isNotificationActive?: boolean;
   onDismissNotification?: () => void;
   showContent?: boolean;
+  idleClock?: IdleClock;
   volume?: VolumeActivity | null;
   status?: StatusActivity | null;
   timer?: TimerActivity | null;
@@ -47,6 +49,7 @@ export const FloatPill: React.FC<FloatPillProps> = ({
   isNotificationActive = false,
   onDismissNotification,
   showContent = true,
+  idleClock = "off",
   volume = null,
   status = null,
   timer = null,
@@ -156,7 +159,7 @@ export const FloatPill: React.FC<FloatPillProps> = ({
         ) : media?.hasMedia ? (
           <MediaWidgetPill media={media} sessionCount={sessionCount} isPreview={isPreview} />
         ) : (
-          <IdleNotch isPreview={isPreview} hasUnread={!!notification?.hasNotification} />
+          <IdleNotch isPreview={isPreview} hasUnread={!!notification?.hasNotification} clock={idleClock} />
         )}
           </motion.div>
         </AnimatePresence>

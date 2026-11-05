@@ -1664,6 +1664,7 @@ const FloatShell: React.FC = () => {
             isNotificationActive={isNotificationActive}
             onDismissNotification={handleDismissNotification}
             showContent={settings.notificationContent}
+            idleClock={settings.idleClock}
             volume={primary?.kind === "volume" ? primary : null}
             status={isStatusActivity(primary) ? primary : null}
             timer={primary?.kind === "timer" ? primary : null}
