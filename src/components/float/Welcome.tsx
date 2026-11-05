@@ -122,7 +122,7 @@ export const Welcome: React.FC<{ onDone: () => void }> = ({ onDone }) => {
           {whatsNew ? "Got it" : "Get started"}
         </button>
       </div>
-      <div className="welcome-grid">
+      <div className={`welcome-grid ${tips.length <= 2 ? "few" : ""}`}>
         {tips.map(({ Icon, title, text }) => (
           <div key={title} className="welcome-tip">
             <Icon size={16} strokeWidth={2} />

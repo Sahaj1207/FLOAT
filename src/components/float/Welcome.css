@@ -11,6 +11,11 @@
   color: var(--tint);
 }
 
+/* One row of tips: sit at the top at their own height instead of stretching. */
+.welcome-grid.few {
+  align-content: start;
+}
+
 .welcome-tip {
   display: flex;
   gap: var(--s-3);
