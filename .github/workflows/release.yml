@@ -29,7 +29,7 @@ jobs:
       TAG: ${{ github.event.inputs.tag || github.ref_name }}
       GH_TOKEN: ${{ github.token }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ github.event.inputs.tag || github.ref }}
 
@@ -43,7 +43,7 @@ jobs:
             exit 1
           fi
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -55,6 +55,9 @@ jobs:
           workspaces: src-tauri
 
       - run: npm ci
+
+      # The native build embeds the built UI, so it has to exist first.
+      - run: npm run build
 
       - name: Native tests
         working-directory: src-tauri
