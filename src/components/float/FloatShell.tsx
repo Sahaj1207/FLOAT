@@ -168,7 +168,8 @@ const FloatShell: React.FC = () => {
   const lastClickTimeRef = useRef<number>(0);
   const notificationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const idleToOrbTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const dragStartRef = useRef<{ x: number; y: number } | null>(null);
+  // `handle`: pressed on the open panel's handle, which moves the island.
+  const dragStartRef = useRef<{ x: number; y: number; handle: boolean } | null>(null);
   const isDraggingRef = useRef(false);
   const shellRef = useRef<HTMLDivElement>(null);
   const hoveringRef = useRef(false);
@@ -1290,8 +1291,15 @@ const FloatShell: React.FC = () => {
     }
     if (e.button !== 0) return;
     const target = e.target as HTMLElement;
-    if (target.closest("button, a, input, [data-no-drag]")) {
+    const handle = !!target.closest("[data-drag-handle]");
+    if (!handle && target.closest("button, a, input, [data-no-drag]")) {
       // Pressing a control is never the start of a hover-open.
+      clearHoverTimers();
+      return;
+    }
+    // The open panel moves only by its handle, and flicks closed only from
+    // its top bar, so clicking, selecting and scrolling inside never drag it.
+    if (visualModeRef.current === "expanded" && !handle && !target.closest(".float-surface-top-bar")) {
       clearHoverTimers();
       return;
     }
@@ -1299,19 +1307,21 @@ const FloatShell: React.FC = () => {
     clearHoverTimers();
     clearIdleToOrbTimer();
     isDraggingRef.current = false;
-    dragStartRef.current = { x: e.screenX, y: e.screenY };
+    dragStartRef.current = { x: e.screenX, y: e.screenY, handle };
     touchRef.current = { touch: e.pointerType === "touch", at: Date.now() };
     setPressed(true);
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
-    if (!dragStartRef.current) return;
-    const dx = e.screenX - dragStartRef.current.x;
-    const dy = e.screenY - dragStartRef.current.y;
+    const start = dragStartRef.current;
+    if (!start) return;
+    const dx = e.screenX - start.x;
+    const dy = e.screenY - start.y;
 
     // Touch: flick down to open, flick up to close. Moving the island
-    // needs a short hold first, so a flick is never mistaken for a drag.
-    if (touchRef.current.touch) {
+    // needs a short hold first, so a flick is never mistaken for a drag;
+    // the panel's handle is for moving, so it moves at once.
+    if (touchRef.current.touch && !start.handle) {
       const vertical = Math.abs(dy) > Math.abs(dx) * 1.4;
       const held = Date.now() - touchRef.current.at >= TOUCH_HOLD_TO_MOVE_MS;
       if (!held) {
@@ -1338,8 +1348,9 @@ const FloatShell: React.FC = () => {
       return;
     }
     const dist = Math.sqrt(dx * dx + dy * dy);
+    const movable = visualModeRef.current !== "expanded" || start.handle;
 
-    if (dist > 5) {
+    if (dist > 5 && movable) {
       clearHoverTimers();
       clearClickTimer();
       clearIdleToOrbTimer();

@@ -197,8 +197,9 @@ export const FloatSurface: React.FC<FloatSurfaceProps> = ({
         <button
           className="float-surface-header-center"
           onClick={onCollapse}
-          data-no-drag="true"
-          aria-label="Collapse island"
+          data-drag-handle="true"
+          aria-label="Drag to move, click to close"
+          title="Drag to move · Click to close"
         >
           <div className="float-surface-handle" />
         </button>

@@ -47,8 +47,17 @@
   justify-content: center;
   background: none;
   border: none;
-  cursor: pointer;
-  padding: 6px 12px;
+  /* The handle moves the island (drag) or closes it (click). */
+  cursor: grab;
+  padding: 8px 20px;
+}
+
+.float-surface-header-center:active {
+  cursor: grabbing;
+}
+
+:root[data-input="touch"] .float-surface-header-center {
+  padding: 12px 32px;
 }
 
 .float-surface-handle {
@@ -56,11 +65,13 @@
   height: 4px;
   border-radius: 2px;
   background: rgba(255, 255, 255, 0.2);
-  transition: background var(--float-transition);
+  transition: background var(--float-transition), width var(--float-transition);
 }
 
-.float-surface-header-center:hover .float-surface-handle {
-  background: rgba(255, 255, 255, 0.35);
+.float-surface-header-center:hover .float-surface-handle,
+.float-surface-header-center:active .float-surface-handle {
+  width: 48px;
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .float-surface-nav {
