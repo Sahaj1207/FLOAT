@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- FLOAT app icon ("Dusk"): the black island with music waves on the film's colours. -->
+  <defs>
+    <linearGradient id="dusk" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff7a59"/>
+      <stop offset="0.5" stop-color="#d946a8"/>
+      <stop offset="1" stop-color="#5b3fd6"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.22"/>
+      <stop offset="0.45" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(64 64) scale(0.875)">
+    <path d="M287.5 0H736.5C980.3 0 1024 43.7 1024 287.5V736.5C1024 980.3 980.3 1024 736.5 1024H287.5C43.7 1024 0 980.3 0 736.5V287.5C0 43.7 43.7 0 287.5 0Z" fill="url(#dusk)"/>
+    <path d="M287.5 0H736.5C980.3 0 1024 43.7 1024 287.5V736.5C1024 980.3 980.3 1024 736.5 1024H287.5C43.7 1024 0 980.3 0 736.5V287.5C0 43.7 43.7 0 287.5 0Z" fill="url(#shine)"/>
+    <rect x="222" y="190" width="580" height="170" rx="85" fill="#000"/>
+    <rect x="262" y="236" width="78" height="78" rx="22" fill="url(#dusk)"/>
+    <rect x="640" y="250" width="16" height="56" rx="8" fill="#fff"/>
+    <rect x="670" y="228" width="16" height="100" rx="8" fill="#fff"/>
+    <rect x="700" y="256" width="16" height="44" rx="8" fill="#fff"/>
+    <rect x="730" y="240" width="16" height="74" rx="8" fill="#fff"/>
+  </g>
+</svg>
